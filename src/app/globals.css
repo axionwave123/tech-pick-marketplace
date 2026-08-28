@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: #050508;
+  --foreground: #f1f5f9;
 }
 
 body {
@@ -18,20 +18,28 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* Focus rings */
 :focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
-/* Scrollbar subtle */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 4px;
 }
