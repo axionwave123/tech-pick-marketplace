@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search } from 'lucide-react';
 import { ProductCard } from '@/components/products/ProductCard';
 import { getPublishedProducts, getDeals } from '@/lib/data/products';
@@ -41,55 +42,73 @@ export default async function HomePage() {
 
   return (
     <div>
+      {/* Hero — matches mockup: headline + search + product visual */}
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-surface-950 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              Find. Compare.\n              <span className="text-brand-200">Buy Smart.</span>
+        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-2 lg:px-8 lg:py-20">
+          <div className="relative z-10 max-w-xl">
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              Find. Compare.
+              <br />
+              <span className="text-brand-200">Buy Smart.</span>
             </h1>
-            <p className="mt-4 text-lg text-brand-100">
-              Real reviews. Better prices. Smarter choices for tech in Nigeria.
+            <p className="mt-4 text-base text-brand-100 sm:text-lg">
+              Real reviews. Best prices. Smarter choices for tech in Nigeria.
             </p>
-            <form action="/search" method="get" className="mt-8">
+            <form action="/search" method="get" className="mt-6 sm:mt-8">
               <div className="flex overflow-hidden rounded-2xl bg-white shadow-lg">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-400" />
-                  <input
-                    name="q"
-                    placeholder="Search for products, brands, categories…"
-                    className="w-full border-0 py-4 pl-12 pr-4 text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-0"
-                  />
-                </div>
+                <input
+                  name="q"
+                  placeholder="Search for products, brands, categories…"
+                  className="min-w-0 flex-1 border-0 px-4 py-3.5 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-0 sm:px-5 sm:py-4 sm:text-base"
+                />
                 <button
                   type="submit"
-                  className="bg-brand-600 px-6 font-semibold text-white hover:bg-brand-500 sm:px-8"
+                  className="shrink-0 bg-brand-600 px-5 font-semibold text-white hover:bg-brand-500 sm:px-8"
                 >
                   Search
                 </button>
               </div>
             </form>
           </div>
+
+          {/* Hero product visual (design image) — visible on all sizes, stronger on desktop */}
+          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl shadow-2xl ring-1 ring-white/10">
+              <Image
+                src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=900&q=80"
+                alt="Featured smartphones and tech devices"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 90vw, 45vw"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-950/50 to-transparent" />
+            </div>
+            {/* Decorative floating cards feel */}
+            <div className="pointer-events-none absolute -right-2 -top-2 hidden h-24 w-20 rounded-2xl bg-white/10 backdrop-blur-sm sm:block" />
+            <div className="pointer-events-none absolute -bottom-3 -left-3 hidden h-16 w-28 rounded-2xl bg-brand-400/20 backdrop-blur-sm sm:block" />
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        <div className="grid grid-cols-4 gap-2.5 sm:gap-3 sm:grid-cols-8">
           {categories.map((c) => (
             <Link
               key={c.slug}
               href={`/categories/${c.slug}`}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-surface-200 bg-white p-3 text-center shadow-card transition hover:border-brand-200 hover:shadow-card-hover"
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-200 bg-white p-2.5 text-center shadow-card transition hover:border-brand-200 hover:shadow-card-hover sm:gap-2 sm:p-3"
             >
-              <span className="text-2xl">{c.emoji}</span>
-              <span className="text-xs font-medium text-surface-700">{c.label}</span>
+              <span className="text-xl sm:text-2xl">{c.emoji}</span>
+              <span className="text-[10px] font-medium text-surface-700 sm:text-xs">{c.label}</span>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="text-2xl font-bold text-surface-900">Trending Products</h2>
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-5 flex items-end justify-between sm:mb-6">
+          <h2 className="text-xl font-bold text-surface-900 sm:text-2xl">Trending Products</h2>
           <Link href="/search" className="text-sm font-medium text-brand-600 hover:text-brand-700">
             View all
           </Link>
@@ -97,7 +116,7 @@ export default async function HomePage() {
         {products.length === 0 ? (
           <EmptyState message="Connect Supabase and run migrations + seed to see demo products." />
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -105,10 +124,10 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="bg-surface-50 py-12">
+      <section className="bg-surface-50 py-10 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-6 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-surface-900">Best Deals Today</h2>
+          <div className="mb-5 flex items-end justify-between sm:mb-6">
+            <h2 className="text-xl font-bold text-surface-900 sm:text-2xl">Best Deals Today</h2>
             <Link href="/deals" className="text-sm font-medium text-brand-600 hover:text-brand-700">
               All deals
             </Link>
@@ -116,7 +135,7 @@ export default async function HomePage() {
           {deals.length === 0 ? (
             <EmptyState message="No discounted offers yet." />
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
               {deals.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -125,9 +144,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="text-2xl font-bold text-surface-900">Latest Articles</h2>
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+        <div className="mb-5 flex items-end justify-between sm:mb-6">
+          <h2 className="text-xl font-bold text-surface-900 sm:text-2xl">Latest Articles</h2>
           <Link href="/articles" className="text-sm font-medium text-brand-600 hover:text-brand-700">
             All articles
           </Link>
@@ -135,24 +154,26 @@ export default async function HomePage() {
         {articles.length === 0 ? (
           <EmptyState message="No published articles yet." />
         ) : (
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
             {articles.map((a) => (
               <Link
                 key={a.id}
                 href={`/articles/${a.slug}`}
-                className="rounded-2xl border border-surface-200 bg-white p-6 shadow-card transition hover:shadow-card-hover"
+                className="rounded-2xl border border-surface-200 bg-white p-5 shadow-card transition hover:shadow-card-hover sm:p-6"
               >
                 <h3 className="font-semibold text-surface-900">{a.title}</h3>
-                {a.excerpt && <p className="mt-2 line-clamp-2 text-sm text-surface-600">{a.excerpt}</p>}
+                {a.excerpt && (
+                  <p className="mt-2 line-clamp-2 text-sm text-surface-600">{a.excerpt}</p>
+                )}
               </Link>
             ))}
           </div>
         )}
       </section>
 
-      <section className="border-t border-surface-200 bg-brand-600 py-12 text-center text-white">
-        <h2 className="text-2xl font-bold">Get the best deals & reviews</h2>
-        <p className="mt-2 text-brand-100">Newsletter coming soon.</p>
+      <section className="border-t border-surface-200 bg-brand-600 py-10 text-center text-white sm:py-12">
+        <h2 className="text-xl font-bold sm:text-2xl">Get the best deals &amp; reviews</h2>
+        <p className="mt-2 text-sm text-brand-100 sm:text-base">Newsletter coming soon.</p>
       </section>
     </div>
   );
