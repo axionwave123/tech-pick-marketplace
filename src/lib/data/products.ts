@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import type { Product } from '@/types';
 
 const productSelect = `
@@ -13,14 +13,8 @@ const productSelect = `
   )
 `;
 
-function isConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-}
-
 export async function getPublishedProducts(limit = 12): Promise<Product[]> {
-  if (!isConfigured()) return [];
+  if (!isSupabaseConfigured()) return [];
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -41,7 +35,7 @@ export async function getPublishedProducts(limit = 12): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  if (!isConfigured()) return null;
+  if (!isSupabaseConfigured()) return null;
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -69,7 +63,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function searchProducts(query: string, limit = 24): Promise<Product[]> {
-  if (!isConfigured()) return [];
+  if (!isSupabaseConfigured()) return [];
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -93,7 +87,7 @@ export async function getProductsByCategorySlug(
   slug: string,
   limit = 48
 ): Promise<{ category: { name: string; slug: string } | null; products: Product[] }> {
-  if (!isConfigured()) return { category: null, products: [] };
+  if (!isSupabaseConfigured()) return { category: null, products: [] };
   try {
     const supabase = await createClient();
     const { data: category } = await supabase

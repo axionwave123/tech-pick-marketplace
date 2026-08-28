@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { ProductCard } from '@/components/products/ProductCard';
 import { getPublishedProducts, getDeals } from '@/lib/data/products';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 
 const categories = [
   { slug: 'smartphones', label: 'Phones', emoji: '📱' },
@@ -15,6 +15,8 @@ const categories = [
   { slug: 'power-banks', label: 'Power', emoji: '🔋' },
 ];
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const [products, deals] = await Promise.all([
     getPublishedProducts(8),
@@ -22,22 +24,23 @@ export default async function HomePage() {
   ]);
 
   let articles: { id: string; title: string; slug: string; excerpt: string | null }[] = [];
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from('articles')
-      .select('id, title, slug, excerpt')
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .limit(3);
-    articles = data || [];
-  } catch {
-    /* empty until DB connected */
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from('articles')
+        .select('id, title, slug, excerpt')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(3);
+      articles = data || [];
+    } catch {
+      /* ignore until DB connected */
+    }
   }
 
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-surface-950 text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
           <div className="max-w-2xl">
@@ -69,7 +72,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
           {categories.map((c) => (
@@ -85,7 +87,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trending */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-end justify-between">
           <h2 className="text-2xl font-bold text-surface-900">Trending Products</h2>
@@ -104,7 +105,6 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Deals */}
       <section className="bg-surface-50 py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-end justify-between">
@@ -114,7 +114,7 @@ export default async function HomePage() {
             </Link>
           </div>
           {deals.length === 0 ? (
-            <EmptyState message="No discounted offers in seed data yet." />
+            <EmptyState message="No discounted offers yet." />
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {deals.map((p) => (
@@ -125,7 +125,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Articles */}
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-end justify-between">
           <h2 className="text-2xl font-bold text-surface-900">Latest Articles</h2>
@@ -151,10 +150,9 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* CTA */}
       <section className="border-t border-surface-200 bg-brand-600 py-12 text-center text-white">
         <h2 className="text-2xl font-bold">Get the best deals & reviews</h2>
-        <p className="mt-2 text-brand-100">Newsletter coming soon — build with verified data only.</p>
+        <p className="mt-2 text-brand-100">Newsletter coming soon.</p>
       </section>
     </div>
   );

@@ -1,27 +1,37 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 
 export async function getSessionUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 export async function isAdminUser(userId?: string): Promise<boolean> {
-  const supabase = await createClient();
-  const uid = userId ?? (await getSessionUser())?.id;
-  if (!uid) return false;
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const supabase = await createClient();
+    const uid = userId ?? (await getSessionUser())?.id;
+    if (!uid) return false;
 
-  const { data } = await supabase
-    .from('admin_roles')
-    .select('role')
-    .eq('user_id', uid)
-    .in('role', ['super_admin', 'admin', 'editor', 'moderator'])
-    .limit(1)
-    .maybeSingle();
+    const { data } = await supabase
+      .from('admin_roles')
+      .select('role')
+      .eq('user_id', uid)
+      .in('role', ['super_admin', 'admin', 'editor', 'moderator'])
+      .limit(1)
+      .maybeSingle();
 
-  return !!data;
+    return !!data;
+  } catch {
+    return false;
+  }
 }
 
 export async function requireAdmin() {
