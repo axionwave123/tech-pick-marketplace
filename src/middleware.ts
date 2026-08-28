@@ -2,16 +2,12 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Protect /admin/* except login
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-    const response = await updateSession(request);
-    // Session refresh only here; fine-grained auth in layout/server components
-    return response;
+  try {
+    return await updateSession(request);
+  } catch (err) {
+    console.error('[middleware] unexpected error:', err);
+    return NextResponse.next({ request: { headers: request.headers } });
   }
-
-  return updateSession(request);
 }
 
 export const config = {

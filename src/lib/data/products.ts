@@ -13,79 +13,112 @@ const productSelect = `
   )
 `;
 
+function isConfigured() {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 export async function getPublishedProducts(limit = 12): Promise<Product[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('products')
-    .select(productSelect)
-    .eq('status', 'published')
-    .order('published_at', { ascending: false })
-    .limit(limit);
-  if (error) {
-    console.error(error);
+  if (!isConfigured()) return [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select(productSelect)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.error(error);
+      return [];
+    }
+    return (data as Product[]) || [];
+  } catch (e) {
+    console.error(e);
     return [];
   }
-  return (data as Product[]) || [];
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('products')
-    .select(
-      `${productSelect},
+  if (!isConfigured()) return null;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select(
+        `${productSelect},
       product_specifications (
         id, value_text, value_number, value_boolean, value_list, spec_def_id,
         specification_definitions (id, key, label, unit, data_type, sort_order)
       ),
       editorial_reviews (*)`
-    )
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .maybeSingle();
-  if (error) {
-    console.error(error);
+      )
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle();
+    if (error) {
+      console.error(error);
+      return null;
+    }
+    return data as Product | null;
+  } catch (e) {
+    console.error(e);
     return null;
   }
-  return data as Product | null;
 }
 
 export async function searchProducts(query: string, limit = 24): Promise<Product[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('products')
-    .select(productSelect)
-    .eq('status', 'published')
-    .ilike('name', `%${query}%`)
-    .limit(limit);
-  if (error) {
-    console.error(error);
+  if (!isConfigured()) return [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select(productSelect)
+      .eq('status', 'published')
+      .ilike('name', `%${query}%`)
+      .limit(limit);
+    if (error) {
+      console.error(error);
+      return [];
+    }
+    return (data as Product[]) || [];
+  } catch (e) {
+    console.error(e);
     return [];
   }
-  return (data as Product[]) || [];
 }
 
-export async function getProductsByCategorySlug(slug: string, limit = 48): Promise<{ category: { name: string; slug: string } | null; products: Product[] }> {
-  const supabase = await createClient();
-  const { data: category } = await supabase
-    .from('categories')
-    .select('id, name, slug')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (!category) return { category: null, products: [] };
+export async function getProductsByCategorySlug(
+  slug: string,
+  limit = 48
+): Promise<{ category: { name: string; slug: string } | null; products: Product[] }> {
+  if (!isConfigured()) return { category: null, products: [] };
+  try {
+    const supabase = await createClient();
+    const { data: category } = await supabase
+      .from('categories')
+      .select('id, name, slug')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (!category) return { category: null, products: [] };
 
-  const { data, error } = await supabase
-    .from('products')
-    .select(productSelect)
-    .eq('status', 'published')
-    .eq('category_id', category.id)
-    .order('published_at', { ascending: false })
-    .limit(limit);
-  if (error) {
-    console.error(error);
-    return { category, products: [] };
+    const { data, error } = await supabase
+      .from('products')
+      .select(productSelect)
+      .eq('status', 'published')
+      .eq('category_id', category.id)
+      .order('published_at', { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.error(error);
+      return { category, products: [] };
+    }
+    return { category, products: (data as Product[]) || [] };
+  } catch (e) {
+    console.error(e);
+    return { category: null, products: [] };
   }
-  return { category, products: (data as Product[]) || [] };
 }
 
 export async function getDeals(limit = 24): Promise<Product[]> {
