@@ -24,25 +24,35 @@ export default async function ReviewsHub() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-surface-900">TechPick Reviews</h1>
-      <p className="mt-2 text-surface-600">In-depth analysis based on verified public information and sources.</p>
+      <h1 className="font-display text-3xl font-bold text-white light:text-slate-900">
+        TechPick Reviews
+      </h1>
+      <p className="mt-2 text-base font-medium text-surface-200 light:text-slate-600">
+        In-depth analysis based on verified public information and sources.
+      </p>
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {data.map((r: any) => (
           <Link
             key={r.id}
             href={r.products?.slug ? `/products/${r.products.slug}` : '#'}
-            className="flex gap-4 rounded-2xl border border-surface-200 bg-white p-5 shadow-card transition hover:shadow-card-hover"
+            className="flex gap-4 rounded-2xl border border-surface-700 bg-surface-900 p-5 shadow-card transition hover:border-brand-500/40 light:border-slate-200 light:bg-white"
           >
             {r.rating != null && <ScoreBadge score={r.rating} />}
             <div>
-              <h2 className="font-semibold text-surface-900">{r.products?.name || r.title}</h2>
-              {r.summary && <p className="mt-1 line-clamp-2 text-sm text-surface-600">{r.summary}</p>}
+              <h2 className="font-semibold text-white light:text-slate-900">
+                {r.products?.name || r.title}
+              </h2>
+              {r.summary && (
+                <p className="mt-1 line-clamp-2 text-sm text-surface-300 light:text-slate-600">{r.summary}</p>
+              )}
             </div>
           </Link>
         ))}
       </div>
       {data.length === 0 && (
-        <p className="mt-8 text-surface-500">No published editorial reviews yet.</p>
+        <p className="mt-8 text-base font-medium text-surface-300 light:text-slate-500">
+          No published editorial reviews yet.
+        </p>
       )}
     </div>
   );

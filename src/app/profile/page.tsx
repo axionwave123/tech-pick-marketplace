@@ -2,14 +2,12 @@ export const metadata = { title: 'Profile' };
 
 export default function ProfilePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <h1 className="text-3xl font-bold text-surface-900">Your profile</h1>
-      <p className="mt-2 text-surface-600">
-        Registered users will be able to save products, save comparisons, view comments, and manage account settings.
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+      <h1 className="font-display text-3xl font-bold text-white light:text-slate-900">Your profile</h1>
+      <p className="mt-2 text-base font-medium text-surface-200 light:text-slate-600">
+        Saved products, comparisons, and account settings will appear here after public auth is
+        connected.
       </p>
-      <div className="mt-8 rounded-2xl border border-dashed border-surface-300 bg-surface-50 p-8 text-center text-sm text-surface-500">
-        Sign-in via Supabase Auth is configured. Complete profile UI after connecting your project and enabling auth providers.
-      </div>
     </div>
   );
 }
