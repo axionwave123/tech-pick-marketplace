@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { ProductCard } from '@/components/products/ProductCard';
 import { getPublishedProducts, getDeals } from '@/lib/data/products';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
-import { HomeToolbar } from '@/components/layout/HomeToolbar';
 
 const categories = [
   { slug: 'smartphones', label: 'Phones', emoji: '📱' },
@@ -50,40 +49,39 @@ export default async function HomePage() {
             alt=""
             fill
             priority
-            className="object-cover object-center opacity-70"
+            className="object-cover object-center opacity-60"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-950/85 via-surface-950/55 to-surface-950 light:from-slate-900/80 light:via-slate-900/50 light:to-slate-50" />
-          <div className="absolute inset-0 bg-gradient-to-r from-surface-950/90 via-brand-950/40 to-transparent" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(37,99,235,0.35),transparent_55%)]" />
+          {/* Stronger overlay = clearer white text */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/65 to-surface-950 light:to-slate-50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-brand-950/50 to-black/30" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(37,99,235,0.25),transparent_55%)]" />
         </div>
 
         <div className="relative z-10 mx-auto flex min-h-[65vh] max-w-7xl flex-col justify-center px-4 py-14 sm:min-h-[70vh] sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-300 sm:text-sm">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-brand-200 drop-shadow sm:text-sm">
               Tech · Nigeria · Smart shopping
             </p>
-            <h1 className="font-display text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-6xl">
               Find. Compare.
               <br />
-              <span className="bg-gradient-to-r from-brand-300 via-brand-200 to-white bg-clip-text text-transparent">
-                Buy Smart.
-              </span>
+              <span className="text-brand-200">Buy Smart.</span>
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-surface-200 sm:text-lg">
+            <p className="mt-5 max-w-lg text-base font-medium leading-relaxed text-white/95 drop-shadow sm:text-lg">
               Real reviews. Best prices. Smarter choices for tech in Nigeria.
             </p>
 
             <form action="/search" method="get" className="mt-8">
-              <div className="flex overflow-hidden rounded-2xl border border-white/10 bg-white/95 shadow-neon backdrop-blur">
+              <div className="flex overflow-hidden rounded-2xl border border-white/20 bg-white shadow-xl">
                 <input
                   name="q"
                   placeholder="Search phones, laptops, brands…"
-                  className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3.5 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-0 sm:px-5 sm:py-4 sm:text-base"
+                  className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3.5 text-sm font-medium text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-0 sm:px-5 sm:py-4 sm:text-base"
                 />
                 <button
                   type="submit"
-                  className="shrink-0 bg-brand-600 px-5 font-semibold text-white transition hover:bg-brand-500 sm:px-8"
+                  className="shrink-0 bg-brand-600 px-5 text-sm font-bold text-white transition hover:bg-brand-500 sm:px-8 sm:text-base"
                 >
                   Search
                 </button>
@@ -93,10 +91,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Under hero: theme toggle + quick nav (always visible) */}
-      <HomeToolbar />
-
-      {/* Categories */}
+      {/* Categories — no duplicate theme bar */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-8 sm:gap-3">
           {categories.map((c) => (
@@ -106,7 +101,7 @@ export default async function HomePage() {
               className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-700/80 bg-surface-900/80 p-2.5 text-center shadow-card transition hover:border-brand-500/50 hover:shadow-neon light:border-slate-200 light:bg-white light:shadow-sm light:hover:border-brand-400 sm:gap-2 sm:p-3"
             >
               <span className="text-xl sm:text-2xl">{c.emoji}</span>
-              <span className="text-[10px] font-medium text-surface-200 light:text-slate-700 sm:text-xs">
+              <span className="text-[11px] font-semibold text-surface-100 light:text-slate-800 sm:text-xs">
                 {c.label}
               </span>
             </Link>
@@ -114,15 +109,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trending */}
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="mb-5 flex items-end justify-between sm:mb-6">
-          <h2 className="font-display text-xl font-bold text-white light:text-slate-900 sm:text-2xl">
+          <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
             Trending Products
           </h2>
           <Link
             href="/search"
-            className="text-sm font-medium text-brand-400 hover:text-brand-300 light:text-brand-600 light:hover:text-brand-700"
+            className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600 light:hover:text-brand-700"
           >
             View all
           </Link>
@@ -138,16 +132,15 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Deals */}
       <section className="border-y border-surface-800 bg-surface-900/50 py-10 light:border-slate-200 light:bg-slate-100/80 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-5 flex items-end justify-between sm:mb-6">
-            <h2 className="font-display text-xl font-bold text-white light:text-slate-900 sm:text-2xl">
+            <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
               Best Deals Today
             </h2>
             <Link
               href="/deals"
-              className="text-sm font-medium text-brand-400 hover:text-brand-300 light:text-brand-600"
+              className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600"
             >
               All deals
             </Link>
@@ -164,15 +157,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Articles */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <div className="mb-5 flex items-end justify-between sm:mb-6">
-          <h2 className="font-display text-xl font-bold text-white light:text-slate-900 sm:text-2xl">
+          <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
             Latest Articles
           </h2>
           <Link
             href="/articles"
-            className="text-sm font-medium text-brand-400 hover:text-brand-300 light:text-brand-600"
+            className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600"
           >
             All articles
           </Link>
@@ -189,7 +181,7 @@ export default async function HomePage() {
               >
                 <h3 className="font-display font-semibold text-white light:text-slate-900">{a.title}</h3>
                 {a.excerpt && (
-                  <p className="mt-2 line-clamp-2 text-sm text-surface-300 light:text-slate-600">{a.excerpt}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-surface-200 light:text-slate-600">{a.excerpt}</p>
                 )}
               </Link>
             ))}
@@ -199,7 +191,7 @@ export default async function HomePage() {
 
       <section className="border-t border-surface-800 bg-brand-600 py-10 text-center text-white sm:py-12">
         <h2 className="font-display text-xl font-bold sm:text-2xl">Get the best deals &amp; reviews</h2>
-        <p className="mt-2 text-sm text-brand-100 sm:text-base">Newsletter coming soon.</p>
+        <p className="mt-2 text-sm font-medium text-brand-50 sm:text-base">Newsletter coming soon.</p>
       </section>
     </div>
   );
@@ -207,7 +199,7 @@ export default async function HomePage() {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-surface-600 bg-surface-900/60 px-6 py-12 text-center text-sm text-surface-400 light:border-slate-300 light:bg-slate-100 light:text-slate-500">
+    <div className="rounded-2xl border border-dashed border-surface-600 bg-surface-900/60 px-6 py-12 text-center text-sm font-medium text-surface-300 light:border-slate-300 light:bg-slate-100 light:text-slate-600">
       {message}
     </div>
   );
