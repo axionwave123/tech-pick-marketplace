@@ -54,7 +54,6 @@ export default async function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/65 to-surface-950 light:to-slate-50" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-brand-950/50 to-black/30" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(37,99,235,0.25),transparent_55%)]" />
         </div>
 
         <div className="relative z-10 mx-auto flex min-h-[65vh] max-w-7xl flex-col justify-center px-4 py-14 sm:min-h-[70vh] sm:px-6 lg:px-8">
@@ -70,7 +69,6 @@ export default async function HomePage() {
             <p className="mt-5 max-w-lg text-base font-medium leading-relaxed text-white/95 drop-shadow sm:text-lg">
               Real reviews. Best prices. Smarter choices for tech in Nigeria.
             </p>
-
             <form action="/search" method="get" className="mt-8">
               <div className="flex overflow-hidden rounded-2xl border border-white/20 bg-white shadow-xl">
                 <input
@@ -121,7 +119,7 @@ export default async function HomePage() {
           </h2>
           <Link
             href="/search"
-            className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600 light:hover:text-brand-700"
+            className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600"
           >
             View all
           </Link>
@@ -143,10 +141,7 @@ export default async function HomePage() {
             <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
               Best Deals Today
             </h2>
-            <Link
-              href="/deals"
-              className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600"
-            >
+            <Link href="/deals" className="text-sm font-semibold text-brand-300 light:text-brand-600">
               All deals
             </Link>
           </div>
@@ -167,10 +162,7 @@ export default async function HomePage() {
           <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
             Latest Articles
           </h2>
-          <Link
-            href="/articles"
-            className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600"
-          >
+          <Link href="/articles" className="text-sm font-semibold text-brand-300 light:text-brand-600">
             All articles
           </Link>
         </div>
@@ -182,7 +174,7 @@ export default async function HomePage() {
               <Link
                 key={a.id}
                 href={`/articles/${a.slug}`}
-                className="rounded-2xl border border-surface-700 bg-surface-900 p-5 transition hover:border-brand-500/40 hover:shadow-neon light:border-slate-200 light:bg-white light:hover:border-brand-300 sm:p-6"
+                className="rounded-2xl border border-surface-700 bg-surface-900 p-5 light:border-slate-200 light:bg-white sm:p-6"
               >
                 <h3 className="font-display font-semibold text-white light:text-slate-900">{a.title}</h3>
                 {a.excerpt && (
