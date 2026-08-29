@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ProductCard } from '@/components/products/ProductCard';
 import { getPublishedProducts, getDeals } from '@/lib/data/products';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
+import { HomeToolbar } from '@/components/layout/HomeToolbar';
 
 const categories = [
   { slug: 'smartphones', label: 'Phones', emoji: '📱' },
@@ -40,10 +41,9 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="bg-surface-950">
-      {/* Hero: image BEHIND lettering, neon black + blue glow */}
-      <section className="relative min-h-[70vh] overflow-hidden sm:min-h-[75vh]">
-        {/* Background image (phone on blue neon — free license stock, similar look) */}
+    <div className="bg-surface-950 light:bg-slate-50">
+      {/* Hero */}
+      <section className="relative min-h-[65vh] overflow-hidden sm:min-h-[70vh]">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1600&q=85"
@@ -53,13 +53,12 @@ export default async function HomePage() {
             className="object-cover object-center opacity-70"
             sizes="100vw"
           />
-          {/* Neon black + blue overlays so text stays readable */}
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-950/85 via-surface-950/55 to-surface-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-950/85 via-surface-950/55 to-surface-950 light:from-slate-900/80 light:via-slate-900/50 light:to-slate-50" />
           <div className="absolute inset-0 bg-gradient-to-r from-surface-950/90 via-brand-950/40 to-transparent" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(37,99,235,0.35),transparent_55%)]" />
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-center px-4 py-16 sm:min-h-[75vh] sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto flex min-h-[65vh] max-w-7xl flex-col justify-center px-4 py-14 sm:min-h-[70vh] sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-300 sm:text-sm">
               Tech · Nigeria · Smart shopping
@@ -94,25 +93,37 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Under hero: theme toggle + quick nav (always visible) */}
+      <HomeToolbar />
+
+      {/* Categories */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-8 sm:gap-3">
           {categories.map((c) => (
             <Link
               key={c.slug}
               href={`/categories/${c.slug}`}
-              className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-700/80 bg-surface-900/80 p-2.5 text-center shadow-card transition hover:border-brand-500/50 hover:shadow-neon sm:gap-2 sm:p-3"
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-700/80 bg-surface-900/80 p-2.5 text-center shadow-card transition hover:border-brand-500/50 hover:shadow-neon light:border-slate-200 light:bg-white light:shadow-sm light:hover:border-brand-400 sm:gap-2 sm:p-3"
             >
               <span className="text-xl sm:text-2xl">{c.emoji}</span>
-              <span className="text-[10px] font-medium text-surface-200 sm:text-xs">{c.label}</span>
+              <span className="text-[10px] font-medium text-surface-200 light:text-slate-700 sm:text-xs">
+                {c.label}
+              </span>
             </Link>
           ))}
         </div>
       </section>
 
+      {/* Trending */}
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="mb-5 flex items-end justify-between sm:mb-6">
-          <h2 className="font-display text-xl font-bold text-white sm:text-2xl">Trending Products</h2>
-          <Link href="/search" className="text-sm font-medium text-brand-400 hover:text-brand-300">
+          <h2 className="font-display text-xl font-bold text-white light:text-slate-900 sm:text-2xl">
+            Trending Products
+          </h2>
+          <Link
+            href="/search"
+            className="text-sm font-medium text-brand-400 hover:text-brand-300 light:text-brand-600 light:hover:text-brand-700"
+          >
             View all
           </Link>
         </div>
@@ -127,11 +138,17 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="border-y border-surface-800 bg-surface-900/50 py-10 sm:py-12">
+      {/* Deals */}
+      <section className="border-y border-surface-800 bg-surface-900/50 py-10 light:border-slate-200 light:bg-slate-100/80 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-5 flex items-end justify-between sm:mb-6">
-            <h2 className="font-display text-xl font-bold text-white sm:text-2xl">Best Deals Today</h2>
-            <Link href="/deals" className="text-sm font-medium text-brand-400 hover:text-brand-300">
+            <h2 className="font-display text-xl font-bold text-white light:text-slate-900 sm:text-2xl">
+              Best Deals Today
+            </h2>
+            <Link
+              href="/deals"
+              className="text-sm font-medium text-brand-400 hover:text-brand-300 light:text-brand-600"
+            >
               All deals
             </Link>
           </div>
@@ -147,10 +164,16 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Articles */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <div className="mb-5 flex items-end justify-between sm:mb-6">
-          <h2 className="font-display text-xl font-bold text-white sm:text-2xl">Latest Articles</h2>
-          <Link href="/articles" className="text-sm font-medium text-brand-400 hover:text-brand-300">
+          <h2 className="font-display text-xl font-bold text-white light:text-slate-900 sm:text-2xl">
+            Latest Articles
+          </h2>
+          <Link
+            href="/articles"
+            className="text-sm font-medium text-brand-400 hover:text-brand-300 light:text-brand-600"
+          >
             All articles
           </Link>
         </div>
@@ -162,11 +185,11 @@ export default async function HomePage() {
               <Link
                 key={a.id}
                 href={`/articles/${a.slug}`}
-                className="rounded-2xl border border-surface-700 bg-surface-900 p-5 transition hover:border-brand-500/40 hover:shadow-neon sm:p-6"
+                className="rounded-2xl border border-surface-700 bg-surface-900 p-5 transition hover:border-brand-500/40 hover:shadow-neon light:border-slate-200 light:bg-white light:hover:border-brand-300 sm:p-6"
               >
-                <h3 className="font-display font-semibold text-white">{a.title}</h3>
+                <h3 className="font-display font-semibold text-white light:text-slate-900">{a.title}</h3>
                 {a.excerpt && (
-                  <p className="mt-2 line-clamp-2 text-sm text-surface-300">{a.excerpt}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-surface-300 light:text-slate-600">{a.excerpt}</p>
                 )}
               </Link>
             ))}
@@ -184,7 +207,7 @@ export default async function HomePage() {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-surface-600 bg-surface-900/60 px-6 py-12 text-center text-sm text-surface-400">
+    <div className="rounded-2xl border border-dashed border-surface-600 bg-surface-900/60 px-6 py-12 text-center text-sm text-surface-400 light:border-slate-300 light:bg-slate-100 light:text-slate-500">
       {message}
     </div>
   );
