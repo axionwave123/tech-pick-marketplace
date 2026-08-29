@@ -3,16 +3,17 @@ import Image from 'next/image';
 import { ProductCard } from '@/components/products/ProductCard';
 import { getPublishedProducts, getDeals } from '@/lib/data/products';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
+import { categoryImages } from '@/lib/category-images';
 
 const categories = [
-  { slug: 'smartphones', label: 'Phones', emoji: '📱' },
-  { slug: 'laptops', label: 'Laptops', emoji: '💻' },
-  { slug: 'tablets', label: 'Tablets', emoji: '📟' },
-  { slug: 'audio', label: 'Audio', emoji: '🎧' },
-  { slug: 'wearables', label: 'Watches', emoji: '⌚' },
-  { slug: 'gaming', label: 'Gaming', emoji: '🎮' },
-  { slug: 'tvs', label: 'TVs', emoji: '📺' },
-  { slug: 'power-banks', label: 'Power', emoji: '🔋' },
+  { slug: 'smartphones', label: 'Phones', key: 'phones' as const },
+  { slug: 'laptops', label: 'Laptops', key: 'laptops' as const },
+  { slug: 'tablets', label: 'Tablets', key: 'tablets' as const },
+  { slug: 'audio', label: 'Audio', key: 'audio' as const },
+  { slug: 'wearables', label: 'Watches', key: 'watches' as const },
+  { slug: 'gaming', label: 'Gaming', key: 'gaming' as const },
+  { slug: 'tvs', label: 'TVs', key: 'tvs' as const },
+  { slug: 'power-banks', label: 'Power', key: 'power' as const },
 ];
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,6 @@ export default async function HomePage() {
 
   return (
     <div className="bg-surface-950 light:bg-slate-50">
-      {/* Hero */}
       <section className="relative min-h-[65vh] overflow-hidden sm:min-h-[70vh]">
         <div className="absolute inset-0">
           <Image
@@ -52,7 +52,6 @@ export default async function HomePage() {
             className="object-cover object-center opacity-60"
             sizes="100vw"
           />
-          {/* Stronger overlay = clearer white text */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/65 to-surface-950 light:to-slate-50" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-brand-950/50 to-black/30" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(37,99,235,0.25),transparent_55%)]" />
@@ -91,16 +90,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories — no duplicate theme bar */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-8 sm:gap-3">
           {categories.map((c) => (
             <Link
               key={c.slug}
               href={`/categories/${c.slug}`}
-              className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-700/80 bg-surface-900/80 p-2.5 text-center shadow-card transition hover:border-brand-500/50 hover:shadow-neon light:border-slate-200 light:bg-white light:shadow-sm light:hover:border-brand-400 sm:gap-2 sm:p-3"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-surface-700/80 bg-surface-900/80 p-2 text-center shadow-card transition hover:border-brand-500/50 hover:shadow-neon light:border-slate-200 light:bg-white light:shadow-sm light:hover:border-brand-400 sm:p-2.5"
             >
-              <span className="text-xl sm:text-2xl">{c.emoji}</span>
+              <span className="relative block aspect-square w-full overflow-hidden rounded-xl bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={categoryImages[c.key]}
+                  alt={c.label}
+                  className="h-full w-full object-contain p-1"
+                />
+              </span>
               <span className="text-[11px] font-semibold text-surface-100 light:text-slate-800 sm:text-xs">
                 {c.label}
               </span>
