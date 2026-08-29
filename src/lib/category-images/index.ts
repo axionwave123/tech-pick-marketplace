@@ -1,19 +1,11 @@
-import { img as phones } from './phones';
-import { img as laptops } from './laptops';
-import { img as tablets } from './tablets';
-import { img as audio } from './audio';
-import { img as watches } from './watches';
-import { img as gaming } from './gaming';
-import { img as tvs } from './tvs';
-import { img as power } from './power';
-
+/** Category tile images — your uploaded product photos */
 export const categoryImages = {
-  phones,
-  laptops,
-  tablets,
-  audio,
-  watches,
-  gaming,
-  tvs,
-  power,
+  phones: 'https://litter.catbox.moe/z67q3e.jpg',
+  laptops: 'https://litter.catbox.moe/45bmt3.jpg',
+  tablets: 'https://litter.catbox.moe/khbfh2.jpg',
+  audio: 'https://litter.catbox.moe/xewl8h.jpg',
+  watches: 'https://litter.catbox.moe/cy7vc3.jpg',
+  gaming: 'https://litter.catbox.moe/jie2hi.jpg',
+  tvs: 'https://litter.catbox.moe/haiq4t.jpg',
+  power: 'https://litter.catbox.moe/6l4947.jpg',
 } as const;

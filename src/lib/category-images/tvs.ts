@@ -1,1 +1,1 @@
-export { img } from './laptops';
+export const img = 'https://litter.catbox.moe/haiq4t.jpg';
