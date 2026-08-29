@@ -1,1 +1,1 @@
-export const img = 'PLACEHOLDER';
+export { img } from './laptops';
