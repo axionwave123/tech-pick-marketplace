@@ -3,6 +3,8 @@ import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { PageNav } from '@/components/layout/PageNav';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -31,13 +33,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${jakarta.variable} font-sans min-h-screen flex flex-col bg-surface-950 text-surface-100`}
+        className={`${outfit.variable} ${jakarta.variable} font-sans min-h-screen flex flex-col bg-surface-950 text-surface-100 light:bg-slate-50 light:text-slate-900`}
       >
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <ThemeProvider>
+          <Header />
+          <PageNav />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -47,7 +48,12 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Support html.light as inverse of dark (pair with class strategy)
+    function ({ addVariant }: { addVariant: (name: string, value: string) => void }) {
+      addVariant('light', 'html.light &');
+    },
+  ],
 };
 
 export default config;
