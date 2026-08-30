@@ -88,7 +88,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Category grid — product photos (not emoji) */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-8 sm:gap-3">
           {categories.map((c) => (
@@ -105,7 +104,6 @@ export default async function HomePage() {
                   width={120}
                   height={120}
                   className="h-full w-full object-contain"
-                  loading="eager"
                 />
               </span>
               <span className="text-[11px] font-semibold text-surface-100 light:text-slate-800 sm:text-xs">
@@ -121,10 +119,7 @@ export default async function HomePage() {
           <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
             Trending Products
           </h2>
-          <Link
-            href="/search"
-            className="text-sm font-semibold text-brand-300 hover:text-brand-200 light:text-brand-600"
-          >
+          <Link href="/search" className="text-sm font-semibold text-brand-300 light:text-brand-600">
             View all
           </Link>
         </div>
