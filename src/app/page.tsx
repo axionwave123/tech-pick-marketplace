@@ -5,7 +5,6 @@ import { getPublishedProducts, getDeals } from '@/lib/data/products';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import { categoryImages } from '@/lib/category-images';
 
-// Category photos: phones, laptops, tablets, audio, watches, gaming, tvs, power
 const categories = [
   { slug: 'smartphones', label: 'Phones', key: 'phones' as const },
   { slug: 'laptops', label: 'Laptops', key: 'laptops' as const },
@@ -89,6 +88,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Category grid — product photos (not emoji) */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-8 sm:gap-3">
           {categories.map((c) => (
@@ -105,6 +105,7 @@ export default async function HomePage() {
                   width={120}
                   height={120}
                   className="h-full w-full object-contain"
+                  loading="eager"
                 />
               </span>
               <span className="text-[11px] font-semibold text-surface-100 light:text-slate-800 sm:text-xs">
