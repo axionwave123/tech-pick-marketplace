@@ -5,6 +5,7 @@ import { getPublishedProducts, getDeals } from '@/lib/data/products';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import { categoryImages } from '@/lib/category-images';
 
+// Category photos: phones, laptops, tablets, audio, watches, gaming, tvs, power
 const categories = [
   { slug: 'smartphones', label: 'Phones', key: 'phones' as const },
   { slug: 'laptops', label: 'Laptops', key: 'laptops' as const },
@@ -96,12 +97,14 @@ export default async function HomePage() {
               href={`/categories/${c.slug}`}
               className="flex flex-col items-center gap-2 rounded-2xl border border-surface-700/80 bg-surface-900/80 p-2 text-center shadow-card transition hover:border-brand-500/50 hover:shadow-neon light:border-slate-200 light:bg-white light:shadow-sm light:hover:border-brand-400 sm:p-2.5"
             >
-              <span className="relative block aspect-square w-full overflow-hidden rounded-xl bg-white">
+              <span className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-white p-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={categoryImages[c.key]}
                   alt={c.label}
-                  className="h-full w-full object-contain p-1"
+                  width={120}
+                  height={120}
+                  className="h-full w-full object-contain"
                 />
               </span>
               <span className="text-[11px] font-semibold text-surface-100 light:text-slate-800 sm:text-xs">
