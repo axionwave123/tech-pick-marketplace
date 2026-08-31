@@ -11,7 +11,7 @@
 html.light {
   --background: #f1f5f9;
   --foreground: #0f172a;
-  --muted: #475569;
+  --muted: #334155;
 }
 
 html.dark {
@@ -20,6 +20,7 @@ html.dark {
   --muted: #cbd5e1;
 }
 
+html,
 body {
   color: var(--foreground);
   background: var(--background);
@@ -27,13 +28,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Default readable text when no explicit text-* class is set */
+/* Always force full-page bg from theme (beats utility order issues) */
+html.dark,
+html.dark body {
+  background-color: #050508 !important;
+  color: #f8fafc;
+}
+
+html.light,
+html.light body {
+  background-color: #f1f5f9 !important;
+  color: #0f172a;
+}
+
 h1, h2, h3, h4, h5, h6 {
   color: var(--foreground);
 }
 
-p, li, dd, dt, span, a {
-  /* inherit unless overridden by utility classes */
+/*
+ * High-contrast overrides for pages that still use fixed surface-* text colors.
+ * Only apply outside white/light cards so ProductCards stay dark-on-white.
+ */
+html.dark .text-surface-900:not(.bg-white *):not([class*='bg-white'] *) {
+  color: #f8fafc;
 }
 
 @layer utilities {
@@ -48,7 +65,6 @@ p, li, dd, dt, span, a {
     display: none;
   }
 
-  /* Semantic readable text helpers */
   .text-readable {
     color: #f8fafc;
   }
@@ -59,7 +75,7 @@ p, li, dd, dt, span, a {
     color: #cbd5e1;
   }
   html.light .text-readable-muted {
-    color: #475569;
+    color: #334155;
   }
 }
 
