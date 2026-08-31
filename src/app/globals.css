@@ -4,17 +4,20 @@
 
 :root {
   --background: #050508;
-  --foreground: #f1f5f9;
+  --foreground: #f8fafc;
+  --muted: #cbd5e1;
 }
 
 html.light {
   --background: #f1f5f9;
   --foreground: #0f172a;
+  --muted: #475569;
 }
 
 html.dark {
   --background: #050508;
-  --foreground: #f1f5f9;
+  --foreground: #f8fafc;
+  --muted: #cbd5e1;
 }
 
 body {
@@ -22,6 +25,15 @@ body {
   background: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Default readable text when no explicit text-* class is set */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground);
+}
+
+p, li, dd, dt, span, a {
+  /* inherit unless overridden by utility classes */
 }
 
 @layer utilities {
@@ -35,9 +47,22 @@ body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Semantic readable text helpers */
+  .text-readable {
+    color: #f8fafc;
+  }
+  html.light .text-readable {
+    color: #0f172a;
+  }
+  .text-readable-muted {
+    color: #cbd5e1;
+  }
+  html.light .text-readable-muted {
+    color: #475569;
+  }
 }
 
-/* Light-mode helper: use with class "light:" via parent html.light */
 html.light .light\:bg-white\/95 {
   background-color: rgb(255 255 255 / 0.95);
 }
