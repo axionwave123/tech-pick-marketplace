@@ -29,15 +29,21 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-surface-950/95 backdrop-blur-md light:border-slate-200 light:bg-white/95">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2 font-display font-bold text-white light:text-slate-900"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white shadow-neon">
+        <div className="flex shrink-0 items-center gap-2 font-display font-bold text-white light:text-slate-900">
+          {/* Blue TP badge → admin login / dashboard */}
+          <Link
+            href="/admin/login"
+            title="Admin login & dashboard"
+            aria-label="Open admin login"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white shadow-neon transition hover:bg-brand-500"
+          >
             TP
-          </span>
-          <span className="text-sm font-bold tracking-tight sm:text-base">TechPick NG</span>
-        </Link>
+          </Link>
+          {/* Site name → public homepage */}
+          <Link href="/" className="text-sm font-bold tracking-tight sm:text-base">
+            TechPick NG
+          </Link>
+        </div>
 
         <form onSubmit={onSearch} className="mx-auto hidden max-w-xl flex-1 md:flex">
           <div className="relative w-full">
@@ -110,6 +116,13 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              href="/admin/login"
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-3 text-sm font-bold text-brand-300 hover:bg-white/5 light:text-brand-600 light:hover:bg-slate-50"
+            >
+              Admin login
+            </Link>
           </nav>
         </div>
       )}
