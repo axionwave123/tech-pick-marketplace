@@ -1,0 +1,1 @@
+Redeploy triggered 2026-08-31 to load NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY into production.
