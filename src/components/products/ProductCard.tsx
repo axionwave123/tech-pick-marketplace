@@ -29,7 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
             sizes="(max-width: 640px) 50vw, 25vw"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-surface-300 text-sm">No image</div>
+          <div className="flex h-full items-center justify-center text-sm text-surface-500">No image</div>
         )}
         {discount && (
           <Badge variant="discount" className="absolute left-2 top-2">
@@ -39,9 +39,11 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
       <div className="flex flex-1 flex-col p-4">
         {product.brands && (
-          <p className="text-xs font-medium uppercase tracking-wide text-surface-400">{product.brands.name}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-surface-600">
+            {product.brands.name}
+          </p>
         )}
-        <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-surface-900 group-hover:text-brand-700">
+        <h3 className="mt-1 line-clamp-2 text-sm font-bold text-surface-900 group-hover:text-brand-700">
           {product.name}
         </h3>
         <div className="mt-2">
@@ -52,14 +54,17 @@ export function ProductCard({ product }: { product: Product }) {
             <>
               <p className="text-lg font-bold text-surface-900">{formatNaira(bestOffer.price)}</p>
               {bestOffer.original_price && bestOffer.original_price > bestOffer.price && (
-                <p className="text-xs text-surface-400 line-through">{formatNaira(bestOffer.original_price)}</p>
+                <p className="text-xs text-surface-500 line-through">
+                  {formatNaira(bestOffer.original_price)}
+                </p>
               )}
-              <p className="mt-1 text-xs text-surface-500">
-                {product.product_offers?.length || 0} store{(product.product_offers?.length || 0) !== 1 ? 's' : ''}
+              <p className="mt-1 text-xs font-medium text-surface-600">
+                {product.product_offers?.length || 0} store
+                {(product.product_offers?.length || 0) !== 1 ? 's' : ''}
               </p>
             </>
           ) : (
-            <p className="text-sm text-surface-500">Price unavailable</p>
+            <p className="text-sm font-medium text-surface-600">Price unavailable</p>
           )}
         </div>
       </div>
