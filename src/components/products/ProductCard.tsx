@@ -5,6 +5,24 @@ import { Rating } from '@/components/ui/Rating';
 import { Badge } from '@/components/ui/Badge';
 import type { Product } from '@/types';
 
+function dealUrlFor(product: Product): string {
+  const bestOffer = product.product_offers
+    ?.filter((o) => o.status === 'active')
+    ?.sort((a, b) => a.price - b.price)?.[0];
+
+  const raw = (bestOffer?.affiliate_url || bestOffer?.product_url || '').trim();
+  // Reject empty or bare store homepages
+  if (
+    raw &&
+    !/^https?:\/\/(www\.)?(jumia\.com\.ng|amazon\.com|konga\.com)\/?$/i.test(raw) &&
+    !/^https?:\/\/(www\.)?amazon\.com\/\?/i.test(raw)
+  ) {
+    return raw;
+  }
+  // Always work: Jumia search for this product name
+  return `https://www.jumia.com.ng/catalog/?q=${encodeURIComponent(product.name)}`;
+}
+
 export function ProductCard({ product }: { product: Product }) {
   const image = product.product_images?.find((i) => i.is_primary) ?? product.product_images?.[0];
   const bestOffer = product.product_offers
@@ -14,14 +32,14 @@ export function ProductCard({ product }: { product: Product }) {
     ? formatDiscount(bestOffer.original_price, bestOffer.price)
     : null;
 
-  // Always a clean URL slug (never spaces)
   const pathSlug = slugify(String(product.slug || product.name || 'product'));
   const productHref = `/products/${pathSlug}`;
+  const dealHref = dealUrlFor(product);
+  const storeName = bestOffer?.stores?.name || 'Jumia';
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-surface-200 bg-white shadow-card transition hover:shadow-card-hover">
       <Link href={productHref} className="block">
-        {/* Shorter image area */}
         <div className="relative h-28 bg-surface-50 sm:h-32">
           {image ? (
             <Image
@@ -65,18 +83,25 @@ export function ProductCard({ product }: { product: Product }) {
               </p>
             </div>
           ) : (
-            <p className="mt-1 text-xs font-medium text-surface-600">Price unavailable</p>
+            <p className="mt-1 text-xs font-medium text-surface-600">Check price on Jumia</p>
           )}
         </div>
       </Link>
 
-      {/* Always open the product page on TechPick */}
-      <div className="mt-auto px-2 pb-2">
-        <Link
-          href={productHref}
+      <div className="mt-auto flex flex-col gap-1.5 px-2 pb-2">
+        <a
+          href={dealHref}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
           className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-2 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 sm:text-xs"
         >
-          View deal
+          View deal on {storeName}
+        </a>
+        <Link
+          href={productHref}
+          className="flex w-full items-center justify-center rounded-lg border border-surface-200 bg-surface-50 px-2 py-1 text-[10px] font-semibold text-surface-700 hover:bg-surface-100 sm:text-[11px]"
+        >
+          Details on TechPick
         </Link>
       </div>
     </div>
