@@ -1,7 +1,9 @@
-import { getProductsByCategorySlug } from '@/lib/data/products';
+import { getProductsByCategorySlug, getCategories } from '@/lib/data/products';
 import { ProductCard } from '@/components/products/ProductCard';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -19,7 +21,10 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { category, products } = await getProductsByCategorySlug(slug);
+  const [{ category, products }, categories] = await Promise.all([
+    getProductsByCategorySlug(slug),
+    getCategories(),
+  ]);
 
   if (!category) notFound();
 
@@ -28,6 +33,10 @@ export default async function CategoryPage({
       <nav className="text-sm font-medium text-surface-300 light:text-slate-600">
         <Link href="/" className="hover:text-brand-400 light:hover:text-brand-600">
           Home
+        </Link>
+        <span className="mx-1 opacity-60">/</span>
+        <Link href="/search" className="hover:text-brand-400 light:hover:text-brand-600">
+          Categories
         </Link>
         <span className="mx-1 opacity-60">/</span>
         <span className="text-white light:text-slate-900">{category.name}</span>
@@ -42,23 +51,37 @@ export default async function CategoryPage({
         {products.length} products
       </p>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">
-        <aside className="rounded-2xl border border-surface-600 bg-surface-900 p-4 light:border-slate-200 light:bg-white">
-          <h2 className="text-sm font-bold text-white light:text-slate-900">Filter</h2>
-          <p className="mt-2 text-xs font-medium text-surface-300 light:text-slate-600">
-            Price, brand, RAM, storage — extend with URL params.
+      <div className="mt-5 flex flex-wrap gap-2">
+        <Link
+          href="/search"
+          className="rounded-full bg-surface-800 px-3 py-1.5 text-xs font-bold text-surface-200 hover:bg-surface-700 light:bg-slate-100 light:text-slate-700 sm:text-sm"
+        >
+          All
+        </Link>
+        {categories.map((c) => (
+          <Link
+            key={c.id}
+            href={`/categories/${c.slug}`}
+            className={`rounded-full px-3 py-1.5 text-xs font-bold sm:text-sm ${
+              c.slug === slug
+                ? 'bg-brand-600 text-white'
+                : 'bg-surface-800 text-surface-200 hover:bg-surface-700 light:bg-slate-100 light:text-slate-700'
+            }`}
+          >
+            {c.name}
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} />
+        ))}
+        {products.length === 0 && (
+          <p className="col-span-full font-medium text-surface-300 light:text-slate-600">
+            No published products in this category yet.
           </p>
-        </aside>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-          {products.length === 0 && (
-            <p className="col-span-full font-medium text-surface-300 light:text-slate-600">
-              No published products in this category yet.
-            </p>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
