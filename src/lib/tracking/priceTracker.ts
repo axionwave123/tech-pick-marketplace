@@ -1,4 +1,5 @@
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient, createClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type TrackResult = {
   offersChecked: number;
@@ -64,16 +65,29 @@ async function fetchPage(url: string): Promise<string | null> {
 function pickPrice(prices: number[], previous: number | null): number | null {
   if (!prices.length) return null;
   if (previous && previous > 0) {
-    // Prefer price within 40% of previous to avoid accessories/noise
     const near = prices.filter((p) => p >= previous * 0.6 && p <= previous * 1.5);
     if (near.length) return near[0];
   }
   return prices[0];
 }
 
+async function resolveClient(client?: SupabaseClient): Promise<SupabaseClient> {
+  if (client) return client;
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
+  // Fallback: cookie-bound admin session (manual runs)
+  try {
+    return await createClient();
+  } catch {
+    return createServiceClient();
+  }
+}
+
 /** Check active offers, log history, update price + availability */
-export async function runDailyPriceTrack(limit = 40): Promise<TrackResult> {
-  const supabase = createServiceClient();
+export async function runDailyPriceTrack(
+  limit = 40,
+  client?: SupabaseClient
+): Promise<TrackResult> {
+  const supabase = await resolveClient(client);
   const errors: string[] = [];
   let offersChecked = 0;
   let pricesChanged = 0;
@@ -91,7 +105,7 @@ export async function runDailyPriceTrack(limit = 40): Promise<TrackResult> {
       pricesChanged: 0,
       inventoryAlerts: 0,
       errors: [runErr.message],
-      summary: 'Failed to start run',
+      summary: `Failed to start run: ${runErr.message}`,
     };
   }
 
@@ -123,7 +137,6 @@ export async function runDailyPriceTrack(limit = 40): Promise<TrackResult> {
 
     if (!html) {
       errors.push(`Fetch failed: ${product?.name || offer.id}`);
-      // Still stamp last_checked so we rotate through offers
       await supabase
         .from('product_offers')
         .update({ last_checked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
