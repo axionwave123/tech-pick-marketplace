@@ -14,6 +14,27 @@ const productSelect = `
   )
 `;
 
+export type CategoryOption = { id: string; name: string; slug: string };
+
+export async function getCategories(): Promise<CategoryOption[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('categories')
+      .select('id, name, slug')
+      .order('name');
+    if (error) {
+      console.error(error);
+      return [];
+    }
+    return (data as CategoryOption[]) || [];
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
 export async function getPublishedProducts(limit = 12): Promise<Product[]> {
   if (!isSupabaseConfigured()) return [];
   try {
@@ -38,7 +59,6 @@ export async function getPublishedProducts(limit = 12): Promise<Product[]> {
 export async function getProductBySlug(rawSlug: string): Promise<Product | null> {
   if (!isSupabaseConfigured()) return null;
   try {
-    // Next may pass encoded segments; normalize
     let slug = rawSlug;
     try {
       slug = decodeURIComponent(rawSlug);
@@ -56,7 +76,6 @@ export async function getProductBySlug(rawSlug: string): Promise<Product | null>
       ),
       editorial_reviews (*)`;
 
-    // 1) Exact slug match
     let { data, error } = await supabase
       .from('products')
       .select(detailSelect)
@@ -75,7 +94,6 @@ export async function getProductBySlug(rawSlug: string): Promise<Product | null>
       error = res.error;
     }
 
-    // 2) Fallback: match slug containing the clean form, or name ilike
     if (!data && clean) {
       const res = await supabase
         .from('products')
@@ -99,16 +117,49 @@ export async function getProductBySlug(rawSlug: string): Promise<Product | null>
   }
 }
 
-export async function searchProducts(query: string, limit = 24): Promise<Product[]> {
+export async function searchProducts(
+  query: string,
+  options?: { categorySlug?: string; limit?: number }
+): Promise<Product[]> {
   if (!isSupabaseConfigured()) return [];
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const limit = options?.limit ?? 48;
+    const categorySlug = options?.categorySlug?.trim();
+
+    let categoryId: string | null = null;
+    if (categorySlug) {
+      const { data: cat } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', categorySlug)
+        .maybeSingle();
+      categoryId = cat?.id ?? null;
+      if (!categoryId) return [];
+    }
+
+    let req = supabase
       .from('products')
       .select(productSelect)
       .eq('status', 'published')
-      .ilike('name', `%${query}%`)
+      .order('published_at', { ascending: false })
       .limit(limit);
+
+    if (categoryId) {
+      req = req.eq('category_id', categoryId);
+    }
+
+    const q = query.trim();
+    if (q) {
+      req = req.ilike('name', `%${q}%`);
+    }
+
+    // If no query and no category, still return recent published
+    if (!q && !categoryId) {
+      req = req.limit(limit);
+    }
+
+    const { data, error } = await req;
     if (error) {
       console.error(error);
       return [];
