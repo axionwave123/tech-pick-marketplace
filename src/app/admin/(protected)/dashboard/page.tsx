@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/admin';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export default async function AdminDashboard() {
   const auth = await requireAdmin();
@@ -18,32 +19,80 @@ export default async function AdminDashboard() {
   ]);
 
   const stats = [
-    { label: 'Products', value: products.count ?? 0 },
-    { label: 'Articles', value: articles.count ?? 0 },
-    { label: 'Editorial reviews', value: editorial.count ?? 0 },
-    { label: 'Pending community', value: comments.count ?? 0 },
-    { label: 'Stores', value: stores.count ?? 0 },
-    { label: 'Active offers', value: offers.count ?? 0 },
+    { label: 'Products', value: products.count ?? 0, href: '/admin/products' },
+    { label: 'Active offers / prices', value: offers.count ?? 0, href: '/admin/offers' },
+    { label: 'Articles', value: articles.count ?? 0, href: '/admin/articles' },
+    { label: 'Editorial reviews', value: editorial.count ?? 0, href: '/admin/reviews' },
+    { label: 'Pending community', value: comments.count ?? 0, href: '/admin/moderation' },
+    { label: 'Stores', value: stores.count ?? 0, href: '/admin/stores' },
+  ];
+
+  const quick = [
+    {
+      href: '/admin/products',
+      title: 'Product list',
+      desc: 'View, open, and manage all products',
+    },
+    {
+      href: '/admin/products/new',
+      title: 'Add product',
+      desc: 'Name, image upload, price, publish',
+      primary: true,
+    },
+    {
+      href: '/admin/offers',
+      title: 'See prices',
+      desc: 'All store offers and last-checked times',
+    },
   ];
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-white">Dashboard</h1>
       <p className="mt-1 text-sm text-surface-400">Welcome back, Admin</p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-surface-800 bg-surface-900 p-5">
-            <p className="text-sm text-surface-400">{s.label}</p>
-            <p className="mt-1 text-3xl font-bold text-white">{s.value}</p>
-          </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        {quick.map((q) => (
+          <Link
+            key={q.href}
+            href={q.href}
+            className={`rounded-xl border p-4 transition ${
+              q.primary
+                ? 'border-brand-500 bg-brand-600 text-white hover:bg-brand-500'
+                : 'border-surface-700 bg-surface-900 hover:border-brand-500/50'
+            }`}
+          >
+            <p className={`text-base font-bold ${q.primary ? 'text-white' : 'text-white'}`}>{q.title}</p>
+            <p className={`mt-1 text-xs ${q.primary ? 'text-brand-100' : 'text-surface-400'}`}>{q.desc}</p>
+          </Link>
         ))}
       </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {stats.map((s) => (
+          <Link
+            key={s.label}
+            href={s.href}
+            className="rounded-xl border border-surface-800 bg-surface-900 p-5 transition hover:border-brand-500/40"
+          >
+            <p className="text-sm text-surface-400">{s.label}</p>
+            <p className="mt-1 text-3xl font-bold text-white">{s.value}</p>
+          </Link>
+        ))}
+      </div>
+
       <div className="mt-8 rounded-xl border border-surface-800 bg-surface-900 p-5">
-        <h2 className="font-semibold text-white">System notes</h2>
+        <h2 className="font-semibold text-white">Quick tips</h2>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-surface-400">
-          <li>AI research never auto-publishes — approve in AI Research.</li>
-          <li>Affiliate click analytics can be fed via analytics_events.</li>
-          <li>Offers needing updates: filter by last_checked_at in Offers.</li>
+          <li>
+            Use <strong className="text-surface-200">Add product</strong> to upload an image and set a ₦
+            price.
+          </li>
+          <li>
+            <strong className="text-surface-200">See prices</strong> lists every store offer and when it was
+            last checked.
+          </li>
+          <li>Published products show on the public site; drafts stay admin-only.</li>
         </ul>
       </div>
     </div>
