@@ -9,17 +9,19 @@ export default async function AdminDashboard() {
 
   const supabase = await createClient();
 
-  const [products, articles, editorial, comments, stores, offers] = await Promise.all([
+  const [products, articles, editorial, comments, stores, offers, drafts] = await Promise.all([
     supabase.from('products').select('id', { count: 'exact', head: true }),
     supabase.from('articles').select('id', { count: 'exact', head: true }),
     supabase.from('editorial_reviews').select('id', { count: 'exact', head: true }),
     supabase.from('user_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('stores').select('id', { count: 'exact', head: true }),
     supabase.from('product_offers').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('products').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
   ]);
 
   const stats = [
     { label: 'Products', value: products.count ?? 0, href: '/admin/products' },
+    { label: 'Drafts / needs review', value: drafts.count ?? 0, href: '/admin/needs-update' },
     { label: 'Active offers / prices', value: offers.count ?? 0, href: '/admin/offers' },
     { label: 'Articles', value: articles.count ?? 0, href: '/admin/articles' },
     { label: 'Editorial reviews', value: editorial.count ?? 0, href: '/admin/reviews' },
@@ -29,20 +31,20 @@ export default async function AdminDashboard() {
 
   const quick = [
     {
-      href: '/admin/products',
-      title: 'Product list',
-      desc: 'View, open, and manage all products',
+      href: '/admin/research',
+      title: 'AI Research',
+      desc: 'Type a name → create draft for approval',
+    },
+    {
+      href: '/admin/needs-update',
+      title: 'Needs update',
+      desc: 'Drafts, missing image/price, stale prices',
+      primary: true,
     },
     {
       href: '/admin/products/new',
       title: 'Add product',
-      desc: 'Name, image upload, price, publish',
-      primary: true,
-    },
-    {
-      href: '/admin/offers',
-      title: 'See prices',
-      desc: 'All store offers and last-checked times',
+      desc: 'Manual: image + ₦ price + publish',
     },
   ];
 
@@ -62,7 +64,7 @@ export default async function AdminDashboard() {
                 : 'border-surface-700 bg-surface-900 hover:border-brand-500/50'
             }`}
           >
-            <p className={`text-base font-bold ${q.primary ? 'text-white' : 'text-white'}`}>{q.title}</p>
+            <p className="text-base font-bold text-white">{q.title}</p>
             <p className={`mt-1 text-xs ${q.primary ? 'text-brand-100' : 'text-surface-400'}`}>{q.desc}</p>
           </Link>
         ))}
@@ -82,18 +84,17 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="mt-8 rounded-xl border border-surface-800 bg-surface-900 p-5">
-        <h2 className="font-semibold text-white">Quick tips</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-surface-400">
+        <h2 className="font-semibold text-white">How auto draft works</h2>
+        <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-surface-400">
           <li>
-            Use <strong className="text-surface-200">Add product</strong> to upload an image and set a ₦
-            price.
+            Open <strong className="text-surface-200">AI Research</strong>, type a product name, run research.
           </li>
+          <li>A <strong className="text-surface-200">draft</strong> is saved (not public).</li>
           <li>
-            <strong className="text-surface-200">See prices</strong> lists every store offer and when it was
-            last checked.
+            Open <strong className="text-surface-200">Needs update</strong> → add image & price → Publish when
+            ready.
           </li>
-          <li>Published products show on the public site; drafts stay admin-only.</li>
-        </ul>
+        </ol>
       </div>
     </div>
   );
