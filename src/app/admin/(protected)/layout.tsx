@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 const primaryNav = [
-  { href: '/admin/products', label: 'Product list' },
+  { href: '/admin/products', label: 'Edit products' },
   { href: '/admin/products/new', label: 'Add product', highlight: true },
   { href: '/admin/offers', label: 'See prices' },
   { href: '/admin/needs-update', label: 'Needs update' },
@@ -12,7 +12,7 @@ const primaryNav = [
 
 const sideLinks = [
   { href: '/admin/dashboard', label: 'Dashboard' },
-  { href: '/admin/products', label: 'Product list' },
+  { href: '/admin/products', label: 'Edit / search products' },
   { href: '/admin/products/new', label: 'Add product' },
   { href: '/admin/offers', label: 'See prices' },
   { href: '/admin/needs-update', label: 'Needs update' },
