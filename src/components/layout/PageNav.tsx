@@ -27,8 +27,14 @@ const labels: Record<string, string> = {
 };
 
 function titleCase(segment: string) {
-  if (labels[segment]) return labels[segment];
-  return segment
+  let s = segment;
+  try {
+    s = decodeURIComponent(segment);
+  } catch {
+    /* keep raw */
+  }
+  if (labels[s]) return labels[s];
+  return s
     .split('-')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
@@ -38,7 +44,6 @@ export function PageNav() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Hide on home
   if (!pathname || pathname === '/') return null;
 
   const parts = pathname.split('/').filter(Boolean);
@@ -50,7 +55,6 @@ export function PageNav() {
   return (
     <div className="sticky top-14 z-40 border-b border-surface-700/80 bg-surface-900/95 backdrop-blur-md dark:border-surface-700/80 dark:bg-surface-900/95 light:border-surface-200 light:bg-white/95 sm:top-16">
       <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 lg:px-8">
-        {/* Back — large, obvious */}
         <button
           type="button"
           onClick={() => {
@@ -67,7 +71,6 @@ export function PageNav() {
           <span className="hidden xs:inline sm:inline">Back</span>
         </button>
 
-        {/* Home shortcut */}
         <Link
           href="/"
           className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-surface-600 text-surface-200 transition hover:border-brand-500/50 hover:text-white light:border-surface-300 light:text-surface-700 light:hover:text-brand-700"
@@ -76,11 +79,7 @@ export function PageNav() {
           <Home className="h-4 w-4" />
         </Link>
 
-        {/* Breadcrumbs */}
-        <nav
-          aria-label="Breadcrumb"
-          className="min-w-0 flex-1 overflow-x-auto scrollbar-hide"
-        >
+        <nav aria-label="Breadcrumb" className="min-w-0 flex-1 overflow-x-auto scrollbar-hide">
           <ol className="flex items-center gap-1 text-xs sm:text-sm">
             <li className="hidden sm:block">
               <Link
