@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
+import { slugify } from '@/lib/utils';
 import type { Product } from '@/types';
 
 const productSelect = `
@@ -34,23 +35,59 @@ export async function getPublishedProducts(limit = 12): Promise<Product[]> {
   }
 }
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
+export async function getProductBySlug(rawSlug: string): Promise<Product | null> {
   if (!isSupabaseConfigured()) return null;
   try {
+    // Next may pass encoded segments; normalize
+    let slug = rawSlug;
+    try {
+      slug = decodeURIComponent(rawSlug);
+    } catch {
+      slug = rawSlug;
+    }
+    slug = slug.trim();
+    const clean = slugify(slug);
+
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('products')
-      .select(
-        `${productSelect},
+    const detailSelect = `${productSelect},
       product_specifications (
         id, value_text, value_number, value_boolean, value_list, spec_def_id,
         specification_definitions (id, key, label, unit, data_type, sort_order)
       ),
-      editorial_reviews (*)`
-      )
+      editorial_reviews (*)`;
+
+    // 1) Exact slug match
+    let { data, error } = await supabase
+      .from('products')
+      .select(detailSelect)
       .eq('slug', slug)
       .eq('status', 'published')
       .maybeSingle();
+
+    if (!data && clean && clean !== slug) {
+      const res = await supabase
+        .from('products')
+        .select(detailSelect)
+        .eq('slug', clean)
+        .eq('status', 'published')
+        .maybeSingle();
+      data = res.data;
+      error = res.error;
+    }
+
+    // 2) Fallback: match slug containing the clean form, or name ilike
+    if (!data && clean) {
+      const res = await supabase
+        .from('products')
+        .select(detailSelect)
+        .eq('status', 'published')
+        .or(`slug.ilike.%${clean}%,name.ilike.%${slug.replace(/-/g, ' ')}%`)
+        .limit(1)
+        .maybeSingle();
+      data = res.data;
+      error = res.error;
+    }
+
     if (error) {
       console.error(error);
       return null;
