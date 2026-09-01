@@ -2,11 +2,12 @@ import { requireAdmin } from '@/lib/auth/admin';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-/** Primary product actions — always visible in the top header */
 const primaryNav = [
   { href: '/admin/products', label: 'Product list' },
-  { href: '/admin/products/new', label: 'Add product' },
+  { href: '/admin/products/new', label: 'Add product', highlight: true },
   { href: '/admin/offers', label: 'See prices' },
+  { href: '/admin/needs-update', label: 'Needs update' },
+  { href: '/admin/research', label: 'AI Research' },
 ];
 
 const sideLinks = [
@@ -14,10 +15,11 @@ const sideLinks = [
   { href: '/admin/products', label: 'Product list' },
   { href: '/admin/products/new', label: 'Add product' },
   { href: '/admin/offers', label: 'See prices' },
+  { href: '/admin/needs-update', label: 'Needs update' },
+  { href: '/admin/research', label: 'AI Research' },
   { href: '/admin/reviews', label: 'Reviews' },
   { href: '/admin/articles', label: 'Articles' },
   { href: '/admin/stores', label: 'Stores' },
-  { href: '/admin/research', label: 'AI Research' },
   { href: '/admin/moderation', label: 'Moderation' },
   { href: '/admin/analytics', label: 'Analytics' },
 ];
@@ -48,7 +50,6 @@ export default async function ProtectedAdminLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-950 text-surface-100">
-      {/* Top header — Product list / Add product / See prices always visible */}
       <header className="sticky top-0 z-40 border-b border-surface-800 bg-surface-900">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
           <Link href="/admin/dashboard" className="flex shrink-0 items-center gap-2 font-bold text-white">
@@ -64,7 +65,7 @@ export default async function ProtectedAdminLayout({
                 key={l.href}
                 href={l.href}
                 className={`shrink-0 rounded-lg px-3 py-2 text-xs font-bold sm:text-sm ${
-                  l.href === '/admin/products/new'
+                  l.highlight
                     ? 'bg-brand-600 text-white hover:bg-brand-500'
                     : 'bg-surface-800 text-surface-100 hover:bg-surface-700 hover:text-white'
                 }`}
@@ -84,7 +85,6 @@ export default async function ProtectedAdminLayout({
       </header>
 
       <div className="flex flex-1">
-        {/* Desktop sidebar */}
         <aside className="hidden w-56 shrink-0 border-r border-surface-800 bg-surface-900 p-4 md:block">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-surface-500">Menu</p>
           <nav className="flex flex-col gap-1">
