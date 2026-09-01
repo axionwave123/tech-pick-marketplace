@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/admin';
 import { slugify } from '@/lib/utils';
+import { researchProductFromWeb } from '@/lib/research/webResearch';
 
 export type ResearchState = {
   error?: string;
@@ -44,6 +45,7 @@ function guessBrandName(name: string): string | null {
     'Nokia',
     'Oraimo',
     'Anker',
+    'Redmi',
   ];
   const lower = name.toLowerCase();
   for (const b of brands) {
@@ -52,7 +54,7 @@ function guessBrandName(name: string): string | null {
   return null;
 }
 
-/** Creates a draft product from a research query — never auto-publishes */
+/** Web research → draft product with image + Jumia price when found. Never auto-publishes. */
 export async function runResearch(
   _prev: ResearchState,
   formData: FormData
@@ -65,17 +67,25 @@ export async function runResearch(
   if (!name) return { error: 'Enter a product name to research.' };
   if (name.length < 3) return { error: 'Name is too short.' };
 
-  const supabase = await createClient();
-  let slug = slugify(name);
+  // Live web research (Jumia links, ₦ prices, images, specs snippets)
+  let web;
+  try {
+    web = await researchProductFromWeb(name);
+  } catch (e) {
+    web = null;
+    console.error('web research failed', e);
+  }
 
-  // Ensure unique slug
+  const supabase = await createClient();
+  let slug = slugify(web?.displayName || name);
+
   const { data: existing } = await supabase.from('products').select('id').eq('slug', slug).maybeSingle();
   if (existing) {
     slug = `${slug}-${Date.now().toString(36).slice(-4)}`;
   }
 
-  const brandName = guessBrandName(name);
-  const catSlug = guessCategorySlug(name);
+  const brandName = guessBrandName(web?.displayName || name);
+  const catSlug = guessCategorySlug(web?.displayName || name);
 
   let brand_id: string | null = null;
   let category_id: string | null = null;
@@ -99,36 +109,42 @@ export async function runResearch(
   }
 
   const researchBlock = [
-    '— Research draft (not published) —',
+    '— AI / web research draft (not published) —',
     `Queried: ${name}`,
-    `Suggested brand: ${brandName || 'unknown — set manually'}`,
-    `Suggested category: ${catSlug || 'unknown — set manually'}`,
+    web ? web.rawNotes : 'Web research unavailable — filled template only.',
     notes ? `Admin notes: ${notes}` : null,
     '',
-    'Next steps for admin:',
-    '1. Add product image',
-    '2. Add store price (₦) under Add product / offers',
-    '3. Fill strengths, specs, and short description',
-    '4. Change status to Published when ready',
+    'Review checklist:',
+    '1. Confirm image matches this model',
+    '2. Confirm ₦ price on Jumia',
+    '3. Edit details if needed',
+    '4. Publish when ready',
   ]
     .filter(Boolean)
     .join('\n');
 
+  const productName = name; // keep admin's typed name for clarity
+
   const { data: product, error } = await supabase
     .from('products')
     .insert({
-      name,
+      name: productName,
       slug,
       status: 'draft',
       brand_id,
       category_id,
-      short_description: `Draft from AI Research. Complete image, price, and details before publishing.`,
-      description: researchBlock,
-      what_stands_out: 'Pending research approval — replace with verified highlights.',
-      strengths: ['Pending verification'],
-      things_to_consider: ['Confirm price on retailer sites', 'Verify specs from official sources'],
-      seo_title: `${name} — TechPick NG`,
-      seo_description: `Compare prices and reviews for ${name} in Nigeria.`,
+      short_description:
+        web?.shortDescription ||
+        `Draft from AI Research for ${name}. Review before publishing.`,
+      description: [web?.description, researchBlock].filter(Boolean).join('\n\n'),
+      what_stands_out: web?.strengths?.[0] || 'Pending final review.',
+      strengths: web?.strengths?.length ? web.strengths : ['Pending verification'],
+      things_to_consider: web?.thingsToConsider || [
+        'Confirm price on retailer sites',
+        'Verify specs from official sources',
+      ],
+      seo_title: `${productName} — TechPick NG`,
+      seo_description: `Compare prices and reviews for ${productName} in Nigeria.`,
       published_at: null,
     })
     .select('id, name, slug')
@@ -138,13 +154,79 @@ export async function runResearch(
     return { error: error.message };
   }
 
+  // Image from web research
+  if (web?.imageUrl) {
+    await supabase.from('product_images').insert({
+      product_id: product.id,
+      url: web.imageUrl,
+      alt_text: productName,
+      is_primary: true,
+      sort_order: 0,
+    });
+  }
+
+  // Jumia (or best) offer with real price when found
+  const { data: jumia } = await supabase
+    .from('stores')
+    .select('id')
+    .ilike('name', 'Jumia')
+    .maybeSingle();
+
+  const productUrl =
+    web?.productUrl || `https://www.jumia.com.ng/catalog/?q=${encodeURIComponent(name)}`;
+
+  if (jumia?.id && web?.price) {
+    const original = web.originalPrice && web.originalPrice > web.price ? web.originalPrice : null;
+    const discount =
+      original && original > web.price
+        ? Math.round(((original - web.price) / original) * 100)
+        : null;
+
+    await supabase.from('product_offers').insert({
+      product_id: product.id,
+      store_id: jumia.id,
+      price: web.price,
+      original_price: original,
+      currency: 'NGN',
+      discount_percent: discount,
+      availability: 'in_stock',
+      product_url: productUrl,
+      affiliate_url: null,
+      last_checked_at: new Date().toISOString(),
+      status: 'active',
+    });
+  } else if (jumia?.id) {
+    // Still attach View deal link even without a parsed price
+    await supabase.from('product_offers').insert({
+      product_id: product.id,
+      store_id: jumia.id,
+      price: 0,
+      original_price: null,
+      currency: 'NGN',
+      discount_percent: null,
+      availability: 'unknown',
+      product_url: productUrl,
+      affiliate_url: null,
+      last_checked_at: new Date().toISOString(),
+      status: 'active',
+    });
+  }
+
   revalidatePath('/admin/research');
   revalidatePath('/admin/products');
   revalidatePath('/admin/needs-update');
   revalidatePath('/admin/dashboard');
 
+  const bits = [
+    `Draft created: “${product.name}”`,
+    web?.imageUrl ? 'image found' : 'no image (add manually)',
+    web?.price ? `price ~₦${web.price.toLocaleString('en-NG')}` : 'price not parsed',
+    web?.productUrl ? 'Jumia/link attached' : 'search link attached',
+    'Not published until you approve',
+  ];
+
   return {
-    success: `Draft created: “${product.name}”. It will not show on the public site until you publish it.`,
+    success: bits.join(' · '),
     productId: product.id,
   };
 }
