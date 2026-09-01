@@ -54,7 +54,7 @@ function guessBrandName(name: string): string | null {
   return null;
 }
 
-/** Web research → draft product with image + Jumia price when found. Never auto-publishes. */
+/** Web research → draft product with image, multi-store prices, review notes. Never auto-publishes. */
 export async function runResearch(
   _prev: ResearchState,
   formData: FormData
@@ -67,7 +67,6 @@ export async function runResearch(
   if (!name) return { error: 'Enter a product name to research.' };
   if (name.length < 3) return { error: 'Name is too short.' };
 
-  // Live web research (Jumia links, ₦ prices, images, specs snippets)
   let web;
   try {
     web = await researchProductFromWeb(name);
@@ -111,19 +110,19 @@ export async function runResearch(
   const researchBlock = [
     '— AI / web research draft (not published) —',
     `Queried: ${name}`,
-    web ? web.rawNotes : 'Web research unavailable — filled template only.',
+    web ? web.rawNotes : 'Web research unavailable — template only.',
     notes ? `Admin notes: ${notes}` : null,
     '',
     'Review checklist:',
     '1. Confirm image matches this model',
-    '2. Confirm ₦ price on Jumia',
-    '3. Edit details if needed',
+    '2. Confirm ₦ prices on Jumia / Amazon / Temu / Konga',
+    '3. Edit review notes if needed',
     '4. Publish when ready',
   ]
     .filter(Boolean)
     .join('\n');
 
-  const productName = name; // keep admin's typed name for clarity
+  const productName = name;
 
   const { data: product, error } = await supabase
     .from('products')
@@ -143,8 +142,10 @@ export async function runResearch(
         'Confirm price on retailer sites',
         'Verify specs from official sources',
       ],
+      best_for: web?.bestFor || null,
+      not_ideal_for: web?.notIdealFor || null,
       seo_title: `${productName} — TechPick NG`,
-      seo_description: `Compare prices and reviews for ${productName} in Nigeria.`,
+      seo_description: `Compare prices and reviews for ${productName} in Nigeria (Jumia, Amazon, Temu).`,
       published_at: null,
     })
     .select('id, name, slug')
@@ -154,7 +155,7 @@ export async function runResearch(
     return { error: error.message };
   }
 
-  // Image from web research
+  // Primary product image
   if (web?.imageUrl) {
     await supabase.from('product_images').insert({
       product_id: product.id,
@@ -165,50 +166,75 @@ export async function runResearch(
     });
   }
 
-  // Jumia (or best) offer with real price when found
-  const { data: jumia } = await supabase
-    .from('stores')
-    .select('id')
-    .ilike('name', 'Jumia')
-    .maybeSingle();
+  // Multi-store offers: Jumia, Amazon, Temu, Konga
+  const { data: stores } = await supabase.from('stores').select('id, slug, name');
+  const storeBySlug = new Map((stores || []).map((s) => [s.slug, s]));
 
-  const productUrl =
-    web?.productUrl || `https://www.jumia.com.ng/catalog/?q=${encodeURIComponent(name)}`;
+  const offerRows =
+    web?.offers?.map((o) => {
+      const store = storeBySlug.get(o.storeSlug);
+      if (!store) return null;
+      const price = o.price && o.price > 0 ? o.price : 0;
+      const original =
+        o.originalPrice && o.originalPrice > price ? o.originalPrice : null;
+      const discount =
+        original && original > price
+          ? Math.round(((original - price) / original) * 100)
+          : null;
+      return {
+        product_id: product.id,
+        store_id: store.id,
+        price,
+        original_price: original,
+        currency: 'NGN',
+        discount_percent: discount,
+        availability: price > 0 ? 'in_stock' : 'unknown',
+        product_url: o.productUrl,
+        affiliate_url: null,
+        last_checked_at: new Date().toISOString(),
+        status: 'active',
+      };
+    }).filter(Boolean) || [];
 
-  if (jumia?.id && web?.price) {
-    const original = web.originalPrice && web.originalPrice > web.price ? web.originalPrice : null;
-    const discount =
-      original && original > web.price
-        ? Math.round(((original - web.price) / original) * 100)
-        : null;
+  if (offerRows.length) {
+    await supabase.from('product_offers').insert(offerRows as any[]);
+  } else {
+    // Fallback: at least Jumia search link
+    const jumia = storeBySlug.get('jumia');
+    if (jumia) {
+      await supabase.from('product_offers').insert({
+        product_id: product.id,
+        store_id: jumia.id,
+        price: 0,
+        currency: 'NGN',
+        availability: 'unknown',
+        product_url: `https://www.jumia.com.ng/catalog/?q=${encodeURIComponent(name)}`,
+        last_checked_at: new Date().toISOString(),
+        status: 'active',
+      });
+    }
+  }
 
-    await supabase.from('product_offers').insert({
+  // Editorial review draft with 2 synthesized “people review” style notes
+  if (web?.reviews?.length) {
+    const r0 = web.reviews[0];
+    const r1 = web.reviews[1];
+    await supabase.from('editorial_reviews').insert({
       product_id: product.id,
-      store_id: jumia.id,
-      price: web.price,
-      original_price: original,
-      currency: 'NGN',
-      discount_percent: discount,
-      availability: 'in_stock',
-      product_url: productUrl,
-      affiliate_url: null,
-      last_checked_at: new Date().toISOString(),
-      status: 'active',
-    });
-  } else if (jumia?.id) {
-    // Still attach View deal link even without a parsed price
-    await supabase.from('product_offers').insert({
-      product_id: product.id,
-      store_id: jumia.id,
-      price: 0,
-      original_price: null,
-      currency: 'NGN',
-      discount_percent: null,
-      availability: 'unknown',
-      product_url: productUrl,
-      affiliate_url: null,
-      last_checked_at: new Date().toISOString(),
-      status: 'active',
+      title: `Research notes: ${productName}`,
+      rating: r0?.rating ?? 4,
+      summary: [r0?.body, r1?.body].filter(Boolean).join('\n\n'),
+      what_stands_out: web.strengths?.[0] || null,
+      strengths: web.strengths || null,
+      things_to_consider: web.thingsToConsider || null,
+      best_for: web.bestFor || null,
+      not_ideal_for: web.notIdealFor || null,
+      verdict:
+        'Draft from web research and public review themes. Admin must verify before treating as official TechPick analysis.',
+      sources: web.sources || [],
+      status: 'draft',
+      published_at: null,
+      author_id: auth.userId || null,
     });
   }
 
@@ -216,12 +242,14 @@ export async function runResearch(
   revalidatePath('/admin/products');
   revalidatePath('/admin/needs-update');
   revalidatePath('/admin/dashboard');
+  revalidatePath('/admin/offers');
 
+  const priced = (web?.offers || []).filter((o) => o.price && o.price > 0).length;
   const bits = [
     `Draft created: “${product.name}”`,
-    web?.imageUrl ? 'image found' : 'no image (add manually)',
-    web?.price ? `price ~₦${web.price.toLocaleString('en-NG')}` : 'price not parsed',
-    web?.productUrl ? 'Jumia/link attached' : 'search link attached',
+    web?.imageUrl ? 'image found' : 'no image (add in Edit)',
+    priced ? `${priced} store price(s)` : 'store links attached',
+    web?.reviews?.length ? `${web.reviews.length} review notes` : 'no review notes',
     'Not published until you approve',
   ];
 
@@ -245,6 +273,13 @@ export async function publishDraft(productId: string): Promise<ResearchState> {
     .eq('id', productId);
 
   if (error) return { error: error.message };
+
+  // Publish linked editorial draft if any
+  await supabase
+    .from('editorial_reviews')
+    .update({ status: 'published', published_at: new Date().toISOString() })
+    .eq('product_id', productId)
+    .eq('status', 'draft');
 
   revalidatePath('/admin/products');
   revalidatePath('/admin/needs-update');
