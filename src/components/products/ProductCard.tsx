@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { formatNaira, formatDiscount } from '@/lib/utils';
+import { formatNaira, formatDiscount, slugify } from '@/lib/utils';
 import { Rating } from '@/components/ui/Rating';
 import { Badge } from '@/components/ui/Badge';
 import type { Product } from '@/types';
@@ -13,21 +13,22 @@ export function ProductCard({ product }: { product: Product }) {
   const discount = bestOffer
     ? formatDiscount(bestOffer.original_price, bestOffer.price)
     : null;
-  const dealUrl = bestOffer?.affiliate_url || bestOffer?.product_url || null;
-  const storeName = bestOffer?.stores?.name || 'store';
-  // Always use a URL-safe slug path
-  const slug = encodeURIComponent(String(product.slug || '').trim());
+
+  // Always a clean URL slug (never spaces)
+  const pathSlug = slugify(String(product.slug || product.name || 'product'));
+  const productHref = `/products/${pathSlug}`;
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-surface-200 bg-white shadow-card transition hover:shadow-card-hover">
-      <Link href={`/products/${slug}`} className="block">
-        <div className="relative aspect-[4/3] bg-surface-50">
+      <Link href={productHref} className="block">
+        {/* Shorter image area */}
+        <div className="relative h-28 bg-surface-50 sm:h-32">
           {image ? (
             <Image
               src={image.url}
               alt={image.alt_text || product.name}
               fill
-              className="object-contain p-2 transition group-hover:scale-[1.02]"
+              className="object-contain p-1.5 transition group-hover:scale-[1.02]"
               sizes="(max-width: 640px) 50vw, 25vw"
             />
           ) : (
@@ -39,7 +40,7 @@ export function ProductCard({ product }: { product: Product }) {
             </Badge>
           )}
         </div>
-        <div className="px-2.5 pb-1 pt-2">
+        <div className="px-2 pb-1 pt-1.5">
           {product.brands && (
             <p className="text-[10px] font-semibold uppercase tracking-wide text-surface-600">
               {product.brands.name}
@@ -48,36 +49,36 @@ export function ProductCard({ product }: { product: Product }) {
           <h3 className="mt-0.5 line-clamp-2 text-xs font-bold leading-snug text-surface-900 group-hover:text-brand-700 sm:text-sm">
             {product.name}
           </h3>
-          <div className="mt-1 scale-90 origin-left">
+          <div className="mt-0.5 scale-90 origin-left">
             <Rating value={product.avg_rating || 0} />
           </div>
           {bestOffer ? (
-            <div className="mt-1.5">
+            <div className="mt-1">
               <p className="text-sm font-bold text-surface-900 sm:text-base">{formatNaira(bestOffer.price)}</p>
               {bestOffer.original_price && bestOffer.original_price > bestOffer.price && (
                 <p className="text-[10px] text-surface-500 line-through">
                   {formatNaira(bestOffer.original_price)}
                 </p>
               )}
+              <p className="text-[10px] text-surface-500">
+                {product.product_offers?.filter((o) => o.status === 'active').length || 1} store
+              </p>
             </div>
           ) : (
-            <p className="mt-1.5 text-xs font-medium text-surface-600">Price unavailable</p>
+            <p className="mt-1 text-xs font-medium text-surface-600">Price unavailable</p>
           )}
         </div>
       </Link>
 
-      {dealUrl && (
-        <div className="mt-auto px-2.5 pb-2.5">
-          <a
-            href={dealUrl}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-2 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 sm:text-xs"
-          >
-            View deal on {storeName}
-          </a>
-        </div>
-      )}
+      {/* Always open the product page on TechPick */}
+      <div className="mt-auto px-2 pb-2">
+        <Link
+          href={productHref}
+          className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-2 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 sm:text-xs"
+        >
+          View deal
+        </Link>
+      </div>
     </div>
   );
 }
