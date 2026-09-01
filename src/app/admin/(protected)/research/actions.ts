@@ -155,7 +155,6 @@ export async function runResearch(
     return { error: error.message };
   }
 
-  // Primary product image
   if (web?.imageUrl) {
     await supabase.from('product_images').insert({
       product_id: product.id,
@@ -166,40 +165,40 @@ export async function runResearch(
     });
   }
 
-  // Multi-store offers: Jumia, Amazon, Temu, Konga
   const { data: stores } = await supabase.from('stores').select('id, slug, name');
   const storeBySlug = new Map((stores || []).map((s) => [s.slug, s]));
 
   const offerRows =
-    web?.offers?.map((o) => {
-      const store = storeBySlug.get(o.storeSlug);
-      if (!store) return null;
-      const price = o.price && o.price > 0 ? o.price : 0;
-      const original =
-        o.originalPrice && o.originalPrice > price ? o.originalPrice : null;
-      const discount =
-        original && original > price
-          ? Math.round(((original - price) / original) * 100)
-          : null;
-      return {
-        product_id: product.id,
-        store_id: store.id,
-        price,
-        original_price: original,
-        currency: 'NGN',
-        discount_percent: discount,
-        availability: price > 0 ? 'in_stock' : 'unknown',
-        product_url: o.productUrl,
-        affiliate_url: null,
-        last_checked_at: new Date().toISOString(),
-        status: 'active',
-      };
-    }).filter(Boolean) || [];
+    web?.offers
+      ?.map((o) => {
+        const store = storeBySlug.get(o.storeSlug);
+        if (!store) return null;
+        const price = o.price && o.price > 0 ? o.price : 0;
+        const original =
+          o.originalPrice && o.originalPrice > price ? o.originalPrice : null;
+        const discount =
+          original && original > price
+            ? Math.round(((original - price) / original) * 100)
+            : null;
+        return {
+          product_id: product.id,
+          store_id: store.id,
+          price,
+          original_price: original,
+          currency: 'NGN',
+          discount_percent: discount,
+          availability: price > 0 ? 'in_stock' : 'unknown',
+          product_url: o.productUrl,
+          affiliate_url: null,
+          last_checked_at: new Date().toISOString(),
+          status: 'active',
+        };
+      })
+      .filter(Boolean) || [];
 
   if (offerRows.length) {
     await supabase.from('product_offers').insert(offerRows as any[]);
   } else {
-    // Fallback: at least Jumia search link
     const jumia = storeBySlug.get('jumia');
     if (jumia) {
       await supabase.from('product_offers').insert({
@@ -215,7 +214,6 @@ export async function runResearch(
     }
   }
 
-  // Editorial review draft with 2 synthesized “people review” style notes
   if (web?.reviews?.length) {
     const r0 = web.reviews[0];
     const r1 = web.reviews[1];
@@ -234,7 +232,7 @@ export async function runResearch(
       sources: web.sources || [],
       status: 'draft',
       published_at: null,
-      author_id: auth.userId || null,
+      author_id: auth.user?.id || null,
     });
   }
 
@@ -274,7 +272,6 @@ export async function publishDraft(productId: string): Promise<ResearchState> {
 
   if (error) return { error: error.message };
 
-  // Publish linked editorial draft if any
   await supabase
     .from('editorial_reviews')
     .update({ status: 'published', published_at: new Date().toISOString() })
