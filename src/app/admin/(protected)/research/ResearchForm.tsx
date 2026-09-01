@@ -23,15 +23,17 @@ export function ResearchForm() {
   return (
     <form onSubmit={onSubmit} className="mt-6 rounded-xl border border-surface-800 bg-surface-900 p-6">
       <p className="text-sm text-surface-400">
-        Type a product name. We search the web (Wikipedia + search results) for{' '}
-        <strong className="text-surface-200">images, ₦ prices, Jumia links, and specs</strong>, then save a{' '}
-        <strong className="text-surface-200">draft</strong> only — never auto-published. Review under{' '}
-        <strong className="text-surface-200">Needs update</strong> or Product list, then publish.
+        Type a product name. We search the web for{' '}
+        <strong className="text-surface-200">
+          description, image, Jumia / Amazon / Temu / Konga links & prices, and 2 review-style notes
+        </strong>
+        , then save a <strong className="text-surface-200">draft</strong> only — never auto-published.
       </p>
-      <p className="mt-2 text-xs text-surface-500">
-        Tip: use a clear model name (e.g. “Infinix Hot 60i” or “Samsung Galaxy A26 8GB”). Research can take
-        5–15 seconds.
-      </p>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-surface-500">
+        <li>Sources: Wikipedia + DuckDuckGo (and Google if SERPER_API_KEY is set on Vercel)</li>
+        <li>Takes about 10–20 seconds</li>
+        <li>You must Edit → confirm prices/image → Publish</li>
+      </ul>
 
       {state.error && (
         <p className="mt-4 rounded-lg border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
@@ -53,8 +55,8 @@ export function ResearchForm() {
             <Link href="/admin/needs-update" className="font-semibold text-brand-300 hover:underline">
               Needs update →
             </Link>
-            <Link href="/admin/products" className="font-semibold text-brand-300 hover:underline">
-              Product list →
+            <Link href="/admin/offers" className="font-semibold text-brand-300 hover:underline">
+              See prices →
             </Link>
           </div>
         </div>
@@ -66,7 +68,7 @@ export function ResearchForm() {
           name="name"
           required
           className="mt-1 w-full max-w-md rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="Samsung Galaxy A26"
+          placeholder="Samsung Galaxy A26 8GB"
         />
       </label>
 
@@ -85,7 +87,7 @@ export function ResearchForm() {
         disabled={pending}
         className="mt-4 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
       >
-        {pending ? 'Searching web + creating draft…' : 'Run research → create draft'}
+        {pending ? 'Searching stores + reviews… (10–20s)' : 'Run research → create draft'}
       </button>
     </form>
   );
