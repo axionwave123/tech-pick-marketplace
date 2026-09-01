@@ -6,7 +6,7 @@ const primaryNav = [
   { href: '/admin/products', label: 'Edit products' },
   { href: '/admin/products/new', label: 'Add product', highlight: true },
   { href: '/admin/offers', label: 'See prices' },
-  { href: '/admin/needs-update', label: 'Needs update' },
+  { href: '/admin/tracking', label: 'Price tracking' },
   { href: '/admin/research', label: 'AI Research' },
 ];
 
@@ -15,6 +15,7 @@ const sideLinks = [
   { href: '/admin/products', label: 'Edit / search products' },
   { href: '/admin/products/new', label: 'Add product' },
   { href: '/admin/offers', label: 'See prices' },
+  { href: '/admin/tracking', label: 'Price tracking' },
   { href: '/admin/needs-update', label: 'Needs update' },
   { href: '/admin/research', label: 'AI Research' },
   { href: '/admin/reviews', label: 'Reviews' },
