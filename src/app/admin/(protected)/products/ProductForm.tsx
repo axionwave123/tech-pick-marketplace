@@ -2,21 +2,40 @@
 
 import { useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { createProduct, type ProductFormState } from './actions';
+import { createProduct, updateProduct, type ProductFormState } from './actions';
 
 type Option = { id: string; name: string };
+
+export type ProductEditValues = {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  short_description: string;
+  brand_id: string;
+  category_id: string;
+  image_url: string;
+  store_id: string;
+  price: string;
+  original_price: string;
+  product_url: string;
+  offer_id: string;
+};
 
 export function ProductForm({
   brands,
   categories,
   stores,
+  initial,
 }: {
   brands: Option[];
   categories: Option[];
   stores: Option[];
+  initial?: ProductEditValues;
 }) {
+  const isEdit = Boolean(initial?.id);
   const [state, setState] = useState<ProductFormState>({});
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState(initial?.image_url || '');
   const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -55,16 +74,28 @@ export function ProductForm({
     const fd = new FormData(e.currentTarget);
     if (imageUrl) fd.set('image_url', imageUrl);
     startTransition(async () => {
-      const result = await createProduct({}, fd);
+      const result = isEdit ? await updateProduct({}, fd) : await createProduct({}, fd);
       if (result?.error) setState(result);
+      else if (result?.success) setState(result);
     });
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 grid max-w-2xl gap-4 rounded-xl border border-surface-800 bg-surface-900 p-6">
+    <form
+      onSubmit={onSubmit}
+      className="mt-6 grid max-w-2xl gap-4 rounded-xl border border-surface-800 bg-surface-900 p-6"
+    >
+      {isEdit && <input type="hidden" name="id" value={initial!.id} />}
+      {isEdit && initial?.offer_id && <input type="hidden" name="offer_id" value={initial.offer_id} />}
+
       {state.error && (
         <p className="rounded-lg border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
           {state.error}
+        </p>
+      )}
+      {state.success && (
+        <p className="rounded-lg border border-emerald-800 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200">
+          {state.success}
         </p>
       )}
 
@@ -73,6 +104,7 @@ export function ProductForm({
         <input
           name="name"
           required
+          defaultValue={initial?.name}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           placeholder="Samsung Galaxy A26"
         />
@@ -82,6 +114,7 @@ export function ProductForm({
         Slug (optional — auto from name)
         <input
           name="slug"
+          defaultValue={initial?.slug}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           placeholder="samsung-galaxy-a26"
         />
@@ -92,6 +125,7 @@ export function ProductForm({
           Brand
           <select
             name="brand_id"
+            defaultValue={initial?.brand_id || ''}
             className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           >
             <option value="">— None —</option>
@@ -106,6 +140,7 @@ export function ProductForm({
           Category
           <select
             name="category_id"
+            defaultValue={initial?.category_id || ''}
             className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           >
             <option value="">— None —</option>
@@ -123,6 +158,7 @@ export function ProductForm({
         <textarea
           name="short_description"
           rows={3}
+          defaultValue={initial?.short_description}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           placeholder="Mid-range phone with AMOLED display…"
         />
@@ -132,7 +168,7 @@ export function ProductForm({
         Status
         <select
           name="status"
-          defaultValue="published"
+          defaultValue={initial?.status || 'published'}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
         >
           <option value="draft">Draft</option>
@@ -168,13 +204,17 @@ export function ProductForm({
       </div>
 
       <div className="rounded-lg border border-surface-700 bg-surface-950 p-4">
-        <p className="text-sm font-semibold text-white">Price / offer (optional)</p>
-        <p className="mt-1 text-xs text-surface-400">Adds one store price so the product can show on Deals.</p>
+        <p className="text-sm font-semibold text-white">Price / offer (View deal link)</p>
+        <p className="mt-1 text-xs text-surface-400">
+          Paste the real Jumia/Amazon product link. If empty, we use a Jumia search for the product name so
+          View deal still works.
+        </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block text-sm text-surface-300">
             Store
             <select
               name="store_id"
+              defaultValue={initial?.store_id || ''}
               className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
             >
               <option value="">— Skip price —</option>
@@ -192,6 +232,7 @@ export function ProductForm({
               type="number"
               min="0"
               step="1"
+              defaultValue={initial?.price}
               className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
               placeholder="238000"
             />
@@ -203,15 +244,17 @@ export function ProductForm({
               type="number"
               min="0"
               step="1"
+              defaultValue={initial?.original_price}
               className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
               placeholder="265000"
             />
           </label>
           <label className="block text-sm text-surface-300">
-            Retailer product link
+            Retailer product link (View deal)
             <input
               name="product_url"
               type="url"
+              defaultValue={initial?.product_url}
               className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
               placeholder="https://www.jumia.com.ng/..."
             />
@@ -225,7 +268,7 @@ export function ProductForm({
           disabled={pending || uploading}
           className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
         >
-          {pending ? 'Saving…' : 'Save product'}
+          {pending ? 'Saving…' : isEdit ? 'Save changes' : 'Save product'}
         </button>
       </div>
     </form>
