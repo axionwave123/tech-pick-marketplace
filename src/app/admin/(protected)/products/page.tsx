@@ -8,15 +8,27 @@ import { DeleteProductButton } from './DeleteProductButton';
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; category?: string }>;
 }) {
   const auth = await requireAdmin();
   if (!auth.authorized) redirect('/admin/login');
 
-  const { q } = await searchParams;
+  const { q, category: catSlug } = await searchParams;
   const query = (q || '').trim();
+  const categorySlug = (catSlug || '').trim();
 
   const supabase = await createClient();
+
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, name, slug')
+    .order('name');
+
+  let categoryId: string | null = null;
+  if (categorySlug) {
+    categoryId = categories?.find((c) => c.slug === categorySlug)?.id ?? null;
+  }
+
   let req = supabase
     .from('products')
     .select(
@@ -28,8 +40,19 @@ export default async function AdminProductsPage({
   if (query) {
     req = req.or(`name.ilike.%${query}%,slug.ilike.%${query}%`);
   }
+  if (categoryId) {
+    req = req.eq('category_id', categoryId);
+  }
 
   const { data: products } = await req;
+
+  function href(opts: { q?: string; category?: string }) {
+    const p = new URLSearchParams();
+    if (opts.q) p.set('q', opts.q);
+    if (opts.category) p.set('category', opts.category);
+    const s = p.toString();
+    return s ? `/admin/products?${s}` : '/admin/products';
+  }
 
   return (
     <div>
@@ -37,7 +60,7 @@ export default async function AdminProductsPage({
         <div>
           <h1 className="text-2xl font-bold text-white">Edit / delete products</h1>
           <p className="mt-1 text-sm text-surface-400">
-            Search, open Edit, change price or deal link, or Delete permanently.
+            Search or filter by category, then Edit or Delete.
           </p>
         </div>
         <Link
@@ -48,35 +71,66 @@ export default async function AdminProductsPage({
         </Link>
       </div>
 
-      <form action="/admin/products" method="get" className="mt-5 flex max-w-xl gap-2">
+      <form action="/admin/products" method="get" className="mt-5 flex max-w-2xl flex-wrap gap-2">
         <input
           name="q"
           defaultValue={query}
           placeholder="Search by product name…"
           className="min-w-0 flex-1 rounded-lg border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm text-white placeholder:text-surface-500"
         />
+        <select
+          name="category"
+          defaultValue={categorySlug}
+          className="rounded-lg border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm text-white"
+        >
+          <option value="">All categories</option>
+          {(categories || []).map((c) => (
+            <option key={c.id} value={c.slug}>
+              {c.name}
+            </option>
+          ))}
+        </select>
         <button
           type="submit"
           className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-500"
         >
-          Search
+          Filter
         </button>
-        {query && (
-          <Link
-            href="/admin/products"
-            className="rounded-lg px-3 py-2.5 text-sm text-surface-400 hover:text-white"
-          >
+        {(query || categorySlug) && (
+          <Link href="/admin/products" className="rounded-lg px-3 py-2.5 text-sm text-surface-400 hover:text-white">
             Clear
           </Link>
         )}
       </form>
 
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Link
+          href={href({ q: query })}
+          className={`rounded-full px-3 py-1 text-xs font-bold ${
+            !categorySlug ? 'bg-brand-600 text-white' : 'bg-surface-800 text-surface-300'
+          }`}
+        >
+          All
+        </Link>
+        {(categories || []).map((c) => (
+          <Link
+            key={c.id}
+            href={href({ q: query, category: c.slug })}
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              categorySlug === c.slug ? 'bg-brand-600 text-white' : 'bg-surface-800 text-surface-300'
+            }`}
+          >
+            {c.name}
+          </Link>
+        ))}
+      </div>
+
       <p className="mt-3 text-sm text-surface-400">
         {(products || []).length} product{(products || []).length === 1 ? '' : 's'}
         {query ? ` matching “${query}”` : ''}
+        {categorySlug ? ` · category filter on` : ''}
       </p>
 
-      {/* Mobile-friendly cards */}
       <div className="mt-4 space-y-3 md:hidden">
         {(products || []).map((p: any) => {
           const prices = (p.product_offers || [])
@@ -88,7 +142,8 @@ export default async function AdminProductsPage({
               <p className="font-semibold text-white">{p.name}</p>
               <p className="text-xs text-surface-500">{p.slug}</p>
               <p className="mt-1 text-sm text-surface-300">
-                {p.status} · {min != null ? formatNaira(min) : 'No price'}
+                {p.categories?.name || 'No category'} · {p.status} ·{' '}
+                {min != null ? formatNaira(min) : 'No price'}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
@@ -110,9 +165,7 @@ export default async function AdminProductsPage({
           );
         })}
         {(!products || products.length === 0) && (
-          <p className="py-8 text-center text-surface-500">
-            {query ? 'No products match that search.' : 'No products yet.'}
-          </p>
+          <p className="py-8 text-center text-surface-500">No products match these filters.</p>
         )}
       </div>
 
@@ -181,7 +234,7 @@ export default async function AdminProductsPage({
             {(!products || products.length === 0) && (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-surface-500">
-                  {query ? 'No products match that search.' : 'No products yet.'}
+                  No products match these filters.
                 </td>
               </tr>
             )}
