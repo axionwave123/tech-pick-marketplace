@@ -22,24 +22,13 @@ function writeIds(ids: string[]) {
 }
 
 /**
- * High-contrast compare CTA:
- * Dark theme → white bg + black text
- * Light theme → dark bg + white text
+ * Dark page: white button + black label
+ * Light page: black button + white label
+ * Uses global .compare-btn with !important so nothing washes it out.
  */
 export function CompareButton({ productId }: { productId: string }) {
-  const [isLight, setIsLight] = useState(false);
   const [href, setHref] = useState(`/compare?ids=${productId}`);
   const [added, setAdded] = useState(false);
-
-  useEffect(() => {
-    const read = () => {
-      setIsLight(document.documentElement.classList.contains('light'));
-    };
-    read();
-    const obs = new MutationObserver(read);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     const ids = readIds();
@@ -56,8 +45,13 @@ export function CompareButton({ productId }: { productId: string }) {
     setHref(`/compare?ids=${next.join(',')}`);
   };
 
-  const style: React.CSSProperties = isLight
-    ? {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="compare-btn"
+      // Inline fallback if CSS fails to load
+      style={{
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -67,28 +61,19 @@ export function CompareButton({ productId }: { productId: string }) {
         fontSize: 14,
         fontWeight: 700,
         textDecoration: 'none',
-        border: '1px solid #1e293b',
-        backgroundColor: '#0f172a',
-        color: '#ffffff',
-      }
-    : {
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 40,
-        padding: '0 16px',
-        borderRadius: 8,
-        fontSize: 14,
-        fontWeight: 700,
-        textDecoration: 'none',
-        border: '1px solid #cbd5e1',
+        border: '1px solid #94a3b8',
         backgroundColor: '#ffffff',
         color: '#000000',
-      };
-
-  return (
-    <Link href={href} style={style} onClick={onClick}>
-      {added ? 'Compare list →' : 'Add to compare'}
+      }}
+    >
+      <span
+        style={{
+          color: 'inherit',
+          fontWeight: 700,
+        }}
+      >
+        {added ? 'Compare list →' : 'Add to compare'}
+      </span>
     </Link>
   );
 }
