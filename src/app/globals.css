@@ -28,7 +28,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Always force full-page bg from theme (beats utility order issues) */
 html.dark,
 html.dark body {
   background-color: #050508 !important;
@@ -45,20 +44,15 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--foreground);
 }
 
-/*
- * High-contrast: surface-900 is near-black in our palette, so on dark pages
- * it becomes invisible. Force light text ONLY when the element itself is not
- * on a white/light background (buttons, cards, pills).
- */
-html.dark .text-surface-900:not(.bg-white):not([class*='bg-white']):not(.bg-slate-50):not(.bg-slate-100) {
+html.dark .text-surface-900:not(.bg-white):not([class*='bg-white']):not(.bg-slate-50):not(.bg-slate-100):not(.compare-btn) {
   color: #f8fafc;
 }
 
-/* White / light surfaces: keep dark text readable in both themes */
 html.dark .bg-white,
 html.dark [class*='bg-white'] {
   color: #0f172a;
 }
+
 html.dark .bg-white .text-surface-900,
 html.dark .bg-white .text-surface-800,
 html.dark .bg-white .text-surface-700,
@@ -68,11 +62,55 @@ html.dark [class*='bg-white'] .text-surface-700 {
   color: #0f172a !important;
 }
 
-/* Explicit black/slate labels that must never invert */
 html.dark .!text-slate-900,
 html.dark .text-slate-900,
 html.dark .text-black {
   color: #0f172a !important;
+}
+
+/*
+ * Compare / outline CTA:
+ * Dark theme page → white background, BLACK text
+ * Light theme page → black background, WHITE text
+ */
+.compare-btn {
+  display: inline-flex;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+.compare-btn:hover {
+  background-color: #f1f5f9 !important;
+  color: #000000 !important;
+}
+html.light .compare-btn {
+  border-color: #1e293b;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+html.light .compare-btn:hover {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+}
+html.dark .compare-btn,
+html.dark .compare-btn span,
+html.dark a.compare-btn {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+html.light .compare-btn,
+html.light .compare-btn span,
+html.light a.compare-btn {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
 }
 
 @layer utilities {
