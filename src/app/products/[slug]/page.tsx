@@ -132,16 +132,9 @@ export default async function ProductPage({
             </div>
           )}
 
-          {/* Dark page: white pill + black label. Light page: black pill + white label. */}
           <div className="mt-6 flex gap-3">
-            <Link
-              href={`/compare?ids=${product.id}`}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-black shadow-sm hover:bg-slate-100 light:border-slate-800 light:bg-slate-900 light:text-white light:hover:bg-slate-800"
-              style={{ color: undefined }}
-            >
-              <span className="text-black light:text-white" style={{ color: 'inherit' }}>
-                Add to compare
-              </span>
+            <Link href={`/compare?ids=${product.id}`} className="compare-btn">
+              Add to compare
             </Link>
           </div>
         </div>
