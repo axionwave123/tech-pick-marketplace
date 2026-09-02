@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { formatNaira, relativeTime } from '@/lib/utils';
 import { PublishButton } from './PublishButton';
+import { DeleteProductButton } from '../products/DeleteProductButton';
 
 export default async function NeedsUpdatePage() {
   const auth = await requireAdmin();
@@ -59,7 +60,7 @@ export default async function NeedsUpdatePage() {
 
     if (reasons.length === 0) continue;
 
-    const prices = offers.map((o: any) => Number(o.price)).filter((n: number) => !Number.isNaN(n));
+    const prices = offers.map((o: any) => Number(o.price)).filter((n: number) => !Number.isNaN(n) && n > 0);
     rows.push({
       id: p.id,
       name: p.name,
@@ -70,7 +71,6 @@ export default async function NeedsUpdatePage() {
     });
   }
 
-  // Drafts first, then missing image/price, then stale
   rows.sort((a, b) => {
     const score = (r: Row) =>
       (r.reasons.some((x) => x.includes('Draft')) ? 0 : 10) +
@@ -83,11 +83,16 @@ export default async function NeedsUpdatePage() {
     <div>
       <h1 className="text-2xl font-bold text-white">Needs update</h1>
       <p className="mt-2 max-w-2xl text-sm text-surface-400">
-        Products that are drafts, missing an image or price, or have prices not checked in 7+ days. Fix
-        these before they go live (or to keep live prices honest).
+        Drafts, missing image/price, or stale prices. Edit, publish, or delete drafts you don’t need.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
+        <Link
+          href="/admin/drafts"
+          className="rounded-lg bg-surface-800 px-3 py-2 text-xs font-bold text-white hover:bg-surface-700 sm:text-sm"
+        >
+          All drafts →
+        </Link>
         <Link
           href="/admin/research"
           className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-500 sm:text-sm"
@@ -141,14 +146,19 @@ export default async function NeedsUpdatePage() {
                 </td>
                 <td className="px-4 py-3 text-surface-500">{relativeTime(r.lastChecked)}</td>
                 <td className="px-4 py-3">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col items-start gap-1.5">
                     <Link
-                      href="/admin/products/new"
+                      href={`/admin/products/${r.id}`}
                       className="text-xs font-semibold text-brand-400 hover:underline"
                     >
-                      Add image / price
+                      Edit
                     </Link>
-                    {r.status === 'draft' && <PublishButton productId={r.id} />}
+                    {r.status === 'draft' && (
+                      <>
+                        <PublishButton productId={r.id} />
+                        <DeleteProductButton productId={r.id} productName={r.name} compact />
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
