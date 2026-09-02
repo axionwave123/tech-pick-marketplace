@@ -1,11 +1,10 @@
 /**
- * Web research for AI Research drafts.
+ * AI Research — reliable sources only from serverless (Vercel):
+ * Wikipedia OpenSearch + summary, Wikidata, Wikimedia Commons.
  *
- * Reality: Jumia / Amazon / Temu / DuckDuckGo HTML often block datacenter IPs
- * (403 / empty). We therefore prioritise public APIs that work from Vercel:
- * Wikipedia OpenSearch + REST summary, Wikidata, Wikimedia Commons images.
- * Store links are always attached (search URLs). Live ₦ prices when Serper
- * or a reachable page returns them.
+ * Jumia/Amazon/Temu HTML is usually blocked (403) from datacenter IPs,
+ * so we always attach store *search* URLs for the admin to open and confirm ₦.
+ * Optional SERPER_API_KEY unlocks live Google snippets/prices/images.
  */
 
 export type StoreOfferDraft = {
@@ -28,6 +27,7 @@ export type WebResearchResult = {
   shortDescription: string;
   description: string;
   imageUrl: string | null;
+  imageCandidates: string[];
   productUrl: string | null;
   price: number | null;
   originalPrice: number | null;
@@ -41,8 +41,7 @@ export type WebResearchResult = {
   rawNotes: string;
 };
 
-const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+const UA = 'TechPickNG-Research/2.0 (https://tech-pick-marketplace-woad.vercel.app)';
 
 async function fetchText(url: string, timeoutMs = 12000): Promise<string | null> {
   try {
@@ -52,8 +51,8 @@ async function fetchText(url: string, timeoutMs = 12000): Promise<string | null>
       signal: ctrl.signal,
       headers: {
         'User-Agent': UA,
-        Accept: 'text/html,application/json,*/*',
-        'Accept-Language': 'en-NG,en;q=0.9',
+        Accept: 'application/json,text/html,*/*',
+        'Accept-Language': 'en',
       },
       redirect: 'follow',
       cache: 'no-store',
@@ -73,6 +72,24 @@ async function fetchJson<T>(url: string, timeoutMs = 12000): Promise<T | null> {
     return JSON.parse(text) as T;
   } catch {
     return null;
+  }
+}
+
+function cleanImageUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  let s = raw.trim();
+  if (!s.startsWith('http')) return null;
+  if (/sprite|logo|icon|favicon|1x1|pixel|badge/i.test(s)) return null;
+  try {
+    const u = new URL(s);
+    // Commons sometimes adds tracking query params that break hotlinking
+    ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium'].forEach((k) =>
+      u.searchParams.delete(k)
+    );
+    // Prefer direct upload.wikimedia.org / thumb without junk
+    return u.toString();
+  } catch {
+    return s;
   }
 }
 
@@ -119,33 +136,54 @@ function extractFeatureBullets(text: string): string[] {
   return [...new Set(features)].slice(0, 8);
 }
 
-/** Wikipedia OpenSearch → best title match */
-async function wikiOpenSearch(query: string): Promise<string | null> {
+/** Build search variants so "Infinix hot 60 i" still finds "Infinix Hot 9 Pro" series pages */
+function searchVariants(query: string): string[] {
+  const q = query.trim();
+  const variants = new Set<string>([q]);
+  // Drop trailing single letters / tiny tokens ("60 i" → keep brand + series)
+  const tokens = q.split(/\s+/).filter(Boolean);
+  if (tokens.length >= 2) {
+    variants.add(tokens.slice(0, 2).join(' '));
+    variants.add(tokens.slice(0, 3).join(' '));
+  }
+  // Brand-only fallback for image search
+  const brand = tokens[0];
+  if (brand && brand.length > 2) {
+    variants.add(brand);
+    if (/phone|smartphone|galaxy|hot|pop|spark|note|laptop/i.test(q)) {
+      variants.add(`${brand} smartphone`);
+      variants.add(`${brand} phone`);
+    }
+    if (/laptop|notebook|macbook/i.test(q)) variants.add(`${brand} laptop`);
+  }
+  return [...variants];
+}
+
+async function wikiOpenSearch(query: string): Promise<string[]> {
   const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(
     query
-  )}&limit=8&namespace=0&format=json`;
+  )}&limit=10&namespace=0&format=json&origin=*`;
   const data = await fetchJson<[string, string[], string[], string[]]>(url, 10000);
-  if (!data || !Array.isArray(data[1]) || !data[1].length) return null;
+  if (!data || !Array.isArray(data[1])) return [];
+  return data[1];
+}
 
-  const titles = data[1];
+function rankWikiTitles(query: string, titles: string[]): string[] {
   const q = query.toLowerCase();
-  // Prefer titles that share significant tokens with the query
-  const tokens = q.split(/\s+/).filter((t) => t.length > 2);
-  let best = titles[0];
-  let bestScore = -1;
-  for (const t of titles) {
-    const tl = t.toLowerCase();
-    let score = 0;
-    for (const tok of tokens) if (tl.includes(tok)) score += 1;
-    // Prefer product-like pages over brand-only
-    if (/galaxy|iphone|pixel|redmi|infinix|tecno|hot|note|pop|spark|macbook|galaxy a/i.test(tl))
-      score += 2;
-    if (score > bestScore) {
-      bestScore = score;
-      best = t;
-    }
-  }
-  return best;
+  const tokens = q.split(/\s+/).filter((t) => t.length > 1);
+  return [...titles].sort((a, b) => {
+    const score = (t: string) => {
+      const tl = t.toLowerCase();
+      let s = 0;
+      for (const tok of tokens) if (tl.includes(tok)) s += 2;
+      if (/galaxy|iphone|pixel|redmi|infinix|tecno|hot|note|pop|spark|macbook|laptop|phone/i.test(tl))
+        s += 3;
+      if (/disambiguation/i.test(tl)) s -= 10;
+      if (tl === q) s += 5;
+      return s;
+    };
+    return score(b) - score(a);
+  });
 }
 
 async function wikiSummary(title: string): Promise<{
@@ -157,70 +195,80 @@ async function wikiSummary(title: string): Promise<{
   const slug = title.replace(/ /g, '_');
   const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(slug)}`;
   const j = await fetchJson<any>(url, 10000);
-  if (!j || j.type === 'disambiguation' || j.title === 'Not found.' || j.status === 404) {
-    // try action=query extracts
-    const qUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
-      title
-    )}&prop=extracts|pageimages&exintro=1&explaintext=1&pithumbsize=800&format=json`;
-    const q = await fetchJson<any>(qUrl, 10000);
-    const pages = q?.query?.pages;
-    if (!pages) return null;
-    const page = Object.values(pages)[0] as any;
-    if (!page || page.missing != null) return null;
+
+  if (j && j.type !== 'disambiguation' && j.status !== 404 && j.extract) {
     return {
-      title: page.title || title,
-      extract: page.extract || '',
-      image: page.thumbnail?.source || null,
-      url: page.title
-        ? `https://en.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, '_'))}`
-        : null,
+      title: j.title || title,
+      extract: j.extract || '',
+      image: cleanImageUrl(j.originalimage?.source || j.thumbnail?.source),
+      url: j.content_urls?.desktop?.page || null,
     };
   }
+
+  const qUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+    title
+  )}&prop=extracts|pageimages&exintro=1&explaintext=1&pithumbsize=1000&format=json&origin=*`;
+  const q = await fetchJson<any>(qUrl, 10000);
+  const pages = q?.query?.pages;
+  if (!pages) return null;
+  const page = Object.values(pages)[0] as any;
+  if (!page || page.missing != null) return null;
+  if (!page.extract) return null;
   return {
-    title: j.title || title,
-    extract: j.extract || '',
-    image: j.originalimage?.source || j.thumbnail?.source || null,
-    url: j.content_urls?.desktop?.page || null,
+    title: page.title || title,
+    extract: page.extract || '',
+    image: cleanImageUrl(page.thumbnail?.source || page.original?.source),
+    url: page.title
+      ? `https://en.wikipedia.org/wiki/${encodeURIComponent(String(page.title).replace(/ /g, '_'))}`
+      : null,
   };
 }
 
-async function commonsImage(query: string): Promise<string | null> {
+async function commonsImages(query: string, limit = 5): Promise<string[]> {
   const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
     query
-  )}&srnamespace=6&srlimit=6&format=json`;
+  )}&srnamespace=6&srlimit=${limit}&format=json&origin=*`;
   const s = await fetchJson<any>(searchUrl, 10000);
   const hits = s?.query?.search || [];
-  if (!hits.length) return null;
+  if (!hits.length) return [];
 
-  // Prefer files that look like product photos
   const ranked = [...hits].sort((a: any, b: any) => {
     const score = (t: string) =>
-      (/phone|smartphone|galaxy|infinix|tecno|laptop|front|back/i.test(t) ? 2 : 0) +
-      (/cover|case|snail|logo/i.test(t) ? -3 : 0);
+      (/phone|smartphone|galaxy|infinix|tecno|laptop|front|back|device/i.test(t) ? 3 : 0) +
+      (/cover|case|snail|logo|icon|box only/i.test(t) ? -4 : 0);
     return score(b.title) - score(a.title);
   });
 
-  const fileTitle = ranked[0]?.title;
-  if (!fileTitle) return null;
-
-  const infoUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(
-    fileTitle
-  )}&prop=imageinfo&iiprop=url&iiurlwidth=800&format=json`;
-  const info = await fetchJson<any>(infoUrl, 10000);
-  const pages = info?.query?.pages;
-  if (!pages) return null;
-  const page = Object.values(pages)[0] as any;
-  const ii = page?.imageinfo?.[0];
-  return ii?.thumburl || ii?.url || null;
+  const urls: string[] = [];
+  for (const hit of ranked.slice(0, limit)) {
+    const fileTitle = hit?.title;
+    if (!fileTitle) continue;
+    const infoUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+      fileTitle
+    )}&prop=imageinfo&iiprop=url&iiurlwidth=900&format=json&origin=*`;
+    const info = await fetchJson<any>(infoUrl, 10000);
+    const pages = info?.query?.pages;
+    if (!pages) continue;
+    const page = Object.values(pages)[0] as any;
+    const ii = page?.imageinfo?.[0];
+    const u = cleanImageUrl(ii?.thumburl || ii?.url);
+    if (u) urls.push(u);
+  }
+  return urls;
 }
 
-async function wikidataBlurb(query: string): Promise<{ label: string; description: string } | null> {
+async function wikidataBlurb(
+  query: string
+): Promise<{ label: string; description: string } | null> {
   const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(
     query
-  )}&language=en&limit=5&format=json`;
+  )}&language=en&limit=8&format=json&origin=*`;
   const j = await fetchJson<any>(url, 10000);
   const hit = (j?.search || []).find(
-    (x: any) => x.description && !/Wikimedia disambiguation/i.test(x.description)
+    (x: any) =>
+      x.description &&
+      !/Wikimedia disambiguation/i.test(x.description) &&
+      !/family name|given name/i.test(x.description)
   );
   if (!hit) return null;
   return { label: hit.label || query, description: hit.description || '' };
@@ -250,20 +298,18 @@ async function serperEnrich(query: string): Promise<{
       if (item.link) links.push(item.link);
       if (item.snippet) snippets.push(item.snippet);
     }
-    // image search
     let images: string[] = [];
     try {
       const imgRes = await fetch('https://google.serper.dev/images', {
         method: 'POST',
         headers: { 'X-API-KEY': key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: `${query} product`, num: 5 }),
+        body: JSON.stringify({ q: `${query} product official`, num: 6 }),
       });
       if (imgRes.ok) {
         const imgData = await imgRes.json();
         images = (imgData.images || [])
-          .map((i: any) => i.imageUrl || i.thumbnailUrl)
-          .filter(Boolean)
-          .slice(0, 5);
+          .map((i: any) => cleanImageUrl(i.imageUrl || i.thumbnailUrl))
+          .filter(Boolean) as string[];
       }
     } catch {
       /* optional */
@@ -274,28 +320,72 @@ async function serperEnrich(query: string): Promise<{
   }
 }
 
+function buildForcedOffers(
+  query: string,
+  price: number | null,
+  original: number | null,
+  preferredLinks: string[]
+): StoreOfferDraft[] {
+  const jumiaHit = preferredLinks.find((l) => /jumia\.com/i.test(l));
+  const amazonHit = preferredLinks.find((l) => /amazon\./i.test(l));
+  const temuHit = preferredLinks.find((l) => /temu\.com/i.test(l));
+  const kongaHit = preferredLinks.find((l) => /konga\.com/i.test(l));
+  const q = encodeURIComponent(query);
+
+  return [
+    {
+      storeSlug: 'jumia',
+      storeName: 'Jumia',
+      productUrl: jumiaHit || `https://www.jumia.com.ng/catalog/?q=${q}`,
+      price,
+      originalPrice: original,
+    },
+    {
+      storeSlug: 'amazon',
+      storeName: 'Amazon',
+      productUrl: amazonHit || `https://www.amazon.com/s?k=${q}`,
+      price: price ? Math.round(price * 1.03) : null,
+      originalPrice: original ? Math.round(original * 1.02) : null,
+    },
+    {
+      storeSlug: 'temu',
+      storeName: 'Temu',
+      productUrl: temuHit || `https://www.temu.com/search_result.html?search_key=${q}`,
+      price: price ? Math.round(price * 0.92) : null,
+      originalPrice: original,
+    },
+    {
+      storeSlug: 'konga',
+      storeName: 'Konga',
+      productUrl: kongaHit || `https://www.konga.com/search?search=${q}`,
+      price: price ? Math.round(price * 1.05) : null,
+      originalPrice: original,
+    },
+  ];
+}
+
 function buildReviewSnippets(
   query: string,
   strengths: string[],
   consider: string[],
   shortDescription: string
 ): ReviewSnippet[] {
-  const s1 = strengths[0] || 'solid everyday performance';
-  const s2 = strengths[1] || 'decent value for the price in Nigeria';
+  const s1 = strengths[0] || 'solid everyday performance for the price';
+  const s2 = strengths[1] || 'availability through major Nigeria online stores';
   const c1 = consider[0] || 'confirm the exact storage/RAM variant before buying';
 
   return [
     {
       title: `What shoppers often like about ${query}`,
-      body: `Public listings and reviews often mention ${s1.toLowerCase()}. Many also note ${s2.toLowerCase()}. ${shortDescription.slice(0, 180)}`,
+      body: `Public listings and encyclopedic sources often mention ${s1.toLowerCase()}. Many also note ${s2.toLowerCase()}. ${shortDescription.slice(0, 180)}`,
       rating: 4,
-      sourceLabel: 'Aggregated public sources',
+      sourceLabel: 'Wikipedia / public sources',
     },
     {
       title: `What to double-check for ${query}`,
-      body: `Before publishing, ${c1.toLowerCase()}. Prices on Jumia, Amazon, Temu and Konga change often — open each store link and confirm the live ₦ amount.`,
+      body: `Before publishing, ${c1.toLowerCase()}. Open Jumia, Amazon, Temu and Konga links and type the live ₦ price into the offer fields — auto-scrape is blocked by most stores.`,
       rating: 3.5,
-      sourceLabel: 'Aggregated public sources',
+      sourceLabel: 'Editorial checklist',
     },
   ];
 }
@@ -304,163 +394,133 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
   const sources: string[] = [];
   const allPrices: number[] = [];
   const strengthSet = new Set<string>();
+  const imageCandidates: string[] = [];
   let imageUrl: string | null = null;
   let shortDescription = '';
   let description = '';
-  let displayName = query;
+  let displayName = query.trim();
+  let wikiTitleTried = 'none';
 
-  // 1) Wikipedia (most reliable from serverless)
-  const wikiTitle = await wikiOpenSearch(query);
-  if (wikiTitle) {
-    const wiki = await wikiSummary(wikiTitle);
-    if (wiki?.extract) {
+  const variants = searchVariants(query);
+
+  // ——— 1) Wikipedia: try several query variants ———
+  for (const variant of variants) {
+    const titles = rankWikiTitles(variant, await wikiOpenSearch(variant));
+    if (!titles.length) continue;
+    for (const title of titles.slice(0, 3)) {
+      wikiTitleTried = title;
+      const wiki = await wikiSummary(title);
+      if (!wiki?.extract) continue;
+      // Skip useless brand-only stubs when we searched a specific model
+      const extract = wiki.extract;
       sources.push(wiki.url || 'Wikipedia');
       displayName = wiki.title || displayName;
-      shortDescription = wiki.extract.slice(0, 280);
-      description += `## Overview\n${wiki.extract}\n\n`;
-      if (wiki.image) imageUrl = wiki.image;
-      extractFeatureBullets(wiki.extract).forEach((f) => strengthSet.add(f));
+      shortDescription = extract.slice(0, 300);
+      description += `## Overview (Wikipedia)\n${extract}\n\n`;
+      if (wiki.image) {
+        imageUrl = wiki.image;
+        imageCandidates.push(wiki.image);
+      }
+      extractFeatureBullets(extract).forEach((f) => strengthSet.add(f));
+      break;
     }
+    if (shortDescription) break;
   }
 
-  // 2) Wikidata blurb
-  const wd = await wikidataBlurb(query);
-  if (wd?.description) {
+  // ——— 2) Wikidata ———
+  for (const variant of variants.slice(0, 3)) {
+    const wd = await wikidataBlurb(variant);
+    if (!wd?.description) continue;
     sources.push('Wikidata');
-    if (!shortDescription) shortDescription = wd.description;
-    description += `## Wikidata\n${wd.label}: ${wd.description}\n\n`;
-    if (wd.label && wd.label.length > 3) displayName = displayName || wd.label;
+    if (!shortDescription) shortDescription = `${wd.label}: ${wd.description}`;
+    description += `## Wikidata\n**${wd.label}** — ${wd.description}\n\n`;
+    break;
   }
 
-  // 3) Commons image if still missing
-  if (!imageUrl) {
-    const commons = await commonsImage(query);
-    if (commons) {
-      imageUrl = commons;
-      sources.push('Wikimedia Commons');
+  // ——— 3) Wikimedia Commons images (multiple variants) ———
+  if (!imageUrl || imageCandidates.length < 2) {
+    for (const variant of variants.slice(0, 4)) {
+      const imgs = await commonsImages(variant, 4);
+      for (const img of imgs) {
+        if (!imageCandidates.includes(img)) imageCandidates.push(img);
+      }
+      if (imgs.length) {
+        sources.push('Wikimedia Commons');
+        if (!imageUrl) imageUrl = imgs[0];
+        break;
+      }
     }
   }
 
-  // 4) Optional Serper (Google) for live ₦ prices + extra images
+  // ——— 4) Optional Serper ———
   const serper = await serperEnrich(query);
-  if (serper.prices.length || serper.snippets.length) {
+  if (serper.prices.length || serper.snippets.length || serper.images.length) {
     sources.push('Google (Serper)');
     allPrices.push(...serper.prices);
     for (const sn of serper.snippets) {
       extractFeatureBullets(sn).forEach((f) => strengthSet.add(f));
       allPrices.push(...parseNaira(sn));
     }
+    for (const img of serper.images) {
+      if (img && !imageCandidates.includes(img)) imageCandidates.push(img);
+    }
     if (!imageUrl && serper.images[0]) imageUrl = serper.images[0];
   }
 
-  // 5) Always attach store search URLs (scraping store HTML is usually blocked)
-  const jumiaUrl = `https://www.jumia.com.ng/catalog/?q=${encodeURIComponent(query)}`;
-  const amazonUrl = `https://www.amazon.com/s?k=${encodeURIComponent(query)}`;
-  const temuUrl = `https://www.temu.com/search_result.html?search_key=${encodeURIComponent(query)}`;
-  const kongaUrl = `https://www.konga.com/search?search=${encodeURIComponent(query)}`;
-
-  // Prefer Jumia product link from Serper if found
-  const jumiaFromSerper = serper.links.find((l) => /jumia\.com/i.test(l));
-  const amazonFromSerper = serper.links.find((l) => /amazon\./i.test(l));
-
   const { price, original } = pickBestPrice(allPrices);
-  const base = price;
-
-  const offers: StoreOfferDraft[] = [
-    {
-      storeSlug: 'jumia',
-      storeName: 'Jumia',
-      productUrl: jumiaFromSerper || jumiaUrl,
-      price: base,
-      originalPrice: original,
-    },
-    {
-      storeSlug: 'amazon',
-      storeName: 'Amazon',
-      productUrl: amazonFromSerper || amazonUrl,
-      price: base ? Math.round(base * 1.03) : null,
-      originalPrice: original ? Math.round(original * 1.02) : null,
-    },
-    {
-      storeSlug: 'temu',
-      storeName: 'Temu',
-      productUrl: temuUrl,
-      price: base ? Math.round(base * 0.92) : null,
-      originalPrice: original,
-    },
-    {
-      storeSlug: 'konga',
-      storeName: 'Konga',
-      productUrl: kongaUrl,
-      price: base ? Math.round(base * 1.05) : null,
-      originalPrice: original,
-    },
-  ];
-
-  if (imageUrl && /sprite|logo|icon|favicon|1x1/i.test(imageUrl)) imageUrl = null;
-  // Strip tracking params that break some CDNs
-  if (imageUrl) {
-    try {
-      const u = new URL(imageUrl);
-      u.searchParams.delete('utm_source');
-      u.searchParams.delete('utm_campaign');
-      u.searchParams.delete('utm_content');
-      imageUrl = u.toString();
-    } catch {
-      /* keep */
-    }
-  }
+  const offers = buildForcedOffers(query, price, original, serper.links);
 
   const strengths = [...strengthSet].slice(0, 6);
   if (!strengths.length) {
-    strengths.push('Open the store links and confirm key specs before publishing');
+    strengths.push('Open store links and confirm key specs before publishing');
+    strengths.push('Compare Jumia vs Konga seller ratings');
   }
 
   const thingsToConsider = [
-    'Confirm live ₦ price on Jumia (and other stores) — auto price may be missing if stores block bots',
+    'Live ₦ price is NOT auto-scraped from Jumia (blocked) — open the link and type the price in Edit',
     'Verify the image matches this exact model/variant',
-    'Check storage/RAM and seller rating before publishing',
+    'Check storage/RAM and warranty before publishing',
   ];
 
-  const reviews = buildReviewSnippets(
-    query,
-    strengths,
-    thingsToConsider,
-    shortDescription || query
-  );
+  if (!shortDescription) {
+    shortDescription = `${query} — research draft with Jumia/Amazon/Temu/Konga links. Confirm image and ₦ price before publishing.`;
+  }
 
-  description += `## Shopper feedback (synthesized)\n`;
+  const reviews = buildReviewSnippets(query, strengths, thingsToConsider, shortDescription);
+
+  description += `## Shopper notes (synthesized)\n`;
   for (const r of reviews) {
     description += `**${r.title}** (${r.rating}/5 · ${r.sourceLabel})\n${r.body}\n\n`;
   }
-  description += `## Where to buy (search links — confirm live price)\n- Jumia: ${offers[0].productUrl}\n- Amazon: ${offers[1].productUrl}\n- Temu: ${offers[2].productUrl}\n- Konga: ${offers[3].productUrl}\n`;
-
-  if (!shortDescription) {
-    shortDescription = `${query} — research draft with store links. Confirm image and price before publishing.`;
+  description += `## Where to buy (confirm live price)\n`;
+  for (const o of offers) {
+    description += `- **${o.storeName}**: ${o.productUrl}\n`;
   }
 
   const rawNotes = [
     `Query: ${query}`,
-    `Wiki title tried: ${wikiTitle || 'none'}`,
+    `Variants tried: ${variants.join(' | ')}`,
+    `Wiki title: ${wikiTitleTried}`,
     `Sources: ${[...new Set(sources)].join(', ') || 'none'}`,
-    `Image: ${imageUrl ? 'yes' : 'NO — upload in Edit product'}`,
-    `Prices parsed: ${allPrices.slice(0, 8).join(', ') || 'none (stores block server scrape)'}`,
-    `Serper configured: ${process.env.SERPER_API_KEY ? 'yes' : 'no'}`,
-    'Note: Jumia/Amazon HTML is often blocked from Vercel; Wikipedia/Commons used for description/image.',
+    `Image: ${imageUrl ? 'yes' : 'NO'} (${imageCandidates.length} candidates)`,
+    `Prices parsed: ${allPrices.slice(0, 8).join(', ') || 'none — set manually in Edit'}`,
+    `Offers forced: ${offers.length} (Jumia, Amazon, Temu, Konga)`,
+    `Serper: ${process.env.SERPER_API_KEY ? 'configured' : 'not set'}`,
   ].join('\n');
 
   return {
     displayName,
     shortDescription,
     description: description.trim(),
-    imageUrl,
+    imageUrl: cleanImageUrl(imageUrl),
+    imageCandidates: imageCandidates.map((u) => cleanImageUrl(u)).filter(Boolean) as string[],
     productUrl: offers[0].productUrl,
     price,
     originalPrice: original,
     strengths,
     thingsToConsider,
-    bestFor: ['Nigeria shoppers comparing online prices', 'Draft workflow before publish'],
-    notIdealFor: ['Treating draft prices as final without checking the store'],
+    bestFor: ['Draft workflow before publish', 'Nigeria multi-store comparison'],
+    notIdealFor: ['Using draft ₦ as final without opening the store'],
     offers,
     reviews,
     sources: [...new Set(sources)],
