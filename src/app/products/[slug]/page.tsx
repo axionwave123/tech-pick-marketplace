@@ -5,6 +5,7 @@ import { getProductBySlug } from '@/lib/data/products';
 import { formatNaira, relativeTime, formatDiscount } from '@/lib/utils';
 import { Rating, ScoreBadge } from '@/components/ui/Rating';
 import { Badge } from '@/components/ui/Badge';
+import { CompareButton } from '@/components/product/CompareButton';
 
 export async function generateMetadata({
   params,
@@ -133,9 +134,7 @@ export default async function ProductPage({
           )}
 
           <div className="mt-6 flex gap-3">
-            <Link href={`/compare?ids=${product.id}`} className="compare-btn">
-              Add to compare
-            </Link>
+            <CompareButton productId={product.id} />
           </div>
         </div>
       </div>
