@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/admin';
 import { slugify } from '@/lib/utils';
 
@@ -15,8 +15,14 @@ function jumiaSearchUrl(name: string) {
   return `https://www.jumia.com.ng/catalog/?q=${encodeURIComponent(name.trim())}`;
 }
 
+async function db() {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
+  return createClient();
+}
+
 function revalidateProductPaths(slug?: string) {
   revalidatePath('/admin/products');
+  revalidatePath('/admin/drafts');
   revalidatePath('/admin/needs-update');
   revalidatePath('/');
   revalidatePath('/deals');
@@ -52,10 +58,9 @@ export async function createProduct(
     return { error: 'Invalid status.' };
   }
 
-  // Default View deal URL = Jumia search for this product name
   if (!product_url) product_url = jumiaSearchUrl(name);
 
-  const supabase = await createClient();
+  const supabase = await db();
 
   const { data: product, error } = await supabase
     .from('products')
@@ -147,7 +152,7 @@ export async function updateProduct(
   }
   if (!product_url) product_url = jumiaSearchUrl(name);
 
-  const supabase = await createClient();
+  const supabase = await db();
 
   const { data: existing } = await supabase
     .from('products')
@@ -156,9 +161,7 @@ export async function updateProduct(
     .maybeSingle();
 
   const published_at =
-    status === 'published'
-      ? existing?.published_at || new Date().toISOString()
-      : null;
+    status === 'published' ? existing?.published_at || new Date().toISOString() : null;
 
   const { error } = await supabase
     .from('products')
@@ -191,7 +194,10 @@ export async function updateProduct(
       .limit(1);
 
     if (imgs && imgs.length > 0) {
-      await supabase.from('product_images').update({ url: image_url, alt_text: name }).eq('id', imgs[0].id);
+      await supabase
+        .from('product_images')
+        .update({ url: image_url, alt_text: name })
+        .eq('id', imgs[0].id);
     } else {
       await supabase.from('product_images').insert({
         product_id: id,
@@ -242,22 +248,26 @@ export async function deleteProduct(productId: string): Promise<ProductFormState
   if (!auth.authorized) return { error: 'Not authorized.' };
   if (!productId) return { error: 'Missing product id.' };
 
-  const supabase = await createClient();
+  const supabase = await db();
 
   const { data: product } = await supabase
     .from('products')
-    .select('slug')
+    .select('slug, status')
     .eq('id', productId)
     .maybeSingle();
 
-  // Remove related rows first (in case FK is restrictive)
   await supabase.from('product_offers').delete().eq('product_id', productId);
   await supabase.from('product_images').delete().eq('product_id', productId);
   await supabase.from('product_specifications').delete().eq('product_id', productId);
+  await supabase.from('editorial_reviews').delete().eq('product_id', productId);
 
   const { error } = await supabase.from('products').delete().eq('id', productId);
   if (error) return { error: error.message };
 
   revalidateProductPaths(product?.slug);
+  // Stay on drafts list when deleting a draft
+  if (product?.status === 'draft') {
+    redirect('/admin/drafts');
+  }
   redirect('/admin/products');
 }
