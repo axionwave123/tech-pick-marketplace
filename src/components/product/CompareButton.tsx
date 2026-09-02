@@ -3,25 +3,58 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+const STORAGE_KEY = 'techpick_compare_ids';
+
+function readIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeIds(ids: string[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids.slice(0, 4)));
+}
+
 /**
  * High-contrast compare CTA:
- * - Dark page → white background, black text
- * - Light page → black background, white text
- * Styles are applied via inline style so global CSS cannot wash out the label.
+ * Dark theme → white bg + black text
+ * Light theme → dark bg + white text
  */
 export function CompareButton({ productId }: { productId: string }) {
   const [isLight, setIsLight] = useState(false);
+  const [href, setHref] = useState(`/compare?ids=${productId}`);
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
     const read = () => {
-      const html = document.documentElement;
-      setIsLight(html.classList.contains('light'));
+      setIsLight(document.documentElement.classList.contains('light'));
     };
     read();
     const obs = new MutationObserver(read);
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    const ids = readIds();
+    setAdded(ids.includes(productId));
+    const next = ids.includes(productId) ? ids : [...ids, productId].slice(0, 4);
+    setHref(`/compare?ids=${next.join(',')}`);
+  }, [productId]);
+
+  const onClick = () => {
+    const ids = readIds();
+    const next = ids.includes(productId) ? ids : [...ids, productId].slice(0, 4);
+    writeIds(next);
+    setAdded(true);
+    setHref(`/compare?ids=${next.join(',')}`);
+  };
 
   const style: React.CSSProperties = isLight
     ? {
@@ -54,8 +87,8 @@ export function CompareButton({ productId }: { productId: string }) {
       };
 
   return (
-    <Link href={`/compare?ids=${productId}`} style={style}>
-      Add to compare
+    <Link href={href} style={style} onClick={onClick}>
+      {added ? 'Compare list →' : 'Add to compare'}
     </Link>
   );
 }
