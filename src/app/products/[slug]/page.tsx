@@ -5,7 +5,6 @@ import { getProductBySlug } from '@/lib/data/products';
 import { formatNaira, relativeTime, formatDiscount } from '@/lib/utils';
 import { Rating, ScoreBadge } from '@/components/ui/Rating';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 
 export async function generateMetadata({
   params,
@@ -99,18 +98,18 @@ export default async function ProductPage({
           </div>
 
           {best && (
-            <div className="mt-6 rounded-2xl border border-surface-200 bg-white p-5 text-surface-900">
-              <p className="text-sm text-surface-500">Best deal we found</p>
-              <p className="text-3xl font-bold text-surface-900">{formatNaira(best.price)}</p>
+            <div className="mt-6 rounded-2xl border border-surface-200 bg-white p-5 text-slate-900">
+              <p className="text-sm text-slate-500">Best deal we found</p>
+              <p className="text-3xl font-bold text-slate-900">{formatNaira(best.price)}</p>
               {best.original_price && best.original_price > best.price && (
-                <p className="text-sm text-surface-500">
+                <p className="text-sm text-slate-500">
                   <span className="line-through">{formatNaira(best.original_price)}</span>{' '}
                   <Badge variant="discount" className="ml-2">
                     {formatDiscount(best.original_price, best.price)}
                   </Badge>
                 </p>
               )}
-              <p className="mt-1 text-xs text-surface-500">
+              <p className="mt-1 text-xs text-slate-500">
                 via {best.stores?.name || 'store'} · Last checked {relativeTime(best.last_checked_at)}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -126,16 +125,23 @@ export default async function ProductPage({
                   </a>
                 ))}
               </div>
-              <p className="mt-3 text-xs text-surface-500">
+              <p className="mt-3 text-xs text-slate-500">
                 Affiliate / outbound links may earn TechPick NG a commission. Prices change on retailer
                 sites.
               </p>
             </div>
           )}
 
+          {/* Dark page: white pill + black label. Light page: black pill + white label. */}
           <div className="mt-6 flex gap-3">
-            <Link href={`/compare?ids=${product.id}`}>
-              <Button variant="outline">Add to compare</Button>
+            <Link
+              href={`/compare?ids=${product.id}`}
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-black shadow-sm hover:bg-slate-100 light:border-slate-800 light:bg-slate-900 light:text-white light:hover:bg-slate-800"
+              style={{ color: undefined }}
+            >
+              <span className="text-black light:text-white" style={{ color: 'inherit' }}>
+                Add to compare
+              </span>
             </Link>
           </div>
         </div>
