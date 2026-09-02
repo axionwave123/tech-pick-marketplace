@@ -23,16 +23,22 @@ export function ResearchForm() {
   return (
     <form onSubmit={onSubmit} className="mt-6 rounded-xl border border-surface-800 bg-surface-900 p-6">
       <p className="text-sm text-surface-400">
-        Type a product name. We search the web for{' '}
-        <strong className="text-surface-200">
-          description, image, Jumia / Amazon / Temu / Konga links & prices, and 2 review-style notes
-        </strong>
-        , then save a <strong className="text-surface-200">draft</strong> only — never auto-published.
+        Type a product name. We pull{' '}
+        <strong className="text-surface-200">description + image</strong> from Wikipedia / Wikidata /
+        Wikimedia Commons, and always attach{' '}
+        <strong className="text-surface-200">Jumia · Amazon · Temu · Konga</strong> search links as a{' '}
+        <strong className="text-surface-200">draft</strong> (never auto-published).
       </p>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-surface-500">
-        <li>Sources: Wikipedia + DuckDuckGo (and Google if SERPER_API_KEY is set on Vercel)</li>
-        <li>Takes about 10–20 seconds</li>
-        <li>You must Edit → confirm prices/image → Publish</li>
+        <li>
+          <strong className="text-surface-300">₦ prices:</strong> stores block server bots — open Jumia
+          after research and type the live price in Edit
+        </li>
+        <li>
+          Images work best for products that exist on Wikipedia/Commons (e.g. Samsung Galaxy A26, Infinix
+          Hot series)
+        </li>
+        <li>Takes about 10–20 seconds · then Edit → confirm → Publish</li>
       </ul>
 
       {state.error && (
@@ -68,7 +74,7 @@ export function ResearchForm() {
           name="name"
           required
           className="mt-1 w-full max-w-md rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="Samsung Galaxy A26 8GB"
+          placeholder="Samsung Galaxy A26"
         />
       </label>
 
@@ -87,7 +93,7 @@ export function ResearchForm() {
         disabled={pending}
         className="mt-4 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
       >
-        {pending ? 'Searching stores + reviews… (10–20s)' : 'Run research → create draft'}
+        {pending ? 'Researching Wikipedia + Commons… (10–20s)' : 'Run research → create draft'}
       </button>
     </form>
   );
