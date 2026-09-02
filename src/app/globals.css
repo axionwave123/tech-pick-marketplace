@@ -46,11 +46,33 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /*
- * High-contrast overrides for pages that still use fixed surface-* text colors.
- * Only apply outside white/light cards so ProductCards stay dark-on-white.
+ * High-contrast: surface-900 is near-black in our palette, so on dark pages
+ * it becomes invisible. Force light text ONLY when the element itself is not
+ * on a white/light background (buttons, cards, pills).
  */
-html.dark .text-surface-900:not(.bg-white *):not([class*='bg-white'] *) {
+html.dark .text-surface-900:not(.bg-white):not([class*='bg-white']):not(.bg-slate-50):not(.bg-slate-100) {
   color: #f8fafc;
+}
+
+/* White / light surfaces: keep dark text readable in both themes */
+html.dark .bg-white,
+html.dark [class*='bg-white'] {
+  color: #0f172a;
+}
+html.dark .bg-white .text-surface-900,
+html.dark .bg-white .text-surface-800,
+html.dark .bg-white .text-surface-700,
+html.dark [class*='bg-white'] .text-surface-900,
+html.dark [class*='bg-white'] .text-surface-800,
+html.dark [class*='bg-white'] .text-surface-700 {
+  color: #0f172a !important;
+}
+
+/* Explicit black/slate labels that must never invert */
+html.dark .!text-slate-900,
+html.dark .text-slate-900,
+html.dark .text-black {
+  color: #0f172a !important;
 }
 
 @layer utilities {
