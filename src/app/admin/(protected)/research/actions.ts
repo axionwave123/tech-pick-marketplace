@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/admin';
 import { slugify } from '@/lib/utils';
 import { researchProductFromWeb } from '@/lib/research/webResearch';
@@ -14,8 +14,9 @@ export type ResearchState = {
 
 function guessCategorySlug(name: string): string | null {
   const n = name.toLowerCase();
-  if (/phone|iphone|galaxy|pixel|redmi|tecno|infinix|samsung a|samsung s/.test(n)) return 'smartphones';
-  if (/laptop|macbook|notebook|chromebook/.test(n)) return 'laptops';
+  if (/phone|iphone|galaxy|pixel|redmi|tecno|infinix|samsung a|samsung s|pop |hot |spark|note /.test(n))
+    return 'smartphones';
+  if (/laptop|macbook|notebook|chromebook|hp |dell |lenovo|asus/.test(n)) return 'laptops';
   if (/tablet|ipad/.test(n)) return 'tablets';
   if (/headphone|earbud|earphone|speaker|audio|buds/.test(n)) return 'audio';
   if (/watch|band|wearable/.test(n)) return 'wearables';
@@ -54,7 +55,12 @@ function guessBrandName(name: string): string | null {
   return null;
 }
 
-/** Web research → draft product with image, multi-store prices, review notes. Never auto-publishes. */
+/** Prefer service role for reliable inserts; fall back to user session. */
+async function dbClient() {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
+  return createClient();
+}
+
 export async function runResearch(
   _prev: ResearchState,
   formData: FormData
@@ -75,7 +81,7 @@ export async function runResearch(
     console.error('web research failed', e);
   }
 
-  const supabase = await createClient();
+  const supabase = await dbClient();
   let slug = slugify(web?.displayName || name);
 
   const { data: existing } = await supabase.from('products').select('id').eq('slug', slug).maybeSingle();
@@ -115,7 +121,7 @@ export async function runResearch(
     '',
     'Review checklist:',
     '1. Confirm image matches this model',
-    '2. Confirm ₦ prices on Jumia / Amazon / Temu / Konga',
+    '2. Open Jumia/Amazon links and set correct ₦ price',
     '3. Edit review notes if needed',
     '4. Publish when ready',
   ]
@@ -134,7 +140,7 @@ export async function runResearch(
       category_id,
       short_description:
         web?.shortDescription ||
-        `Draft from AI Research for ${name}. Review before publishing.`,
+        `Research draft for ${name}. Confirm image and prices before publishing.`,
       description: [web?.description, researchBlock].filter(Boolean).join('\n\n'),
       what_stands_out: web?.strengths?.[0] || 'Pending final review.',
       strengths: web?.strengths?.length ? web.strengths : ['Pending verification'],
@@ -155,14 +161,22 @@ export async function runResearch(
     return { error: error.message };
   }
 
+  let imageSaved = false;
+  let imageError = '';
   if (web?.imageUrl) {
-    await supabase.from('product_images').insert({
+    const { error: imgErr } = await supabase.from('product_images').insert({
       product_id: product.id,
       url: web.imageUrl,
       alt_text: productName,
       is_primary: true,
       sort_order: 0,
     });
+    if (imgErr) {
+      imageError = imgErr.message;
+      console.error('image insert failed', imgErr);
+    } else {
+      imageSaved = true;
+    }
   }
 
   const { data: stores } = await supabase.from('stores').select('id, slug, name');
@@ -196,12 +210,18 @@ export async function runResearch(
       })
       .filter(Boolean) || [];
 
+  let offersSaved = 0;
   if (offerRows.length) {
-    await supabase.from('product_offers').insert(offerRows as any[]);
+    const { error: offErr, data: inserted } = await supabase
+      .from('product_offers')
+      .insert(offerRows as any[])
+      .select('id');
+    if (offErr) console.error('offers insert failed', offErr);
+    else offersSaved = inserted?.length || offerRows.length;
   } else {
     const jumia = storeBySlug.get('jumia');
     if (jumia) {
-      await supabase.from('product_offers').insert({
+      const { error: offErr } = await supabase.from('product_offers').insert({
         product_id: product.id,
         store_id: jumia.id,
         price: 0,
@@ -211,24 +231,23 @@ export async function runResearch(
         last_checked_at: new Date().toISOString(),
         status: 'active',
       });
+      if (!offErr) offersSaved = 1;
     }
   }
 
   if (web?.reviews?.length) {
-    const r0 = web.reviews[0];
-    const r1 = web.reviews[1];
     await supabase.from('editorial_reviews').insert({
       product_id: product.id,
       title: `Research notes: ${productName}`,
-      rating: r0?.rating ?? 4,
-      summary: [r0?.body, r1?.body].filter(Boolean).join('\n\n'),
+      rating: web.reviews[0]?.rating ?? 4,
+      summary: web.reviews.map((r) => r.body).join('\n\n'),
       what_stands_out: web.strengths?.[0] || null,
       strengths: web.strengths || null,
       things_to_consider: web.thingsToConsider || null,
       best_for: web.bestFor || null,
       not_ideal_for: web.notIdealFor || null,
       verdict:
-        'Draft from web research and public review themes. Admin must verify before treating as official TechPick analysis.',
+        'Draft from web research. Admin must verify image and live store prices before publishing.',
       sources: web.sources || [],
       status: 'draft',
       published_at: null,
@@ -245,9 +264,13 @@ export async function runResearch(
   const priced = (web?.offers || []).filter((o) => o.price && o.price > 0).length;
   const bits = [
     `Draft created: “${product.name}”`,
-    web?.imageUrl ? 'image found' : 'no image (add in Edit)',
-    priced ? `${priced} store price(s)` : 'store links attached',
-    web?.reviews?.length ? `${web.reviews.length} review notes` : 'no review notes',
+    imageSaved
+      ? 'image saved'
+      : web?.imageUrl
+        ? `image found but not saved (${imageError || 'check RLS'})`
+        : 'no image found — upload in Edit',
+    offersSaved ? `${offersSaved} store link(s)` : 'no store offers saved',
+    priced ? `${priced} with parsed ₦ price` : '₦ price not auto-filled (open Jumia & type it in Edit)',
     'Not published until you approve',
   ];
 
@@ -261,7 +284,7 @@ export async function publishDraft(productId: string): Promise<ResearchState> {
   const auth = await requireAdmin();
   if (!auth.authorized) return { error: 'Not authorized.' };
 
-  const supabase = await createClient();
+  const supabase = await dbClient();
   const { error } = await supabase
     .from('products')
     .update({
