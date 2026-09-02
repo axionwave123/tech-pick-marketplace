@@ -5,6 +5,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/admin';
 import { slugify } from '@/lib/utils';
 import { researchProductFromWeb } from '@/lib/research/webResearch';
+import { persistProductImage } from '@/lib/research/saveImage';
 
 export type ResearchState = {
   error?: string;
@@ -55,18 +56,22 @@ function guessBrandName(name: string): string | null {
   return null;
 }
 
+/** Prefer service role so inserts never fail RLS during research. */
 async function dbClient() {
-  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
+  // Always prefer service role when present — research must write images/offers
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return createServiceClient();
+  }
   return createClient();
 }
 
 function defaultOffers(name: string) {
   const q = encodeURIComponent(name);
   return [
-    { storeSlug: 'jumia', productUrl: `https://www.jumia.com.ng/catalog/?q=${q}`, price: null as number | null },
-    { storeSlug: 'amazon', productUrl: `https://www.amazon.com/s?k=${q}`, price: null as number | null },
-    { storeSlug: 'temu', productUrl: `https://www.temu.com/search_result.html?search_key=${q}`, price: null as number | null },
-    { storeSlug: 'konga', productUrl: `https://www.konga.com/search?search=${q}`, price: null as number | null },
+    { storeSlug: 'jumia' as const, productUrl: `https://www.jumia.com.ng/catalog/?q=${q}`, price: null as number | null },
+    { storeSlug: 'amazon' as const, productUrl: `https://www.amazon.com/s?k=${q}`, price: null as number | null },
+    { storeSlug: 'temu' as const, productUrl: `https://www.temu.com/search_result.html?search_key=${q}`, price: null as number | null },
+    { storeSlug: 'konga' as const, productUrl: `https://www.konga.com/search?search=${q}`, price: null as number | null },
   ];
 }
 
@@ -167,37 +172,53 @@ export async function runResearch(
     return { error: error.message };
   }
 
-  // ——— Images (primary + up to 2 extras) ———
+  // ——— Images: download → Supabase Storage, else keep remote URL ———
   let imagesSaved = 0;
-  const imageList = [
-    web?.imageUrl,
-    ...(web?.imageCandidates || []),
-  ].filter((u, i, arr): u is string => Boolean(u) && arr.indexOf(u) === i);
+  let imageNote = '';
+  const imageList = [web?.imageUrl, ...(web?.imageCandidates || [])].filter(
+    (u, i, arr): u is string => Boolean(u) && arr.indexOf(u) === i
+  );
 
   for (let i = 0; i < Math.min(imageList.length, 3); i++) {
+    const remote = imageList[i];
+    let finalUrl = remote;
+
+    try {
+      const persisted = await persistProductImage(supabase, product.id, remote, i);
+      if (persisted?.url) finalUrl = persisted.url;
+    } catch (e) {
+      console.error('persist image', e);
+    }
+
     const { error: imgErr } = await supabase.from('product_images').insert({
       product_id: product.id,
-      url: imageList[i],
+      url: finalUrl,
       alt_text: `${name}${i === 0 ? '' : ` (${i + 1})`}`,
       is_primary: i === 0,
       sort_order: i,
     });
-    if (!imgErr) imagesSaved += 1;
-    else console.error('image insert failed', imgErr);
+
+    if (!imgErr) {
+      imagesSaved += 1;
+    } else {
+      imageNote = imgErr.message;
+      console.error('image insert failed', imgErr);
+    }
   }
 
   // ——— Always save 4 store offers ———
   const { data: stores } = await supabase.from('stores').select('id, slug, name');
   const storeBySlug = new Map((stores || []).map((s) => [s.slug, s]));
 
-  const offerSource =
-    web?.offers?.length ? web.offers : defaultOffers(name).map((o) => ({
-      storeSlug: o.storeSlug as 'jumia' | 'amazon' | 'temu' | 'konga',
-      storeName: o.storeSlug,
-      productUrl: o.productUrl,
-      price: o.price,
-      originalPrice: null as number | null,
-    }));
+  const offerSource = web?.offers?.length
+    ? web.offers
+    : defaultOffers(name).map((o) => ({
+        storeSlug: o.storeSlug,
+        storeName: o.storeSlug,
+        productUrl: o.productUrl,
+        price: o.price,
+        originalPrice: null as number | null,
+      }));
 
   const offerRows = offerSource
     .map((o) => {
@@ -241,7 +262,6 @@ export async function runResearch(
     }
   }
 
-  // Editorial notes
   if (web?.reviews?.length) {
     await supabase.from('editorial_reviews').insert({
       product_id: product.id,
@@ -271,13 +291,15 @@ export async function runResearch(
   const priced = (web?.offers || []).filter((o) => o.price && o.price > 0).length;
   const bits = [
     `Draft created: “${product.name}”`,
-    imagesSaved ? `${imagesSaved} image(s)` : 'no image — upload in Edit',
+    imagesSaved
+      ? `${imagesSaved} image(s) saved`
+      : imageList.length
+        ? `image found but not saved${imageNote ? `: ${imageNote}` : ''}`
+        : 'no image found — upload in Edit',
     offersSaved
-      ? `${offersSaved} store links (Jumia/Amazon/Temu/Konga)`
+      ? `${offersSaved} store links`
       : `store links failed${offerError ? `: ${offerError}` : ''}`,
-    priced
-      ? `${priced} with auto ₦ (still confirm on store)`
-      : '₦ not auto-filled — open Jumia & type price in Edit',
+    priced ? `${priced} with auto ₦` : 'type ₦ price in Edit after opening Jumia',
     'Not published until you approve',
   ];
 
