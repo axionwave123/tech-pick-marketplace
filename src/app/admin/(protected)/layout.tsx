@@ -5,8 +5,8 @@ import Link from 'next/link';
 const primaryNav = [
   { href: '/admin/products', label: 'Edit products' },
   { href: '/admin/products/new', label: 'Add product', highlight: true },
+  { href: '/admin/drafts', label: 'Drafts' },
   { href: '/admin/offers', label: 'See prices' },
-  { href: '/admin/tracking', label: 'Price tracking' },
   { href: '/admin/research', label: 'AI Research' },
 ];
 
@@ -14,6 +14,7 @@ const sideLinks = [
   { href: '/admin/dashboard', label: 'Dashboard' },
   { href: '/admin/products', label: 'Edit / search products' },
   { href: '/admin/products/new', label: 'Add product' },
+  { href: '/admin/drafts', label: 'Drafts / delete drafts' },
   { href: '/admin/offers', label: 'See prices' },
   { href: '/admin/tracking', label: 'Price tracking' },
   { href: '/admin/needs-update', label: 'Needs update' },
