@@ -68,7 +68,7 @@ html.dark .text-black {
 }
 
 /*
- * Mobile menu + chips — forced high contrast (fixes dark-on-dark lettering)
+ * Mobile menu + chips — forced high contrast
  */
 .mobile-nav-link {
   color: #f8fafc !important;
@@ -90,63 +90,6 @@ html.light .mobile-nav-link:hover {
 }
 html.light .mobile-chip {
   color: #1e293b !important;
-}
-
-/*
- * ADD TO COMPARE button — high contrast
- * Default + dark: WHITE background, BLACK text
- * Light theme: BLACK background, WHITE text
- */
-a.compare-btn,
-.compare-btn,
-a.compare-btn span,
-.compare-btn span {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: 2.5rem !important;
-  padding: 0 1rem !important;
-  border-radius: 0.5rem !important;
-  font-size: 0.875rem !important;
-  font-weight: 700 !important;
-  text-decoration: none !important;
-  border: 1px solid #94a3b8 !important;
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-a.compare-btn:hover,
-.compare-btn:hover,
-a.compare-btn:hover span,
-.compare-btn:hover span {
-  background-color: #e2e8f0 !important;
-  color: #000000 !important;
-}
-
-html.light a.compare-btn,
-html.light .compare-btn,
-html.light a.compare-btn span,
-html.light .compare-btn span {
-  border-color: #1e293b !important;
-  background-color: #0f172a !important;
-  color: #ffffff !important;
-}
-
-html.light a.compare-btn:hover,
-html.light .compare-btn:hover,
-html.light a.compare-btn:hover span,
-html.light .compare-btn:hover span {
-  background-color: #1e293b !important;
-  color: #ffffff !important;
-}
-
-html.dark a.compare-btn,
-html.dark .compare-btn,
-html.dark a.compare-btn span,
-html.dark .compare-btn span {
-  border-color: #94a3b8 !important;
-  background-color: #ffffff !important;
-  color: #000000 !important;
 }
 
 @layer utilities {

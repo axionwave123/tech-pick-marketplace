@@ -22,9 +22,8 @@ function writeIds(ids: string[]) {
 }
 
 /**
- * Dark page: white button + black label
- * Light page: black button + white label
- * Uses global .compare-btn with !important so nothing washes it out.
+ * Professional secondary action — outline style that blends with the page,
+ * not a solid white sticker.
  */
 export function CompareButton({ productId }: { productId: string }) {
   const [href, setHref] = useState(`/compare?ids=${productId}`);
@@ -49,31 +48,45 @@ export function CompareButton({ productId }: { productId: string }) {
     <Link
       href={href}
       onClick={onClick}
-      className="compare-btn"
-      // Inline fallback if CSS fails to load
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 40,
-        padding: '0 16px',
-        borderRadius: 8,
-        fontSize: 14,
-        fontWeight: 700,
-        textDecoration: 'none',
-        border: '1px solid #94a3b8',
-        backgroundColor: '#ffffff',
-        color: '#000000',
-      }}
+      className={
+        added
+          ? 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-brand-500/60 bg-brand-600/15 px-5 text-sm font-semibold text-brand-300 transition hover:bg-brand-600/25 light:border-brand-600 light:bg-brand-50 light:text-brand-700 light:hover:bg-brand-100'
+          : 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-surface-500 bg-transparent px-5 text-sm font-semibold text-surface-100 transition hover:border-surface-300 hover:bg-white/5 light:border-slate-300 light:text-slate-800 light:hover:border-slate-400 light:hover:bg-slate-50'
+      }
     >
-      <span
-        style={{
-          color: 'inherit',
-          fontWeight: 700,
-        }}
-      >
-        {added ? 'Compare list →' : 'Add to compare'}
-      </span>
+      {added ? (
+        <>
+          <svg
+            className="h-4 w-4 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          In compare list
+        </>
+      ) : (
+        <>
+          <svg
+            className="h-4 w-4 shrink-0 opacity-80"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            aria-hidden
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+            />
+          </svg>
+          Add to compare
+        </>
+      )}
     </Link>
   );
 }
