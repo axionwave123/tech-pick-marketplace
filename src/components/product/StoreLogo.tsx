@@ -5,7 +5,7 @@
 export function StoreLogo({
   name,
   logoUrl,
-  size = 36,
+  size = 40,
 }: {
   name: string;
   logoUrl?: string | null;
@@ -16,7 +16,7 @@ export function StoreLogo({
   if (logoUrl) {
     return (
       <span
-        className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-md ring-2 ring-white/20 light:ring-slate-200/80"
+        className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-lg ring-2 ring-white/40 light:ring-slate-200"
         style={{ width: size, height: size }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -25,7 +25,7 @@ export function StoreLogo({
           alt={name}
           width={size}
           height={size}
-          className="h-full w-full object-contain p-1"
+          className="h-full w-full object-contain p-1.5"
           loading="lazy"
         />
       </span>
@@ -34,8 +34,8 @@ export function StoreLogo({
 
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white shadow-md ring-2 ring-white/15"
-      style={{ width: size, height: size, fontSize: Math.max(12, size * 0.42) }}
+      className="inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white shadow-lg ring-2 ring-white/30"
+      style={{ width: size, height: size, fontSize: Math.max(14, size * 0.44) }}
       aria-hidden
     >
       {initial}

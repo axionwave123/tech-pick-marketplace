@@ -22,7 +22,8 @@ function writeIds(ids: string[]) {
 }
 
 /**
- * High-contrast secondary action — clearly visible in both dark and light mode.
+ * High-contrast secondary action — white text in dark mode, dark text in light mode.
+ * Contrast is enforced via .compare-btn rules in globals.css.
  */
 export function CompareButton({ productId }: { productId: string }) {
   const [href, setHref] = useState(`/compare?ids=${productId}`);
@@ -49,8 +50,8 @@ export function CompareButton({ productId }: { productId: string }) {
       onClick={onClick}
       className={
         added
-          ? 'compare-btn inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-brand-400 bg-brand-600/25 px-5 text-sm font-semibold text-brand-200 shadow-sm transition hover:bg-brand-600/40 hover:border-brand-300 light:border-brand-600 light:bg-brand-50 light:text-brand-700 light:hover:bg-brand-100'
-          : 'compare-btn inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-white/40 bg-white/10 px-5 text-sm font-semibold text-white shadow-sm backdrop-blur-sm transition hover:border-white/70 hover:bg-white/20 light:border-slate-400 light:bg-white light:text-slate-800 light:hover:border-slate-500 light:hover:bg-slate-50'
+          ? 'compare-btn compare-btn--added inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 px-5 text-sm font-semibold shadow-sm transition'
+          : 'compare-btn inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 px-5 text-sm font-semibold shadow-sm transition'
       }
     >
       <svg
