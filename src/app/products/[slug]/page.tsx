@@ -122,9 +122,9 @@ export default async function ProductPage({
                     href={o.affiliate_url || o.product_url}
                     target="_blank"
                     rel="noopener noreferrer sponsored"
-                    className="inline-flex items-center gap-3 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-500 hover:shadow-lg"
+                    className="inline-flex items-center gap-3.5 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg ring-1 ring-emerald-400/30 transition hover:bg-emerald-500 hover:shadow-xl hover:ring-emerald-300/50"
                   >
-                    <StoreLogo name={o.stores?.name || 'Store'} logoUrl={o.stores?.logo_url} size={32} />
+                    <StoreLogo name={o.stores?.name || 'Store'} logoUrl={o.stores?.logo_url} size={40} />
                     <span>Check price on {o.stores?.name || 'store'}</span>
                   </a>
                 ))}
@@ -312,7 +312,7 @@ export default async function ProductPage({
                               className={
                                 isBest
                                   ? 'inline-flex items-center rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-500'
-                                  : 'inline-flex items-center rounded-lg border-2 border-white/35 bg-white/15 px-3.5 py-2 text-xs font-bold text-white shadow-sm backdrop-blur-sm transition hover:border-white/60 hover:bg-white/25 light:border-slate-300 light:bg-white light:text-slate-800 light:hover:border-brand-400 light:hover:bg-slate-50'
+                                  : 'view-deal-btn inline-flex items-center rounded-lg border-2 px-3.5 py-2 text-xs font-bold shadow-sm transition'
                               }
                             >
                               View deal →
