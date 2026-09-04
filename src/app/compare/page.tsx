@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import { formatNaira } from '@/lib/utils';
@@ -45,7 +44,6 @@ async function loadProducts(ids: string[]): Promise<CompareProduct[]> {
 
   if (error || !data) return [];
 
-  // Keep order of requested ids
   const map = new Map((data as CompareProduct[]).map((p) => [p.id, p]));
   return ids.map((id) => map.get(id)).filter(Boolean) as CompareProduct[];
 }
@@ -126,9 +124,9 @@ export default async function ComparePage({
         Product Comparison
       </h1>
       <p className="mt-2 max-w-2xl text-base font-medium text-surface-200 light:text-slate-600">
-        Compare up to 4 products side by side. Open any product → tap{' '}
-        <strong className="text-white light:text-slate-900">Add to compare</strong> → open another →
-        add again. Or pick from the lists below.
+        Compare up to 4 products side by side. You do <strong className="text-white light:text-slate-900">not</strong>{' '}
+        type products here. Add them from each product page using the{' '}
+        <strong className="text-white light:text-slate-900">Add to compare</strong> button.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -165,16 +163,27 @@ export default async function ComparePage({
           <p className="text-lg font-semibold text-white light:text-slate-900">
             No products selected yet
           </p>
-          <ol className="mx-auto mt-4 max-w-md space-y-2 text-left text-sm text-surface-300 light:text-slate-600">
-            <li>1. Open a product (e.g. from Phones or Laptops).</li>
-            <li>2. Tap <strong>Add to compare</strong>.</li>
-            <li>3. Open a second product and tap Add to compare again.</li>
-            <li>4. You will land here with both products in the table.</li>
+          <ol className="mx-auto mt-4 max-w-md space-y-3 text-left text-sm text-surface-300 light:text-slate-600">
+            <li>
+              <strong className="text-white light:text-slate-900">1.</strong> Tap{' '}
+              <Link href="/categories/smartphones" className="font-semibold text-brand-400 underline">
+                Browse phones
+              </Link>{' '}
+              (or laptops).
+            </li>
+            <li>
+              <strong className="text-white light:text-slate-900">2.</strong> Open any product.
+            </li>
+            <li>
+              <strong className="text-white light:text-slate-900">3.</strong> Tap the{' '}
+              <strong className="text-white light:text-slate-900">Add to compare</strong> button on that
+              product page.
+            </li>
+            <li>
+              <strong className="text-white light:text-slate-900">4.</strong> Open a second product and
+              tap Add to compare again — both appear in this table.
+            </li>
           </ol>
-          <p className="mt-4 text-xs text-surface-500">
-            Tip: You can also open this page with IDs in the URL, e.g.{' '}
-            <code className="text-brand-300">/compare?ids=id1,id2</code>
-          </p>
         </div>
       ) : (
         <div className="mt-8 overflow-x-auto rounded-2xl border border-surface-700 light:border-slate-200">
