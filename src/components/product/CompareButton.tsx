@@ -22,8 +22,7 @@ function writeIds(ids: string[]) {
 }
 
 /**
- * Professional secondary action — outline style that blends with the page,
- * not a solid white sticker.
+ * Professional secondary action — outline style that blends with the page.
  */
 export function CompareButton({ productId }: { productId: string }) {
   const [href, setHref] = useState(`/compare?ids=${productId}`);
@@ -54,39 +53,21 @@ export function CompareButton({ productId }: { productId: string }) {
           : 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-surface-500 bg-transparent px-5 text-sm font-semibold text-surface-100 transition hover:border-surface-300 hover:bg-white/5 light:border-slate-300 light:text-slate-800 light:hover:border-slate-400 light:hover:bg-slate-50'
       }
     >
-      {added ? (
-        <>
-          <svg
-            className="h-4 w-4 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            aria-hidden
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          In compare list
-        </>
-      ) : (
-        <>
-          <svg
-            className="h-4 w-4 shrink-0 opacity-80"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-            aria-hidden
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-            />
-          </svg>
-          Add to compare
-        </>
-      )}
+      <svg
+        className="h-4 w-4 shrink-0 opacity-90"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+        aria-hidden
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+        />
+      </svg>
+      {added ? 'Compare products' : 'Add to compare'}
     </Link>
   );
 }

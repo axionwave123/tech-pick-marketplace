@@ -6,6 +6,7 @@ import { formatNaira, relativeTime, formatDiscount } from '@/lib/utils';
 import { Rating, ScoreBadge } from '@/components/ui/Rating';
 import { Badge } from '@/components/ui/Badge';
 import { CompareButton } from '@/components/product/CompareButton';
+import { StoreLogo } from '@/components/product/StoreLogo';
 
 export async function generateMetadata({
   params,
@@ -35,6 +36,7 @@ export default async function ProductPage({
     .filter((o) => o.status === 'active')
     .sort((a, b) => a.price - b.price);
   const best = offers[0];
+  const lowestPrice = best?.price;
   const specs = (product.product_specifications || []).sort(
     (a, b) =>
       (a.specification_definitions?.sort_order ?? 0) -
@@ -66,7 +68,6 @@ export default async function ProductPage({
       </nav>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        {/* White canvas so product photos look clean and professional */}
         <div className="relative aspect-square overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-sm ring-1 ring-black/5">
           {primary ? (
             <Image
@@ -121,8 +122,9 @@ export default async function ProductPage({
                     href={o.affiliate_url || o.product_url}
                     target="_blank"
                     rel="noopener noreferrer sponsored"
-                    className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
                   >
+                    <StoreLogo name={o.stores?.name || 'Store'} logoUrl={o.stores?.logo_url} size={20} />
                     Check price on {o.stores?.name || 'store'}
                   </a>
                 ))}
@@ -222,33 +224,123 @@ export default async function ProductPage({
           )}
         </div>
 
+        {/* ——— Professional price comparison ——— */}
         <aside className="space-y-6">
-          <div className="rounded-2xl border border-surface-700 light:border-surface-200 p-5">
-            <h3 className="font-semibold text-white light:text-surface-900">Price comparison</h3>
-            <ul className="mt-4 space-y-3">
-              {offers.map((o) => (
-                <li key={o.id} className="flex items-center justify-between gap-2 text-sm">
-                  <div>
-                    <p className="font-medium text-white light:text-surface-900">{o.stores?.name}</p>
-                    <p className="text-xs text-surface-400">{relativeTime(o.last_checked_at)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-white light:text-surface-900">{formatNaira(o.price)}</p>
-                    <a
-                      href={o.affiliate_url || o.product_url}
-                      target="_blank"
-                      rel="noopener noreferrer sponsored"
-                      className="text-xs font-medium text-brand-400 light:text-brand-600 hover:underline"
-                    >
-                      View deal
-                    </a>
-                  </div>
-                </li>
-              ))}
+          <div className="overflow-hidden rounded-2xl border border-surface-600/80 bg-gradient-to-b from-surface-900 to-surface-950 shadow-lg ring-1 ring-white/5 light:border-slate-200 light:from-white light:to-slate-50 light:ring-slate-200/60">
+            <div className="border-b border-surface-700/80 bg-surface-900/80 px-5 py-4 light:border-slate-100 light:bg-white">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-bold tracking-tight text-white light:text-slate-900">
+                  Price comparison
+                </h3>
+                <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-400 light:bg-emerald-50 light:text-emerald-700">
+                  {offers.length} store{offers.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-surface-400 light:text-slate-500">
+                Sorted by lowest price · verify on retailer site
+              </p>
+            </div>
+
+            <ul className="divide-y divide-surface-800/80 light:divide-slate-100">
+              {offers.map((o, index) => {
+                const isBest = o.price === lowestPrice;
+                const storeName = o.stores?.name || 'Store';
+                const logoUrl = o.stores?.logo_url;
+                const dealHref = o.affiliate_url || o.product_url;
+                const hasDiscount =
+                  o.original_price != null && o.original_price > o.price;
+
+                return (
+                  <li
+                    key={o.id}
+                    className={
+                      isBest
+                        ? 'relative bg-emerald-950/30 px-4 py-4 light:bg-emerald-50/60'
+                        : 'px-4 py-4'
+                    }
+                  >
+                    {isBest && (
+                      <span className="absolute right-3 top-3 rounded-md bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                        Best price
+                      </span>
+                    )}
+
+                    <div className="flex items-start gap-3">
+                      <StoreLogo name={storeName} logoUrl={logoUrl} size={40} />
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-bold text-white light:text-slate-900">
+                            {storeName}
+                          </p>
+                          {index === 0 && !isBest && (
+                            <span className="text-[10px] font-medium text-surface-500">#1</span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-surface-400 light:text-slate-500">
+                          Checked {relativeTime(o.last_checked_at)}
+                        </p>
+
+                        <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
+                          <div>
+                            <p
+                              className={
+                                isBest
+                                  ? 'text-lg font-bold text-emerald-300 light:text-emerald-700'
+                                  : 'text-lg font-bold text-white light:text-slate-900'
+                              }
+                            >
+                              {formatNaira(o.price)}
+                            </p>
+                            {hasDiscount && (
+                              <p className="text-xs text-surface-400 light:text-slate-500">
+                                <span className="line-through">
+                                  {formatNaira(o.original_price!)}
+                                </span>{' '}
+                                <span className="font-semibold text-red-400 light:text-red-600">
+                                  {formatDiscount(o.original_price!, o.price)}
+                                </span>
+                              </p>
+                            )}
+                          </div>
+
+                          {dealHref && (
+                            <a
+                              href={dealHref}
+                              target="_blank"
+                              rel="noopener noreferrer sponsored"
+                              className={
+                                isBest
+                                  ? 'inline-flex items-center rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-500'
+                                  : 'inline-flex items-center rounded-lg border border-surface-600 bg-surface-800/80 px-3 py-2 text-xs font-bold text-white hover:border-brand-500 hover:bg-surface-700 light:border-slate-200 light:bg-white light:text-slate-800 light:hover:border-brand-400 light:hover:bg-slate-50'
+                              }
+                            >
+                              View deal →
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+
               {offers.length === 0 && (
-                <li className="text-sm text-surface-400 light:text-surface-500">No active offers.</li>
+                <li className="px-5 py-8 text-center text-sm text-surface-400 light:text-slate-500">
+                  No active offers yet.
+                </li>
               )}
             </ul>
+
+            {offers.length > 1 && (
+              <div className="border-t border-surface-700/80 bg-surface-900/50 px-5 py-3 text-center text-[11px] text-surface-400 light:border-slate-100 light:bg-slate-50 light:text-slate-500">
+                Save up to{' '}
+                <span className="font-bold text-emerald-400 light:text-emerald-600">
+                  {formatNaira(Math.max(...offers.map((o) => o.price)) - (lowestPrice || 0))}
+                </span>{' '}
+                by picking the best price
+              </div>
+            )}
           </div>
         </aside>
       </div>
