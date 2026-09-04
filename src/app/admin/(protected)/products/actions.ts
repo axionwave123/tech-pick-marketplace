@@ -11,6 +11,14 @@ export type ProductFormState = {
   success?: string;
 };
 
+type OfferInput = {
+  offer_id?: string | null;
+  store_id: string;
+  price: string;
+  original_price?: string | null;
+  product_url?: string | null;
+};
+
 function jumiaSearchUrl(name: string) {
   return `https://www.jumia.com.ng/catalog/?q=${encodeURIComponent(name.trim())}`;
 }
@@ -24,10 +32,55 @@ function revalidateProductPaths(slug?: string) {
   revalidatePath('/admin/products');
   revalidatePath('/admin/drafts');
   revalidatePath('/admin/needs-update');
+  revalidatePath('/admin/offers');
   revalidatePath('/');
   revalidatePath('/deals');
   revalidatePath('/search');
   if (slug) revalidatePath(`/products/${slug}`);
+}
+
+function parseOffersJson(formData: FormData): OfferInput[] {
+  const raw = String(formData.get('offers_json') || '').trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (o: any) => o && typeof o.store_id === 'string' && o.store_id && o.price
+    ) as OfferInput[];
+  } catch {
+    return [];
+  }
+}
+
+function buildOfferPayload(
+  productId: string,
+  o: OfferInput,
+  productName: string
+) {
+  const price = Number(o.price);
+  const original_price = o.original_price ? Number(o.original_price) : null;
+  const discount =
+    original_price && !Number.isNaN(original_price) && original_price > price
+      ? Math.round(((original_price - price) / original_price) * 100)
+      : null;
+  let product_url = (o.product_url || '').trim() || null;
+  if (!product_url) product_url = jumiaSearchUrl(productName);
+
+  return {
+    product_id: productId,
+    store_id: o.store_id,
+    price,
+    original_price: original_price && !Number.isNaN(original_price) ? original_price : null,
+    currency: 'NGN',
+    discount_percent: discount,
+    availability: 'in_stock',
+    product_url,
+    affiliate_url: null,
+    last_checked_at: new Date().toISOString(),
+    status: 'active',
+    updated_at: new Date().toISOString(),
+  };
 }
 
 export async function createProduct(
@@ -46,10 +99,7 @@ export async function createProduct(
   const brand_id = String(formData.get('brand_id') || '') || null;
   const category_id = String(formData.get('category_id') || '') || null;
   const image_url = String(formData.get('image_url') || '').trim() || null;
-  const store_id = String(formData.get('store_id') || '') || null;
-  const priceRaw = String(formData.get('price') || '').trim();
-  const originalRaw = String(formData.get('original_price') || '').trim();
-  let product_url = String(formData.get('product_url') || '').trim() || null;
+  const offerInputs = parseOffersJson(formData);
 
   if (!name) return { error: 'Product name is required.' };
   if (!slug) slug = slugify(name);
@@ -57,8 +107,6 @@ export async function createProduct(
   if (!['draft', 'published', 'archived'].includes(status)) {
     return { error: 'Invalid status.' };
   }
-
-  if (!product_url) product_url = jumiaSearchUrl(name);
 
   const supabase = await db();
 
@@ -94,27 +142,15 @@ export async function createProduct(
     });
   }
 
-  const price = priceRaw ? Number(priceRaw) : NaN;
-  if (store_id && !Number.isNaN(price) && price > 0) {
-    const original_price = originalRaw ? Number(originalRaw) : null;
-    const discount =
-      original_price && original_price > price
-        ? Math.round(((original_price - price) / original_price) * 100)
-        : null;
+  // Insert all valid store offers (one per store)
+  const seenStores = new Set<string>();
+  for (const o of offerInputs) {
+    const price = Number(o.price);
+    if (!o.store_id || Number.isNaN(price) || price <= 0) continue;
+    if (seenStores.has(o.store_id)) continue; // one offer per store
+    seenStores.add(o.store_id);
 
-    await supabase.from('product_offers').insert({
-      product_id: product.id,
-      store_id,
-      price,
-      original_price: original_price && !Number.isNaN(original_price) ? original_price : null,
-      currency: 'NGN',
-      discount_percent: discount,
-      availability: 'in_stock',
-      product_url,
-      affiliate_url: null,
-      last_checked_at: new Date().toISOString(),
-      status: 'active',
-    });
+    await supabase.from('product_offers').insert(buildOfferPayload(product.id, o, name));
   }
 
   revalidateProductPaths(slug);
@@ -138,11 +174,7 @@ export async function updateProduct(
   const brand_id = String(formData.get('brand_id') || '') || null;
   const category_id = String(formData.get('category_id') || '') || null;
   const image_url = String(formData.get('image_url') || '').trim() || null;
-  const store_id = String(formData.get('store_id') || '') || null;
-  const priceRaw = String(formData.get('price') || '').trim();
-  const originalRaw = String(formData.get('original_price') || '').trim();
-  let product_url = String(formData.get('product_url') || '').trim() || null;
-  const offer_id = String(formData.get('offer_id') || '').trim() || null;
+  const offerInputs = parseOffersJson(formData);
 
   if (!name) return { error: 'Product name is required.' };
   if (!slug) slug = slugify(name);
@@ -150,7 +182,6 @@ export async function updateProduct(
   if (!['draft', 'published', 'archived'].includes(status)) {
     return { error: 'Invalid status.' };
   }
-  if (!product_url) product_url = jumiaSearchUrl(name);
 
   const supabase = await db();
 
@@ -209,38 +240,65 @@ export async function updateProduct(
     }
   }
 
-  const price = priceRaw ? Number(priceRaw) : NaN;
-  if (store_id && !Number.isNaN(price) && price > 0) {
-    const original_price = originalRaw ? Number(originalRaw) : null;
-    const discount =
-      original_price && original_price > price
-        ? Math.round(((original_price - price) / original_price) * 100)
-        : null;
+  // Sync offers: update existing by offer_id, insert new, leave others
+  const seenStores = new Set<string>();
+  const keptOfferIds = new Set<string>();
 
-    const offerPayload = {
-      product_id: id,
-      store_id,
-      price,
-      original_price: original_price && !Number.isNaN(original_price) ? original_price : null,
-      currency: 'NGN',
-      discount_percent: discount,
-      availability: 'in_stock',
-      product_url,
-      affiliate_url: null,
-      last_checked_at: new Date().toISOString(),
-      status: 'active',
-      updated_at: new Date().toISOString(),
-    };
+  for (const o of offerInputs) {
+    const price = Number(o.price);
+    if (!o.store_id || Number.isNaN(price) || price <= 0) continue;
+    if (seenStores.has(o.store_id)) continue;
+    seenStores.add(o.store_id);
 
-    if (offer_id) {
-      await supabase.from('product_offers').update(offerPayload).eq('id', offer_id);
+    const payload = buildOfferPayload(id, o, name);
+
+    if (o.offer_id) {
+      await supabase.from('product_offers').update(payload).eq('id', o.offer_id);
+      keptOfferIds.add(o.offer_id);
     } else {
-      await supabase.from('product_offers').insert(offerPayload);
+      // Check if an active offer already exists for this store on this product
+      const { data: existingOffer } = await supabase
+        .from('product_offers')
+        .select('id')
+        .eq('product_id', id)
+        .eq('store_id', o.store_id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (existingOffer?.id) {
+        await supabase.from('product_offers').update(payload).eq('id', existingOffer.id);
+        keptOfferIds.add(existingOffer.id);
+      } else {
+        const { data: inserted } = await supabase
+          .from('product_offers')
+          .insert(payload)
+          .select('id')
+          .single();
+        if (inserted?.id) keptOfferIds.add(inserted.id);
+      }
+    }
+  }
+
+  // Soft-deactivate offers that were removed from the form (same product, not in kept list)
+  if (keptOfferIds.size > 0 || offerInputs.length === 0) {
+    const { data: allOffers } = await supabase
+      .from('product_offers')
+      .select('id')
+      .eq('product_id', id)
+      .eq('status', 'active');
+
+    for (const row of allOffers || []) {
+      if (!keptOfferIds.has(row.id)) {
+        await supabase
+          .from('product_offers')
+          .update({ status: 'inactive', updated_at: new Date().toISOString() })
+          .eq('id', row.id);
+      }
     }
   }
 
   revalidateProductPaths(slug);
-  return { success: 'Product updated.' };
+  return { success: 'Product updated with store offers.' };
 }
 
 export async function deleteProduct(productId: string): Promise<ProductFormState> {
@@ -265,7 +323,6 @@ export async function deleteProduct(productId: string): Promise<ProductFormState
   if (error) return { error: error.message };
 
   revalidateProductPaths(product?.slug);
-  // Stay on drafts list when deleting a draft
   if (product?.status === 'draft') {
     redirect('/admin/drafts');
   }

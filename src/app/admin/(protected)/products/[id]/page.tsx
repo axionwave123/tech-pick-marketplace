@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/admin';
-import { ProductForm } from '../ProductForm';
+import { ProductForm, type OfferRow } from '../ProductForm';
 import { DeleteProductButton } from '../DeleteProductButton';
 
 export default async function EditProductPage({
@@ -38,9 +38,31 @@ export default async function EditProductPage({
     (product.product_images || []).find((i: any) => i.is_primary)?.url ||
     (product.product_images || [])[0]?.url ||
     '';
-  const offer =
-    (product.product_offers || []).find((o: any) => o.status === 'active') ||
-    (product.product_offers || [])[0];
+
+  // Load ALL active offers so admin can edit multi-store prices
+  const activeOffers = (product.product_offers || []).filter(
+    (o: any) => o.status === 'active' || !o.status
+  );
+
+  const offers: OfferRow[] =
+    activeOffers.length > 0
+      ? activeOffers.map((o: any, i: number) => ({
+          key: o.id || `existing-${i}`,
+          offer_id: o.id,
+          store_id: o.store_id || '',
+          price: o.price != null ? String(o.price) : '',
+          original_price: o.original_price != null ? String(o.original_price) : '',
+          product_url: o.product_url || '',
+        }))
+      : [
+          {
+            key: 'empty-0',
+            store_id: '',
+            price: '',
+            original_price: '',
+            product_url: '',
+          },
+        ];
 
   const initial = {
     id: product.id,
@@ -51,11 +73,7 @@ export default async function EditProductPage({
     brand_id: product.brand_id || '',
     category_id: product.category_id || '',
     image_url: image,
-    store_id: offer?.store_id || '',
-    price: offer?.price != null ? String(offer.price) : '',
-    original_price: offer?.original_price != null ? String(offer.original_price) : '',
-    product_url: offer?.product_url || '',
-    offer_id: offer?.id || '',
+    offers,
   };
 
   return (

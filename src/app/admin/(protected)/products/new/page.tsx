@@ -24,8 +24,9 @@ export default async function NewProductPage() {
       </div>
       <h1 className="mt-2 text-2xl font-bold text-white">Add product</h1>
       <p className="mt-2 text-sm text-surface-400">
-        Fill the form, upload an image (or paste a URL), add a store price, then Save. Published products
-        appear on the public site.
+        Fill the form, upload an image, then add one or more store prices (Jumia, Amazon, Temu…).
+        Use <strong className="text-surface-200">+ Add store offer</strong> for each retailer so
+        shoppers can compare prices.
       </p>
       <ProductForm
         brands={brands || []}
