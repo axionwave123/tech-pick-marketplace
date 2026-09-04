@@ -68,6 +68,31 @@ html.dark .text-black {
 }
 
 /*
+ * Mobile menu + chips — forced high contrast (fixes dark-on-dark lettering)
+ */
+.mobile-nav-link {
+  color: #f8fafc !important;
+}
+.mobile-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+html.light .mobile-nav-link {
+  color: #0f172a !important;
+}
+html.light .mobile-nav-link:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.mobile-chip {
+  color: #f8fafc !important;
+}
+html.light .mobile-chip {
+  color: #1e293b !important;
+}
+
+/*
  * ADD TO COMPARE button — high contrast
  * Default + dark: WHITE background, BLACK text
  * Light theme: BLACK background, WHITE text
