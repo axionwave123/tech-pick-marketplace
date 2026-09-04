@@ -44,27 +44,74 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--foreground);
 }
 
-html.dark .text-surface-900:not(.bg-white):not([class*='bg-white']):not(.bg-slate-50):not(.bg-slate-100):not(.compare-btn) {
-  color: #f8fafc;
-}
-
-html.dark .bg-white,
-html.dark [class*='bg-white'] {
+/* Only force dark text on solid white cards — NOT opacity variants like bg-white/10 */
+html.dark .bg-white:not([class*='bg-white/']),
+html.dark .bg-slate-50,
+html.dark .bg-slate-100 {
   color: #0f172a;
 }
 
-html.dark .bg-white .text-surface-900,
-html.dark .bg-white .text-surface-800,
-html.dark .bg-white .text-surface-700,
-html.dark [class*='bg-white'] .text-surface-900,
-html.dark [class*='bg-white'] .text-surface-800,
-html.dark [class*='bg-white'] .text-surface-700 {
+html.dark .bg-white:not([class*='bg-white/']) .text-surface-900,
+html.dark .bg-white:not([class*='bg-white/']) .text-surface-800,
+html.dark .bg-white:not([class*='bg-white/']) .text-surface-700,
+html.dark .bg-slate-50 .text-surface-900,
+html.dark .bg-slate-50 .text-surface-800,
+html.dark .bg-slate-50 .text-surface-700 {
   color: #0f172a !important;
 }
 
-html.dark .text-slate-900,
-html.dark .text-black {
+/*
+ * High-contrast action buttons — always readable in dark & light mode
+ * Dark mode → white text / light border
+ * Light mode → dark text / solid white
+ */
+.compare-btn {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+.compare-btn:hover {
+  border-color: rgba(255, 255, 255, 0.85) !important;
+  background-color: rgba(255, 255, 255, 0.22) !important;
+}
+html.light .compare-btn {
   color: #0f172a !important;
+  border-color: #94a3b8 !important;
+  background-color: #ffffff !important;
+}
+html.light .compare-btn:hover {
+  border-color: #64748b !important;
+  background-color: #f8fafc !important;
+}
+/* When already in compare list */
+.compare-btn.compare-btn--added {
+  color: #bfdbfe !important;
+  border-color: #60a5fa !important;
+  background-color: rgba(37, 99, 235, 0.25) !important;
+}
+html.light .compare-btn.compare-btn--added {
+  color: #1d4ed8 !important;
+  border-color: #2563eb !important;
+  background-color: #eff6ff !important;
+}
+
+.view-deal-btn {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+.view-deal-btn:hover {
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  background-color: rgba(255, 255, 255, 0.25) !important;
+}
+html.light .view-deal-btn {
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  background-color: #ffffff !important;
+}
+html.light .view-deal-btn:hover {
+  border-color: #3b82f6 !important;
+  background-color: #f8fafc !important;
 }
 
 /*
