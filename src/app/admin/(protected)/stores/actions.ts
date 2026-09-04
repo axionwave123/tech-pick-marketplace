@@ -15,6 +15,21 @@ async function db() {
   return createClient();
 }
 
+/** Prefer explicit logo; else favicon from website domain so logos appear automatically */
+function resolveLogoUrl(logo_url: string | null, website_url: string | null): string | null {
+  if (logo_url) return logo_url;
+  if (!website_url) return null;
+  try {
+    const host = new URL(
+      website_url.startsWith('http') ? website_url : `https://${website_url}`
+    ).hostname.replace(/^www\./, '');
+    if (!host) return null;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`;
+  } catch {
+    return null;
+  }
+}
+
 export async function createStore(
   _prev: StoreFormState,
   formData: FormData
@@ -25,7 +40,7 @@ export async function createStore(
   const name = String(formData.get('name') || '').trim();
   let slug = String(formData.get('slug') || '').trim();
   const website_url = String(formData.get('website_url') || '').trim() || null;
-  const logo_url = String(formData.get('logo_url') || '').trim() || null;
+  let logo_url = String(formData.get('logo_url') || '').trim() || null;
   const country_code = String(formData.get('country_code') || 'NG').trim() || 'NG';
   const status = String(formData.get('status') || 'active');
 
@@ -33,6 +48,8 @@ export async function createStore(
   if (!slug) slug = slugify(name);
   else slug = slugify(slug);
   if (!['active', 'inactive'].includes(status)) return { error: 'Invalid status.' };
+
+  logo_url = resolveLogoUrl(logo_url, website_url);
 
   const supabase = await db();
   const { error } = await supabase.from('stores').insert({
@@ -55,7 +72,7 @@ export async function createStore(
   revalidatePath('/admin/stores');
   revalidatePath('/admin/offers');
   revalidatePath('/admin/products');
-  return { success: `Store “${name}” added. You can now attach prices/discounts per product.` };
+  return { success: `Store “${name}” added. Logo will show next to prices automatically.` };
 }
 
 export async function updateStore(
@@ -71,7 +88,7 @@ export async function updateStore(
   const name = String(formData.get('name') || '').trim();
   let slug = String(formData.get('slug') || '').trim();
   const website_url = String(formData.get('website_url') || '').trim() || null;
-  const logo_url = String(formData.get('logo_url') || '').trim() || null;
+  let logo_url = String(formData.get('logo_url') || '').trim() || null;
   const country_code = String(formData.get('country_code') || 'NG').trim() || 'NG';
   const status = String(formData.get('status') || 'active');
 
@@ -79,6 +96,8 @@ export async function updateStore(
   if (!slug) slug = slugify(name);
   else slug = slugify(slug);
   if (!['active', 'inactive'].includes(status)) return { error: 'Invalid status.' };
+
+  logo_url = resolveLogoUrl(logo_url, website_url);
 
   const supabase = await db();
   const { error } = await supabase
