@@ -1,10 +1,6 @@
 /**
  * AI Research — reliable sources only from serverless (Vercel):
  * Wikipedia OpenSearch + summary, Wikidata, Wikimedia Commons.
- *
- * Jumia/Amazon/Temu HTML is usually blocked (403) from datacenter IPs,
- * so we always attach store *search* URLs for the admin to open and confirm ₦.
- * Optional SERPER_API_KEY unlocks live Google snippets/prices/images.
  */
 
 export type StoreOfferDraft = {
@@ -82,15 +78,21 @@ function cleanImageUrl(raw: string | null | undefined): string | null {
   if (/sprite|logo|icon|favicon|1x1|pixel|badge/i.test(s)) return null;
   try {
     const u = new URL(s);
-    // Commons sometimes adds tracking query params that break hotlinking
     ['utm_source', 'utm_campaign', 'utm_content', 'utm_medium'].forEach((k) =>
       u.searchParams.delete(k)
     );
-    // Prefer direct upload.wikimedia.org / thumb without junk
     return u.toString();
   } catch {
     return s;
   }
+}
+
+function uniqueSortedNumbers(out: number[]): number[] {
+  return Array.from(new Set(out)).sort((a, b) => a - b);
+}
+
+function uniqueStrings(arr: string[]): string[] {
+  return Array.from(new Set(arr));
 }
 
 function parseNaira(text: string): number[] {
@@ -111,7 +113,7 @@ function parseNaira(text: string): number[] {
     const usd = Number(m[1].replace(/,/g, ''));
     if (usd >= 15 && usd <= 4000) out.push(Math.round(usd * 1600));
   }
-  return [...new Set(out)].sort((a, b) => a - b);
+  return uniqueSortedNumbers(out);
 }
 
 function pickBestPrice(prices: number[]): { price: number | null; original: number | null } {
@@ -133,20 +135,17 @@ function extractFeatureBullets(text: string): string[] {
       s
     )
   );
-  return [...new Set(features)].slice(0, 8);
+  return uniqueStrings(features).slice(0, 8);
 }
 
-/** Build search variants so "Infinix hot 60 i" still finds "Infinix Hot 9 Pro" series pages */
 function searchVariants(query: string): string[] {
   const q = query.trim();
   const variants = new Set<string>([q]);
-  // Drop trailing single letters / tiny tokens ("60 i" → keep brand + series)
   const tokens = q.split(/\s+/).filter(Boolean);
   if (tokens.length >= 2) {
     variants.add(tokens.slice(0, 2).join(' '));
     variants.add(tokens.slice(0, 3).join(' '));
   }
-  // Brand-only fallback for image search
   const brand = tokens[0];
   if (brand && brand.length > 2) {
     variants.add(brand);
@@ -156,7 +155,7 @@ function searchVariants(query: string): string[] {
     }
     if (/laptop|notebook|macbook/i.test(q)) variants.add(`${brand} laptop`);
   }
-  return [...variants];
+  return Array.from(variants);
 }
 
 async function wikiOpenSearch(query: string): Promise<string[]> {
@@ -171,7 +170,7 @@ async function wikiOpenSearch(query: string): Promise<string[]> {
 function rankWikiTitles(query: string, titles: string[]): string[] {
   const q = query.toLowerCase();
   const tokens = q.split(/\s+/).filter((t) => t.length > 1);
-  return [...titles].sort((a, b) => {
+  return titles.slice().sort((a, b) => {
     const score = (t: string) => {
       const tl = t.toLowerCase();
       let s = 0;
@@ -232,7 +231,7 @@ async function commonsImages(query: string, limit = 5): Promise<string[]> {
   const hits = s?.query?.search || [];
   if (!hits.length) return [];
 
-  const ranked = [...hits].sort((a: any, b: any) => {
+  const ranked = hits.slice().sort((a: any, b: any) => {
     const score = (t: string) =>
       (/phone|smartphone|galaxy|infinix|tecno|laptop|front|back|device/i.test(t) ? 3 : 0) +
       (/cover|case|snail|logo|icon|box only/i.test(t) ? -4 : 0);
@@ -403,7 +402,6 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
 
   const variants = searchVariants(query);
 
-  // ——— 1) Wikipedia: try several query variants ———
   for (const variant of variants) {
     const titles = rankWikiTitles(variant, await wikiOpenSearch(variant));
     if (!titles.length) continue;
@@ -411,7 +409,6 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
       wikiTitleTried = title;
       const wiki = await wikiSummary(title);
       if (!wiki?.extract) continue;
-      // Skip useless brand-only stubs when we searched a specific model
       const extract = wiki.extract;
       sources.push(wiki.url || 'Wikipedia');
       displayName = wiki.title || displayName;
@@ -427,7 +424,6 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
     if (shortDescription) break;
   }
 
-  // ——— 2) Wikidata ———
   for (const variant of variants.slice(0, 3)) {
     const wd = await wikidataBlurb(variant);
     if (!wd?.description) continue;
@@ -437,7 +433,6 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
     break;
   }
 
-  // ——— 3) Wikimedia Commons images (multiple variants) ———
   if (!imageUrl || imageCandidates.length < 2) {
     for (const variant of variants.slice(0, 4)) {
       const imgs = await commonsImages(variant, 4);
@@ -452,7 +447,6 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
     }
   }
 
-  // ——— 4) Optional Serper ———
   const serper = await serperEnrich(query);
   if (serper.prices.length || serper.snippets.length || serper.images.length) {
     sources.push('Google (Serper)');
@@ -470,7 +464,7 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
   const { price, original } = pickBestPrice(allPrices);
   const offers = buildForcedOffers(query, price, original, serper.links);
 
-  const strengths = [...strengthSet].slice(0, 6);
+  const strengths = Array.from(strengthSet).slice(0, 6);
   if (!strengths.length) {
     strengths.push('Open store links and confirm key specs before publishing');
     strengths.push('Compare Jumia vs Konga seller ratings');
@@ -501,7 +495,7 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
     `Query: ${query}`,
     `Variants tried: ${variants.join(' | ')}`,
     `Wiki title: ${wikiTitleTried}`,
-    `Sources: ${[...new Set(sources)].join(', ') || 'none'}`,
+    `Sources: ${uniqueStrings(sources).join(', ') || 'none'}`,
     `Image: ${imageUrl ? 'yes' : 'NO'} (${imageCandidates.length} candidates)`,
     `Prices parsed: ${allPrices.slice(0, 8).join(', ') || 'none — set manually in Edit'}`,
     `Offers forced: ${offers.length} (Jumia, Amazon, Temu, Konga)`,
@@ -523,7 +517,7 @@ export async function researchProductFromWeb(query: string): Promise<WebResearch
     notIdealFor: ['Using draft ₦ as final without opening the store'],
     offers,
     reviews,
-    sources: [...new Set(sources)],
+    sources: uniqueStrings(sources),
     rawNotes,
   };
 }
