@@ -115,17 +115,17 @@ export default async function ProductPage({
               <p className="mt-1 text-xs text-slate-500">
                 via {best.stores?.name || 'store'} · Last checked {relativeTime(best.last_checked_at)}
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                 {offers.map((o) => (
                   <a
                     key={o.id}
                     href={o.affiliate_url || o.product_url}
                     target="_blank"
                     rel="noopener noreferrer sponsored"
-                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+                    className="inline-flex items-center gap-3 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-500 hover:shadow-lg"
                   >
-                    <StoreLogo name={o.stores?.name || 'Store'} logoUrl={o.stores?.logo_url} size={20} />
-                    Check price on {o.stores?.name || 'store'}
+                    <StoreLogo name={o.stores?.name || 'Store'} logoUrl={o.stores?.logo_url} size={32} />
+                    <span>Check price on {o.stores?.name || 'store'}</span>
                   </a>
                 ))}
               </div>
@@ -266,7 +266,7 @@ export default async function ProductPage({
                     )}
 
                     <div className="flex items-start gap-3">
-                      <StoreLogo name={storeName} logoUrl={logoUrl} size={40} />
+                      <StoreLogo name={storeName} logoUrl={logoUrl} size={44} />
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -311,8 +311,8 @@ export default async function ProductPage({
                               rel="noopener noreferrer sponsored"
                               className={
                                 isBest
-                                  ? 'inline-flex items-center rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-500'
-                                  : 'inline-flex items-center rounded-lg border border-surface-600 bg-surface-800/80 px-3 py-2 text-xs font-bold text-white hover:border-brand-500 hover:bg-surface-700 light:border-slate-200 light:bg-white light:text-slate-800 light:hover:border-brand-400 light:hover:bg-slate-50'
+                                  ? 'inline-flex items-center rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-500'
+                                  : 'inline-flex items-center rounded-lg border-2 border-white/35 bg-white/15 px-3.5 py-2 text-xs font-bold text-white shadow-sm backdrop-blur-sm transition hover:border-white/60 hover:bg-white/25 light:border-slate-300 light:bg-white light:text-slate-800 light:hover:border-brand-400 light:hover:bg-slate-50'
                               }
                             >
                               View deal →
