@@ -62,14 +62,13 @@ html.dark [class*='bg-white'] .text-surface-700 {
   color: #0f172a !important;
 }
 
-html.dark .!text-slate-900,
 html.dark .text-slate-900,
 html.dark .text-black {
   color: #0f172a !important;
 }
 
 /*
- * ADD TO COMPARE button — highest priority contrast
+ * ADD TO COMPARE button — high contrast
  * Default + dark: WHITE background, BLACK text
  * Light theme: BLACK background, WHITE text
  */
@@ -89,7 +88,6 @@ a.compare-btn span,
   border: 1px solid #94a3b8 !important;
   background-color: #ffffff !important;
   color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
 }
 
 a.compare-btn:hover,
@@ -98,7 +96,6 @@ a.compare-btn:hover span,
 .compare-btn:hover span {
   background-color: #e2e8f0 !important;
   color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
 }
 
 html.light a.compare-btn,
@@ -108,7 +105,6 @@ html.light .compare-btn span {
   border-color: #1e293b !important;
   background-color: #0f172a !important;
   color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
 }
 
 html.light a.compare-btn:hover,
@@ -117,7 +113,6 @@ html.light a.compare-btn:hover span,
 html.light .compare-btn:hover span {
   background-color: #1e293b !important;
   color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
 }
 
 html.dark a.compare-btn,
@@ -127,7 +122,6 @@ html.dark .compare-btn span {
   border-color: #94a3b8 !important;
   background-color: #ffffff !important;
   color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
 }
 
 @layer utilities {
