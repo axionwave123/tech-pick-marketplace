@@ -25,7 +25,7 @@ function parseNairaPrices(text: string): number[] {
     const n = Number(m[1].replace(/,/g, ''));
     if (n >= 500 && n <= 50_000_000) out.push(Math.round(n));
   }
-  return [...new Set(out)].sort((a, b) => a - b);
+  return Array.from(new Set(out)).sort((a, b) => a - b);
 }
 
 function detectAvailability(html: string): string {
@@ -74,7 +74,6 @@ function pickPrice(prices: number[], previous: number | null): number | null {
 async function resolveClient(client?: SupabaseClient): Promise<SupabaseClient> {
   if (client) return client;
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
-  // Fallback: cookie-bound admin session (manual runs)
   try {
     return await createClient();
   } catch {
