@@ -66,18 +66,19 @@ export default async function ProductPage({
       </nav>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-3xl border border-surface-700 light:border-surface-200 bg-surface-900 light:bg-surface-50">
+        {/* White canvas so product photos look clean and professional */}
+        <div className="relative aspect-square overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-sm ring-1 ring-black/5">
           {primary ? (
             <Image
               src={primary.url}
               alt={primary.alt_text || product.name}
               fill
-              className="object-contain p-8"
+              className="object-contain p-6 sm:p-10"
               priority
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-surface-500">No image</div>
+            <div className="flex h-full items-center justify-center text-surface-400">No image</div>
           )}
         </div>
 

@@ -40,17 +40,18 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-surface-200 bg-white shadow-card transition hover:shadow-card-hover">
       <Link href={productHref} className="block">
-        <div className="relative h-28 bg-surface-50 sm:h-32">
+        {/* Pure white canvas so product photos fill cleanly */}
+        <div className="relative h-28 bg-white sm:h-32">
           {image ? (
             <Image
               src={image.url}
               alt={image.alt_text || product.name}
               fill
-              className="object-contain p-1.5 transition group-hover:scale-[1.02]"
+              className="object-contain p-2 transition group-hover:scale-[1.02]"
               sizes="(max-width: 640px) 50vw, 25vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-xs text-surface-500">No image</div>
+            <div className="flex h-full items-center justify-center text-xs text-surface-400">No image</div>
           )}
           {discount && (
             <Badge variant="discount" className="absolute left-1.5 top-1.5">
@@ -58,7 +59,7 @@ export function ProductCard({ product }: { product: Product }) {
             </Badge>
           )}
         </div>
-        <div className="px-2 pb-1 pt-1.5">
+        <div className="border-t border-surface-100 px-2 pb-1 pt-1.5">
           {product.brands && (
             <p className="text-[10px] font-semibold uppercase tracking-wide text-surface-600">
               {product.brands.name}

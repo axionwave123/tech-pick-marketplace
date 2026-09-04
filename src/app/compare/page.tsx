@@ -201,16 +201,16 @@ export default async function ComparePage({
                   return (
                     <th key={p.id} className="px-4 py-3 align-top">
                       <div className="flex flex-col items-start gap-2">
-                        <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-surface-800 light:bg-white">
+                        <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm">
                           {img ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={img}
                               alt={p.name}
-                              className="h-full w-full object-contain p-1"
+                              className="h-full w-full object-contain p-1.5"
                             />
                           ) : (
-                            <div className="flex h-full items-center justify-center text-[10px] text-surface-500">
+                            <div className="flex h-full items-center justify-center text-[10px] text-surface-400">
                               No img
                             </div>
                           )}
