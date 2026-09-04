@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { deleteStore } from './actions';
 
 export function DeleteStoreButton({
@@ -11,7 +11,7 @@ export function DeleteStoreButton({
   storeName: string;
 }) {
   const [pending, startTransition] = useTransition();
-  const [msg, setMsg] = useStateMsg();
+  const [msg, setMsg] = useState('');
 
   return (
     <div>
@@ -33,9 +33,4 @@ export function DeleteStoreButton({
       {msg && <p className="mt-1 text-xs text-amber-300">{msg}</p>}
     </div>
   );
-}
-
-function useStateMsg() {
-  const { useState } = require('react') as typeof import('react');
-  return useState('' as string);
 }
