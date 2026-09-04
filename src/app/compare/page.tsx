@@ -44,7 +44,9 @@ async function loadProducts(ids: string[]): Promise<CompareProduct[]> {
 
   if (error || !data) return [];
 
-  const map = new Map((data as CompareProduct[]).map((p) => [p.id, p]));
+  // Supabase join typing can be array | object — normalize via unknown
+  const rows = data as unknown as CompareProduct[];
+  const map = new Map(rows.map((p) => [p.id, p]));
   return ids.map((id) => map.get(id)).filter(Boolean) as CompareProduct[];
 }
 
@@ -124,8 +126,9 @@ export default async function ComparePage({
         Product Comparison
       </h1>
       <p className="mt-2 max-w-2xl text-base font-medium text-surface-200 light:text-slate-600">
-        Compare up to 4 products side by side. You do <strong className="text-white light:text-slate-900">not</strong>{' '}
-        type products here. Add them from each product page using the{' '}
+        Compare up to 4 products side by side. You do{' '}
+        <strong className="text-white light:text-slate-900">not</strong> type products here. Add them
+        from each product page using the{' '}
         <strong className="text-white light:text-slate-900">Add to compare</strong> button.
       </p>
 
