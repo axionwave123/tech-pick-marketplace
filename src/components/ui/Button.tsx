@@ -14,9 +14,8 @@ const variants: Record<Variant, string> = {
   primary: 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm',
   secondary:
     'bg-surface-100 text-slate-900 hover:bg-surface-200 dark:bg-surface-800 dark:text-white dark:hover:bg-surface-700',
-  // White pill — label must stay BLACK in dark mode (bg is white)
   outline:
-    'border border-slate-300 bg-white !text-slate-900 hover:bg-slate-100 font-semibold',
+    'border border-slate-300 bg-white text-slate-900 hover:bg-slate-100 font-semibold',
   ghost:
     'hover:bg-surface-100 text-surface-200 light:text-slate-700 dark:hover:bg-surface-800',
   danger: 'bg-red-600 text-white hover:bg-red-700',
