@@ -24,8 +24,8 @@ export type ProductEditValues = {
   brand_id: string;
   category_id: string;
   image_url: string;
+  image_urls?: string[];
   review_video_url: string;
-  /** All store offers for this product */
   offers: OfferRow[];
 };
 
@@ -53,7 +53,12 @@ export function ProductForm({
 }) {
   const isEdit = Boolean(initial?.id);
   const [state, setState] = useState<ProductFormState>({});
-  const [imageUrl, setImageUrl] = useState(initial?.image_url || '');
+  const [imageUrls, setImageUrls] = useState<string[]>(() => {
+    if (initial?.image_urls && initial.image_urls.length > 0) return initial.image_urls;
+    if (initial?.image_url) return [initial.image_url];
+    return [];
+  });
+  const [urlDraft, setUrlDraft] = useState('');
   const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -73,9 +78,7 @@ export function ProductForm({
   });
 
   function updateOffer(key: string, field: keyof OfferRow, value: string) {
-    setOffers((prev) =>
-      prev.map((o) => (o.key === key ? { ...o, [field]: value } : o))
-    );
+    setOffers((prev) => prev.map((o) => (o.key === key ? { ...o, [field]: value } : o)));
   }
 
   function addOffer() {
@@ -89,40 +92,70 @@ export function ProductForm({
     });
   }
 
-  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function uploadOne(file: File): Promise<string | null> {
     if (file.size > 5 * 1024 * 1024) {
-      setState({ error: 'Image must be under 5MB.' });
-      return;
+      setState({ error: `${file.name} must be under 5MB.` });
+      return null;
     }
+    const supabase = createClient();
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from('product-images').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+    if (error) {
+      setState({ error: `Upload failed: ${error.message}` });
+      return null;
+    }
+    const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!files.length) return;
     setUploading(true);
     setState({});
     try {
-      const supabase = createClient();
-      const ext = file.name.split('.').pop() || 'jpg';
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('product-images').upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-      if (error) {
-        setState({ error: `Upload failed: ${error.message}` });
-        setUploading(false);
-        return;
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const url = await uploadOne(file);
+        if (url) uploaded.push(url);
       }
-      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
-      setImageUrl(data.publicUrl);
+      if (uploaded.length) setImageUrls((prev) => [...prev, ...uploaded].slice(0, 12));
     } catch (err) {
       setState({ error: err instanceof Error ? err.message : 'Upload failed' });
     }
     setUploading(false);
   }
 
+  function addImageUrl() {
+    const u = urlDraft.trim();
+    if (!u) return;
+    if (!/^https?:\/\//i.test(u)) {
+      setState({ error: 'Image URL must start with http:// or https://' });
+      return;
+    }
+    setImageUrls((prev) => (prev.includes(u) ? prev : [...prev, u].slice(0, 12)));
+    setUrlDraft('');
+    setState({});
+  }
+
+  function removeImage(url: string) {
+    setImageUrls((prev) => prev.filter((x) => x !== url));
+  }
+
+  function makePrimary(url: string) {
+    setImageUrls((prev) => [url, ...prev.filter((x) => x !== url)]);
+  }
+
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    if (imageUrl) fd.set('image_url', imageUrl);
+    fd.set('images_json', JSON.stringify(imageUrls));
+    if (imageUrls[0]) fd.set('image_url', imageUrls[0]);
 
     const payload = offers
       .filter((o) => o.store_id && o.price && Number(o.price) > 0)
@@ -252,28 +285,69 @@ export function ProductForm({
       </label>
 
       <div className="rounded-lg border border-surface-700 bg-surface-950 p-4">
-        <p className="text-sm font-semibold text-white">Product image</p>
-        <p className="mt-1 text-xs text-surface-400">Upload a file (max 5MB) or paste an image URL.</p>
+        <p className="text-sm font-semibold text-white">Product images</p>
+        <p className="mt-1 text-xs text-surface-400">
+          Upload several angles (max 5MB each, up to 12). First is the main photo. Shoppers can swipe on the
+          product page.
+        </p>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
+          multiple
           onChange={onFileChange}
           className="mt-3 block w-full text-sm text-surface-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
         />
         {uploading && <p className="mt-2 text-xs text-brand-400">Uploading…</p>}
-        <label className="mt-3 block text-sm text-surface-300">
-          Or image URL
+        <div className="mt-3 flex gap-2">
           <input
-            name="image_url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
-            placeholder="https://…"
+            value={urlDraft}
+            onChange={(e) => setUrlDraft(e.target.value)}
+            className="flex-1 rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-sm text-white"
+            placeholder="Or paste image URL https://…"
           />
-        </label>
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="Preview" className="mt-3 h-32 w-32 rounded-lg object-contain bg-white" />
+          <button
+            type="button"
+            onClick={addImageUrl}
+            className="rounded-lg bg-surface-700 px-3 py-2 text-xs font-bold text-white hover:bg-surface-600"
+          >
+            Add URL
+          </button>
+        </div>
+        {imageUrls.length > 0 && (
+          <ul className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {imageUrls.map((url, i) => (
+              <li
+                key={url + i}
+                className="relative overflow-hidden rounded-lg border border-surface-600 bg-white"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="h-24 w-full object-contain p-1" />
+                {i === 0 && (
+                  <span className="absolute left-1 top-1 rounded bg-brand-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                    Main
+                  </span>
+                )}
+                <div className="flex border-t border-surface-200">
+                  {i !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() => makePrimary(url)}
+                      className="flex-1 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      Set main
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(url)}
+                    className="flex-1 py-1 text-[10px] font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
@@ -282,8 +356,7 @@ export function ProductForm({
           <div>
             <p className="text-sm font-semibold text-white">Price / offers (View deal links)</p>
             <p className="mt-1 text-xs text-surface-400">
-              Add one row per store (Jumia, Amazon, Temu, Konga…). Each gets its own price, discount
-              and affiliate link so shoppers can compare.
+              Add one row per store (Jumia, Amazon, Temu…). Each gets its own price and link.
             </p>
           </div>
           <button
@@ -310,7 +383,6 @@ export function ProductForm({
                   Remove
                 </button>
               </div>
-
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm text-surface-300 sm:col-span-2">
                   Store
@@ -327,7 +399,6 @@ export function ProductForm({
                     ))}
                   </select>
                 </label>
-
                 <label className="block text-sm text-surface-300">
                   Current price (₦)
                   <input
@@ -340,9 +411,8 @@ export function ProductForm({
                     placeholder="238000"
                   />
                 </label>
-
                 <label className="block text-sm text-surface-300">
-                  Original price (₦) for discount badge
+                  Original price (₦)
                   <input
                     type="number"
                     min="0"
@@ -353,15 +423,14 @@ export function ProductForm({
                     placeholder="265000"
                   />
                 </label>
-
                 <label className="block text-sm text-surface-300 sm:col-span-2">
-                  Retailer / affiliate product link (View deal)
+                  Retailer / affiliate link
                   <input
                     type="url"
                     value={row.product_url}
                     onChange={(e) => updateOffer(row.key, 'product_url', e.target.value)}
                     className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-                    placeholder="https://www.jumia.com.ng/... or Amazon / Temu link"
+                    placeholder="https://www.jumia.com.ng/..."
                   />
                 </label>
               </div>
@@ -374,18 +443,8 @@ export function ProductForm({
           onClick={addOffer}
           className="mt-4 w-full rounded-lg border border-dashed border-surface-600 py-2.5 text-sm font-semibold text-brand-400 hover:border-brand-500 hover:bg-surface-900"
         >
-          + Add another store (Amazon, Temu, Konga…)
+          + Add another store
         </button>
-
-        {stores.length === 0 && (
-          <p className="mt-3 text-xs text-amber-400">
-            No stores yet. Go to{' '}
-            <a href="/admin/stores" className="underline">
-              Admin → Stores
-            </a>{' '}
-            and add Jumia, Amazon, Temu first.
-          </p>
-        )}
       </div>
 
       <div className="flex flex-wrap gap-3 pt-2">
