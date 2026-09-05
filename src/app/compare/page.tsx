@@ -61,6 +61,19 @@ function primaryImage(p: CompareProduct) {
   return imgs.find((i) => i.is_primary)?.url || imgs[0]?.url || null;
 }
 
+function SpecRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5 border-b border-surface-800/80 py-2.5 last:border-0 light:border-slate-100 sm:flex-row sm:items-start sm:gap-3">
+      <dt className="shrink-0 text-xs font-semibold uppercase tracking-wide text-surface-500 light:text-slate-500 sm:w-24">
+        {label}
+      </dt>
+      <dd className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-surface-100 light:text-slate-800">
+        {children}
+      </dd>
+    </div>
+  );
+}
+
 export default async function ComparePage({
   searchParams,
 }: {
@@ -75,61 +88,23 @@ export default async function ComparePage({
 
   const products = await loadProducts(ids);
 
-  const rows: { label: string; values: (string | null)[] }[] = [];
-
-  if (products.length) {
-    rows.push({
-      label: 'Brand',
-      values: products.map((p) => p.brands?.name || '—'),
-    });
-    rows.push({
-      label: 'Category',
-      values: products.map((p) => p.categories?.name || '—'),
-    });
-    rows.push({
-      label: 'Best price',
-      values: products.map((p) => {
-        const o = bestOffer(p);
-        return o ? formatNaira(o.price) : 'No price';
-      }),
-    });
-    rows.push({
-      label: 'Was',
-      values: products.map((p) => {
-        const o = bestOffer(p);
-        return o?.original_price && o.original_price > o.price
-          ? formatNaira(o.original_price)
-          : '—';
-      }),
-    });
-    rows.push({
-      label: 'Store',
-      values: products.map((p) => bestOffer(p)?.stores?.name || '—'),
-    });
-    rows.push({
-      label: 'Rating',
-      values: products.map((p) =>
-        p.avg_rating != null && p.avg_rating > 0
-          ? `${Number(p.avg_rating).toFixed(1)} (${p.review_count || 0})`
-          : '—'
-      ),
-    });
-    rows.push({
-      label: 'Summary',
-      values: products.map((p) => p.short_description || '—'),
-    });
-  }
+  const gridClass =
+    products.length <= 1
+      ? 'grid-cols-1 max-w-md mx-auto'
+      : products.length === 2
+        ? 'grid-cols-1 sm:grid-cols-2'
+        : products.length === 3
+          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+          : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="font-display text-3xl font-bold text-white light:text-slate-900">
+    <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <h1 className="font-display text-2xl font-bold text-white light:text-slate-900 sm:text-3xl">
         Product Comparison
       </h1>
-      <p className="mt-2 max-w-2xl text-base font-medium text-surface-200 light:text-slate-600">
-        Compare up to 4 products side by side. You do{' '}
-        <strong className="text-white light:text-slate-900">not</strong> type products here. Add them
-        from each product page using the{' '}
-        <strong className="text-white light:text-slate-900">Add to compare</strong> button.
+      <p className="mt-2 max-w-2xl text-sm font-medium text-surface-200 light:text-slate-600 sm:text-base">
+        Compare up to 4 products. Add them from each product page with{' '}
+        <strong className="text-white light:text-slate-900">Add to compare</strong>.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -162,7 +137,7 @@ export default async function ComparePage({
       </div>
 
       {products.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-surface-600 bg-surface-900/60 p-8 text-center light:border-slate-300 light:bg-slate-100">
+        <div className="mt-10 rounded-2xl border border-dashed border-surface-600 bg-surface-900/60 p-6 text-center light:border-slate-300 light:bg-slate-100 sm:p-8">
           <p className="text-lg font-semibold text-white light:text-slate-900">
             No products selected yet
           </p>
@@ -184,93 +159,95 @@ export default async function ComparePage({
             </li>
             <li>
               <strong className="text-white light:text-slate-900">4.</strong> Open a second product and
-              tap Add to compare again — both appear in this table.
+              tap Add to compare again — both appear here.
             </li>
           </ol>
         </div>
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-2xl border border-surface-700 light:border-slate-200">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="bg-surface-900 light:bg-slate-100">
-                <th className="sticky left-0 z-10 bg-surface-900 px-4 py-3 font-medium text-surface-400 light:bg-slate-100 light:text-slate-500">
-                  Spec
-                </th>
-                {products.map((p) => {
-                  const img = primaryImage(p);
-                  return (
-                    <th key={p.id} className="px-4 py-3 align-top">
-                      <div className="flex flex-col items-start gap-2">
-                        <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm">
-                          {img ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={img}
-                              alt={p.name}
-                              className="h-full w-full object-contain p-1.5"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-[10px] text-surface-400">
-                              No img
-                            </div>
-                          )}
-                        </div>
-                        <Link
-                          href={`/products/${p.slug}`}
-                          className="font-bold text-white hover:text-brand-300 light:text-slate-900 light:hover:text-brand-600"
-                        >
-                          {p.name}
-                        </Link>
-                        <RemoveFromCompare productId={p.id} allIds={ids} />
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-surface-800 light:divide-slate-200">
-              {rows.map((row) => (
-                <tr key={row.label} className="hover:bg-surface-900/40 light:hover:bg-slate-50">
-                  <th className="sticky left-0 z-10 bg-surface-950 px-4 py-3 font-medium text-surface-400 light:bg-white light:text-slate-500">
-                    {row.label}
-                  </th>
-                  {row.values.map((v, i) => (
-                    <td
-                      key={`${row.label}-${products[i].id}`}
-                      className="px-4 py-3 text-surface-100 light:text-slate-800"
+        <div className={`mt-6 grid gap-4 sm:gap-5 ${gridClass}`}>
+          {products.map((p) => {
+            const img = primaryImage(p);
+            const offer = bestOffer(p);
+            const dealUrl = offer?.affiliate_url || offer?.product_url;
+            const rating =
+              p.avg_rating != null && p.avg_rating > 0
+                ? `${Number(p.avg_rating).toFixed(1)} (${p.review_count || 0})`
+                : '—';
+            const was =
+              offer?.original_price && offer.original_price > offer.price
+                ? formatNaira(offer.original_price)
+                : '—';
+
+            return (
+              <article
+                key={p.id}
+                className="flex flex-col overflow-hidden rounded-2xl border border-surface-700 bg-surface-900/90 shadow-lg light:border-slate-200 light:bg-white light:shadow-md"
+              >
+                <div className="relative border-b border-surface-800 bg-surface-950/50 px-4 pb-4 pt-5 light:border-slate-100 light:bg-slate-50/80">
+                  <div className="absolute right-3 top-3">
+                    <RemoveFromCompare productId={p.id} allIds={ids} />
+                  </div>
+                  <div className="mx-auto flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm sm:h-32 sm:w-32">
+                    {img ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={img}
+                        alt={p.name}
+                        className="h-full w-full object-contain p-2"
+                      />
+                    ) : (
+                      <span className="text-xs text-surface-400">No image</span>
+                    )}
+                  </div>
+                  <Link
+                    href={`/products/${p.slug}`}
+                    className="mt-3 block text-center text-base font-bold leading-snug text-white hover:text-brand-300 light:text-slate-900 light:hover:text-brand-600"
+                  >
+                    {p.name}
+                  </Link>
+                </div>
+
+                <dl className="flex-1 px-4 py-1">
+                  <SpecRow label="Brand">{p.brands?.name || '—'}</SpecRow>
+                  <SpecRow label="Category">{p.categories?.name || '—'}</SpecRow>
+                  <SpecRow label="Best price">
+                    <span className="text-base font-bold text-emerald-400 light:text-emerald-700">
+                      {offer ? formatNaira(offer.price) : 'No price'}
+                    </span>
+                  </SpecRow>
+                  <SpecRow label="Was">{was}</SpecRow>
+                  <SpecRow label="Store">{offer?.stores?.name || '—'}</SpecRow>
+                  <SpecRow label="Rating">{rating}</SpecRow>
+                  <SpecRow label="Summary">
+                    <span className="whitespace-normal break-words">
+                      {p.short_description || '—'}
+                    </span>
+                  </SpecRow>
+                </dl>
+
+                <div className="mt-auto border-t border-surface-800 p-4 light:border-slate-100">
+                  {dealUrl ? (
+                    <a
+                      href={dealUrl}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      className="flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-500"
                     >
-                      {v}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-              <tr>
-                <th className="sticky left-0 z-10 bg-surface-950 px-4 py-3 font-medium text-surface-400 light:bg-white light:text-slate-500">
-                  Deal
-                </th>
-                {products.map((p) => {
-                  const o = bestOffer(p);
-                  const url = o?.affiliate_url || o?.product_url;
-                  return (
-                    <td key={`deal-${p.id}`} className="px-4 py-3">
-                      {url ? (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer sponsored"
-                          className="inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
-                        >
-                          View deal
-                        </a>
-                      ) : (
-                        <span className="text-surface-500">—</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            </tbody>
-          </table>
+                      View deal
+                    </a>
+                  ) : (
+                    <span className="block text-center text-sm text-surface-500">No deal link</span>
+                  )}
+                  <Link
+                    href={`/products/${p.slug}`}
+                    className="mt-2 block text-center text-xs font-semibold text-brand-400 hover:underline"
+                  >
+                    Full product page →
+                  </Link>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
 
