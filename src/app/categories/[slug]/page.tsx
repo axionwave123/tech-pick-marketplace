@@ -20,7 +20,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 const CATEGORY_BLURBS: Record<string, string> = {
-  smartphones: 'Compare the latest Android phones from Samsung, Xiaomi, Tecno & more across Nigerian stores.',
+  smartphones: 'Compare the latest Android phones from Samsung, Xiaomi, Tecno and more across Nigerian stores.',
   laptops: 'Business, student and gaming laptops — check prices on Jumia, Temu and partners.',
   tablets: 'Tablets for work, school and entertainment with multi-store price comparison.',
   audio: 'Headphones, earbuds and speakers with the best available deals.',
@@ -149,7 +149,7 @@ export default async function CategoryPage({
               No products in {category.name} yet
             </h3>
             <p className="mt-2 max-w-sm text-sm text-surface-400 light:text-slate-500">
-              We're adding more deals soon. Browse other categories in the meantime.
+              More deals are being added soon. Browse other categories in the meantime.
             </p>
             <Link
               href="/search"
