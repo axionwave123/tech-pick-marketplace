@@ -64,7 +64,9 @@ export async function createArticle(
   redirect('/admin/articles');
 }
 
-export async function submitArticleComment(formData: FormData): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function submitArticleComment(
+  formData: FormData
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const article_id = String(formData.get('article_id') || '').trim();
   const author_name = String(formData.get('author_name') || '').trim().slice(0, 80);
   const author_email = String(formData.get('author_email') || '').trim().slice(0, 120) || null;
@@ -94,7 +96,7 @@ export async function submitArticleComment(formData: FormData): Promise<{ ok: tr
       });
       if (e2) {
         console.error(e2);
-        return { ok: false, error: 'Could not post comment.' };
+        return { ok: false, error: 'Could not post comment. Ensure article_comments table exists.' };
       }
     }
     revalidatePath('/articles');
