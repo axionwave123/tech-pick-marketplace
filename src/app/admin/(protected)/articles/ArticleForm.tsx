@@ -86,7 +86,6 @@ export function ArticleForm() {
           Type
           <select
             name="article_type"
-            defaultValue="buying_guide"
             className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           >
             <option value="buying_guide">Buying guide</option>
