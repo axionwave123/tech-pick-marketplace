@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProductBySlug } from '@/lib/data/products';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { CompareButton } from '@/components/product/CompareButton';
 import { StoreLogo } from '@/components/product/StoreLogo';
 import { ReviewVideo } from '@/components/product/ReviewVideo';
+import { ProductGallery } from '@/components/product/ProductGallery';
 
 export async function generateMetadata({
   params,
@@ -32,7 +32,6 @@ export default async function ProductPage({
   if (!product) notFound();
 
   const images = product.product_images || [];
-  const primary = images.find((i) => i.is_primary) || images[0];
   const offers = (product.product_offers || [])
     .filter((o) => o.status === 'active')
     .sort((a, b) => a.price - b.price);
@@ -69,20 +68,14 @@ export default async function ProductPage({
       </nav>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-sm ring-1 ring-black/5">
-          {primary ? (
-            <Image
-              src={primary.url}
-              alt={primary.alt_text || product.name}
-              fill
-              className="object-contain p-6 sm:p-10"
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-surface-400">No image</div>
-          )}
-        </div>
+        <ProductGallery
+          images={(images || []).slice().sort((a, b) => {
+            if (a.is_primary && !b.is_primary) return -1;
+            if (!a.is_primary && b.is_primary) return 1;
+            return 0;
+          })}
+          productName={product.name}
+        />
 
         <div>
           {product.brands && (
