@@ -48,6 +48,11 @@ export function Footer() {
                 Contact
               </Link>
             </li>
+            <li>
+              <Link href="/contact" className="hover:text-brand-300">
+                Report a problem
+              </Link>
+            </li>
           </ul>
         </div>
         <div>
