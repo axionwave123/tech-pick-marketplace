@@ -7,6 +7,7 @@ import { Rating, ScoreBadge } from '@/components/ui/Rating';
 import { Badge } from '@/components/ui/Badge';
 import { CompareButton } from '@/components/product/CompareButton';
 import { StoreLogo } from '@/components/product/StoreLogo';
+import { ReviewVideo } from '@/components/product/ReviewVideo';
 
 export async function generateMetadata({
   params,
@@ -139,6 +140,11 @@ export default async function ProductPage({
           <div className="mt-6 flex gap-3">
             <CompareButton productId={product.id} />
           </div>
+
+          <ReviewVideo
+            url={(product as { review_video_url?: string | null }).review_video_url}
+            title={`${product.name} review`}
+          />
         </div>
       </div>
 
@@ -224,7 +230,6 @@ export default async function ProductPage({
           )}
         </div>
 
-        {/* ——— Professional price comparison ——— */}
         <aside className="space-y-6">
           <div className="overflow-hidden rounded-2xl border border-surface-600/80 bg-gradient-to-b from-surface-900 to-surface-950 shadow-lg ring-1 ring-white/5 light:border-slate-200 light:from-white light:to-slate-50 light:ring-slate-200/60">
             <div className="border-b border-surface-700/80 bg-surface-900/80 px-5 py-4 light:border-slate-100 light:bg-white">
