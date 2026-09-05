@@ -59,7 +59,6 @@ function parseImagesJson(formData: FormData): string[] {
 }
 
 async function saveProductImages(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   productId: string,
   urls: string[],
@@ -85,7 +84,7 @@ function parseOffersJson(formData: FormData): OfferInput[] {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
-      (o: any) => o && typeof o.store_id === 'string' && o.store_id && o.price
+      (o: { store_id?: string; price?: unknown }) => o && typeof o.store_id === 'string' && o.store_id && o.price
     ) as OfferInput[];
   } catch {
     return [];
