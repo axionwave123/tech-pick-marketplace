@@ -99,6 +99,7 @@ export async function createProduct(
   const brand_id = String(formData.get('brand_id') || '') || null;
   const category_id = String(formData.get('category_id') || '') || null;
   const image_url = String(formData.get('image_url') || '').trim() || null;
+  const review_video_url = String(formData.get('review_video_url') || '').trim() || null;
   const offerInputs = parseOffersJson(formData);
 
   if (!name) return { error: 'Product name is required.' };
@@ -119,6 +120,7 @@ export async function createProduct(
       short_description,
       brand_id: brand_id || null,
       category_id: category_id || null,
+      review_video_url,
       published_at: status === 'published' ? new Date().toISOString() : null,
     })
     .select('id')
@@ -142,14 +144,12 @@ export async function createProduct(
     });
   }
 
-  // Insert all valid store offers (one per store)
   const seenStores = new Set<string>();
   for (const o of offerInputs) {
     const price = Number(o.price);
     if (!o.store_id || Number.isNaN(price) || price <= 0) continue;
-    if (seenStores.has(o.store_id)) continue; // one offer per store
+    if (seenStores.has(o.store_id)) continue;
     seenStores.add(o.store_id);
-
     await supabase.from('product_offers').insert(buildOfferPayload(product.id, o, name));
   }
 
@@ -174,6 +174,7 @@ export async function updateProduct(
   const brand_id = String(formData.get('brand_id') || '') || null;
   const category_id = String(formData.get('category_id') || '') || null;
   const image_url = String(formData.get('image_url') || '').trim() || null;
+  const review_video_url = String(formData.get('review_video_url') || '').trim() || null;
   const offerInputs = parseOffersJson(formData);
 
   if (!name) return { error: 'Product name is required.' };
@@ -203,6 +204,7 @@ export async function updateProduct(
       short_description,
       brand_id: brand_id || null,
       category_id: category_id || null,
+      review_video_url,
       published_at,
       updated_at: new Date().toISOString(),
     })
@@ -240,7 +242,6 @@ export async function updateProduct(
     }
   }
 
-  // Sync offers: update existing by offer_id, insert new, leave others
   const seenStores = new Set<string>();
   const keptOfferIds = new Set<string>();
 
@@ -256,7 +257,6 @@ export async function updateProduct(
       await supabase.from('product_offers').update(payload).eq('id', o.offer_id);
       keptOfferIds.add(o.offer_id);
     } else {
-      // Check if an active offer already exists for this store on this product
       const { data: existingOffer } = await supabase
         .from('product_offers')
         .select('id')
@@ -279,7 +279,6 @@ export async function updateProduct(
     }
   }
 
-  // Soft-deactivate offers that were removed from the form (same product, not in kept list)
   if (keptOfferIds.size > 0 || offerInputs.length === 0) {
     const { data: allOffers } = await supabase
       .from('product_offers')
