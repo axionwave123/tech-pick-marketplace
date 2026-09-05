@@ -39,6 +39,45 @@ function revalidateProductPaths(slug?: string) {
   if (slug) revalidatePath(`/products/${slug}`);
 }
 
+function parseImagesJson(formData: FormData): string[] {
+  try {
+    const raw = String(formData.get('images_json') || '').trim();
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((u) => typeof u === 'string' && /^https?:\/\//i.test(u.trim()))
+          .map((u: string) => u.trim())
+          .slice(0, 12);
+      }
+    }
+  } catch {
+    // fall through
+  }
+  const single = String(formData.get('image_url') || '').trim();
+  return single && /^https?:\/\//i.test(single) ? [single] : [];
+}
+
+async function saveProductImages(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  productId: string,
+  urls: string[],
+  alt: string
+) {
+  await supabase.from('product_images').delete().eq('product_id', productId);
+  if (!urls.length) return;
+  await supabase.from('product_images').insert(
+    urls.map((url, i) => ({
+      product_id: productId,
+      url,
+      alt_text: alt,
+      is_primary: i === 0,
+      sort_order: i,
+    }))
+  );
+}
+
 function parseOffersJson(formData: FormData): OfferInput[] {
   const raw = String(formData.get('offers_json') || '').trim();
   if (!raw) return [];
@@ -98,7 +137,6 @@ export async function createProduct(
   const short_description = String(formData.get('short_description') || '').trim() || null;
   const brand_id = String(formData.get('brand_id') || '') || null;
   const category_id = String(formData.get('category_id') || '') || null;
-  const image_url = String(formData.get('image_url') || '').trim() || null;
   const review_video_url = String(formData.get('review_video_url') || '').trim() || null;
   const offerInputs = parseOffersJson(formData);
 
@@ -134,15 +172,8 @@ export async function createProduct(
     };
   }
 
-  if (image_url) {
-    await supabase.from('product_images').insert({
-      product_id: product.id,
-      url: image_url,
-      alt_text: name,
-      is_primary: true,
-      sort_order: 0,
-    });
-  }
+  const imageUrls = parseImagesJson(formData);
+  await saveProductImages(supabase, product.id, imageUrls, name);
 
   const seenStores = new Set<string>();
   for (const o of offerInputs) {
@@ -173,7 +204,6 @@ export async function updateProduct(
   const short_description = String(formData.get('short_description') || '').trim() || null;
   const brand_id = String(formData.get('brand_id') || '') || null;
   const category_id = String(formData.get('category_id') || '') || null;
-  const image_url = String(formData.get('image_url') || '').trim() || null;
   const review_video_url = String(formData.get('review_video_url') || '').trim() || null;
   const offerInputs = parseOffersJson(formData);
 
@@ -218,28 +248,9 @@ export async function updateProduct(
     };
   }
 
-  if (image_url) {
-    const { data: imgs } = await supabase
-      .from('product_images')
-      .select('id')
-      .eq('product_id', id)
-      .eq('is_primary', true)
-      .limit(1);
-
-    if (imgs && imgs.length > 0) {
-      await supabase
-        .from('product_images')
-        .update({ url: image_url, alt_text: name })
-        .eq('id', imgs[0].id);
-    } else {
-      await supabase.from('product_images').insert({
-        product_id: id,
-        url: image_url,
-        alt_text: name,
-        is_primary: true,
-        sort_order: 0,
-      });
-    }
+  const imageUrls = parseImagesJson(formData);
+  if (formData.has('images_json') || imageUrls.length > 0) {
+    await saveProductImages(supabase, id, imageUrls, name);
   }
 
   const seenStores = new Set<string>();
