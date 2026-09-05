@@ -5,6 +5,8 @@ import { requireAdmin } from '@/lib/auth/admin';
 import { ProductForm, type OfferRow } from '../ProductForm';
 import { DeleteProductButton } from '../DeleteProductButton';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditProductPage({
   params,
 }: {
@@ -21,9 +23,11 @@ export default async function EditProductPage({
       supabase
         .from('products')
         .select(
-          `id, name, slug, status, short_description, brand_id, category_id,
-           product_images ( url, is_primary ),
-           product_offers ( id, price, original_price, product_url, status, store_id )`
+          `
+          *,
+          product_images (id, url, is_primary),
+          product_offers (id, store_id, price, original_price, product_url, status)
+        `
         )
         .eq('id', id)
         .maybeSingle(),
@@ -73,6 +77,7 @@ export default async function EditProductPage({
     brand_id: product.brand_id || '',
     category_id: product.category_id || '',
     image_url: image,
+    review_video_url: (product as any).review_video_url || '',
     offers,
   };
 
