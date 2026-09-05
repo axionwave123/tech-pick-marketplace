@@ -5,8 +5,6 @@ import { requireAdmin } from '@/lib/auth/admin';
 import { ProductForm, type OfferRow } from '../ProductForm';
 import { DeleteProductButton } from '../DeleteProductButton';
 
-export const dynamic = 'force-dynamic';
-
 export default async function EditProductPage({
   params,
 }: {
@@ -23,11 +21,9 @@ export default async function EditProductPage({
       supabase
         .from('products')
         .select(
-          `
-          *,
-          product_images (id, url, is_primary),
-          product_offers (id, store_id, price, original_price, product_url, status)
-        `
+          `id, name, slug, status, short_description, brand_id, category_id,
+           product_images ( url, is_primary, sort_order ),
+           product_offers ( id, price, original_price, product_url, status, store_id )`
         )
         .eq('id', id)
         .maybeSingle(),
@@ -38,12 +34,14 @@ export default async function EditProductPage({
 
   if (!product) notFound();
 
-  const image =
-    (product.product_images || []).find((i: any) => i.is_primary)?.url ||
-    (product.product_images || [])[0]?.url ||
-    '';
+  const sortedImgs = [...(product.product_images || [])].sort((a: any, b: any) => {
+    if (a.is_primary && !b.is_primary) return -1;
+    if (!a.is_primary && b.is_primary) return 1;
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  });
+  const imageUrls = sortedImgs.map((i: any) => i.url).filter(Boolean);
+  const image = imageUrls[0] || '';
 
-  // Load ALL active offers so admin can edit multi-store prices
   const activeOffers = (product.product_offers || []).filter(
     (o: any) => o.status === 'active' || !o.status
   );
@@ -77,6 +75,7 @@ export default async function EditProductPage({
     brand_id: product.brand_id || '',
     category_id: product.category_id || '',
     image_url: image,
+    image_urls: imageUrls,
     review_video_url: (product as any).review_video_url || '',
     offers,
   };
