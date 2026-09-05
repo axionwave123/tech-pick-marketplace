@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ProductCard } from '@/components/products/ProductCard';
-import { getPublishedProducts, getDeals } from '@/lib/data/products';
+import { getDeals } from '@/lib/data/products';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import { categoryImages } from '@/lib/category-images';
 
@@ -19,21 +19,26 @@ const categories = [
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [products, deals] = await Promise.all([
-    getPublishedProducts(8),
-    getDeals(4),
-  ]);
+  const deals = await getDeals(6);
 
-  let articles: { id: string; title: string; slug: string; excerpt: string | null }[] = [];
+  let articles: {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    featured_image_url: string | null;
+    article_type: string | null;
+    published_at: string | null;
+  }[] = [];
   if (isSupabaseConfigured()) {
     try {
       const supabase = await createClient();
       const { data } = await supabase
         .from('articles')
-        .select('id, title, slug, excerpt')
+        .select('id, title, slug, excerpt, featured_image_url, article_type, published_at')
         .eq('status', 'published')
         .order('published_at', { ascending: false })
-        .limit(3);
+        .limit(4);
       articles = data || [];
     } catch {
       /* ignore */
@@ -114,26 +119,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mb-5 flex items-end justify-between sm:mb-6">
-          <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
-            Trending Products
-          </h2>
-          <Link href="/search" className="text-sm font-semibold text-brand-300 light:text-brand-600">
-            View all
-          </Link>
-        </div>
-        {products.length === 0 ? (
-          <EmptyState message="Connect Supabase and run migrations + seed to see demo products." />
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        )}
-      </section>
-
       <section className="border-y border-surface-800 bg-surface-900/50 py-10 light:border-slate-200 light:bg-slate-100/80 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-5 flex items-end justify-between sm:mb-6">
@@ -147,7 +132,7 @@ export default async function HomePage() {
           {deals.length === 0 ? (
             <EmptyState message="No discounted offers yet." />
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
               {deals.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -156,37 +141,138 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Why Shop with TechPick NG */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+        <div className="rounded-3xl border border-surface-700/80 bg-surface-900/80 px-5 py-8 light:border-slate-200 light:bg-white sm:px-8 sm:py-10">
+          <h2 className="text-center font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
+            Why Shop with TechPick NG?
+          </h2>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                title: 'Compare with Confidence',
+                body: 'We compare prices from multiple trusted stores so you always get the best deal.',
+                icon: (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Real-time Price Updates',
+                body: 'Prices change fast. We update regularly so you never miss out on the latest offers.',
+                icon: (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Expert Reviews & Guides',
+                body: 'Honest reviews, buying guides and comparisons to help you make smarter choices.',
+                icon: (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Safe & Transparent',
+                body: 'We only link to trusted stores. Your safety and satisfaction come first.',
+                icon: (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                ),
+              },
+            ].map((f) => (
+              <div key={f.title} className="text-center sm:text-left">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600/15 text-brand-400 light:bg-brand-50 light:text-brand-600 sm:mx-0">
+                  {f.icon}
+                </div>
+                <h3 className="mt-3 text-sm font-bold text-white light:text-slate-900">{f.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-surface-400 light:text-slate-600">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Guides & Articles */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <div className="mb-5 flex items-end justify-between sm:mb-6">
           <h2 className="font-display text-xl font-bold tracking-tight text-white light:text-slate-900 sm:text-2xl">
-            Latest Articles
+            Popular Guides & Articles
           </h2>
           <Link href="/articles" className="text-sm font-semibold text-brand-300 light:text-brand-600">
-            All articles
+            View all articles →
           </Link>
         </div>
         {articles.length === 0 ? (
-          <EmptyState message="No published articles yet." />
+          <EmptyState message="No published articles yet. Add some from Admin → Articles." />
         ) : (
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
-            {articles.map((a) => (
-              <Link
-                key={a.id}
-                href={`/articles/${a.slug}`}
-                className="rounded-2xl border border-surface-700 bg-surface-900 p-5 light:border-slate-200 light:bg-white sm:p-6"
-              >
-                <h3 className="font-display font-semibold text-white light:text-slate-900">{a.title}</h3>
-                {a.excerpt && (
-                  <p className="mt-2 line-clamp-2 text-sm text-surface-200 light:text-slate-600">{a.excerpt}</p>
-                )}
-              </Link>
-            ))}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {articles.map((a) => {
+              const typeLabel =
+                (
+                  {
+                    buying_guide: 'Buying guide',
+                    comparison: 'Comparison',
+                    how_to: 'How-to',
+                    tech_tips: 'Tips',
+                    news: 'News',
+                    other: 'Article',
+                  } as Record<string, string>
+                )[a.article_type || 'other'] || 'Article';
+              const dateStr = a.published_at
+                ? new Date(a.published_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                : null;
+              return (
+                <Link
+                  key={a.id}
+                  href={`/articles/${a.slug}`}
+                  className="group overflow-hidden rounded-2xl border border-surface-700/80 bg-surface-900/80 shadow-card transition hover:border-brand-500/40 light:border-slate-200 light:bg-white light:shadow-sm"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden bg-surface-800 light:bg-slate-100">
+                    {a.featured_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={a.featured_image_url}
+                        alt=""
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-surface-500">
+                        <svg className="h-10 w-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-brand-400 light:text-brand-600">
+                      {typeLabel}
+                    </p>
+                    <h3 className="mt-1 line-clamp-2 text-sm font-bold leading-snug text-white light:text-slate-900">
+                      {a.title}
+                    </h3>
+                    {dateStr && (
+                      <p className="mt-2 text-[11px] text-surface-500 light:text-slate-500">{dateStr}</p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
 
       <section className="border-t border-surface-800 bg-brand-600 py-10 text-center text-white sm:py-12">
-        <h2 className="font-display text-xl font-bold sm:text-2xl">Get the best deals &amp; reviews</h2>
+        <h2 className="font-display text-xl font-bold sm:text-2xl">Get the best deals & reviews</h2>
         <p className="mt-2 text-sm font-medium text-brand-50 sm:text-base">Newsletter coming soon.</p>
       </section>
     </div>
