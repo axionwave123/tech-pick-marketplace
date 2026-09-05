@@ -24,6 +24,7 @@ export type ProductEditValues = {
   brand_id: string;
   category_id: string;
   image_url: string;
+  review_video_url: string;
   /** All store offers for this product */
   offers: OfferRow[];
 };
@@ -68,7 +69,6 @@ export function ProductForm({
         })
       );
     }
-    // Start with one empty row so user can fill Jumia first, then add more
     return [newOfferRow()];
   });
 
@@ -84,10 +84,7 @@ export function ProductForm({
 
   function removeOffer(key: string) {
     setOffers((prev) => {
-      if (prev.length <= 1) {
-        // Keep at least one empty row
-        return [newOfferRow()];
-      }
+      if (prev.length <= 1) return [newOfferRow()];
       return prev.filter((o) => o.key !== key);
     });
   }
@@ -127,7 +124,6 @@ export function ProductForm({
     const fd = new FormData(e.currentTarget);
     if (imageUrl) fd.set('image_url', imageUrl);
 
-    // Serialize all offer rows for the server action
     const payload = offers
       .filter((o) => o.store_id && o.price && Number(o.price) > 0)
       .map((o) => ({
@@ -242,6 +238,19 @@ export function ProductForm({
         </select>
       </label>
 
+      <label className="block text-sm text-surface-300">
+        Review video URL (optional)
+        <input
+          name="review_video_url"
+          defaultValue={initial?.review_video_url || ''}
+          className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+          placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
+        />
+        <span className="mt-1 block text-xs text-surface-500">
+          Paste a YouTube, Shorts, or Vimeo link. It appears under Add to compare on the product page.
+        </span>
+      </label>
+
       <div className="rounded-lg border border-surface-700 bg-surface-950 p-4">
         <p className="text-sm font-semibold text-white">Product image</p>
         <p className="mt-1 text-xs text-surface-400">Upload a file (max 5MB) or paste an image URL.</p>
@@ -268,7 +277,6 @@ export function ProductForm({
         )}
       </div>
 
-      {/* ——— Multi-store price offers ——— */}
       <div className="rounded-lg border border-surface-700 bg-surface-950 p-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
@@ -289,10 +297,7 @@ export function ProductForm({
 
         <div className="mt-4 space-y-4">
           {offers.map((row, idx) => (
-            <div
-              key={row.key}
-              className="rounded-lg border border-surface-700 bg-surface-900 p-3"
-            >
+            <div key={row.key} className="rounded-lg border border-surface-700 bg-surface-900 p-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wide text-surface-400">
                   Store offer #{idx + 1}
