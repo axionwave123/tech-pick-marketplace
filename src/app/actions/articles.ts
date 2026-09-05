@@ -1,0 +1,106 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/auth/admin';
+import { slugify } from '@/lib/utils';
+
+export type ArticleFormState = { error?: string; success?: string };
+
+async function db() {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
+  return createClient();
+}
+
+export async function createArticle(
+  _prev: ArticleFormState,
+  formData: FormData
+): Promise<ArticleFormState> {
+  const auth = await requireAdmin();
+  if (!auth.authorized) return { error: 'Not authorized.' };
+
+  const title = String(formData.get('title') || '').trim();
+  let slug = String(formData.get('slug') || '').trim();
+  const excerpt = String(formData.get('excerpt') || '').trim() || null;
+  const content = String(formData.get('content') || '').trim() || null;
+  const featured_image_url = String(formData.get('featured_image_url') || '').trim() || null;
+  const article_type = String(formData.get('article_type') || 'other');
+  const status = String(formData.get('status') || 'draft');
+
+  if (!title) return { error: 'Title is required.' };
+  if (!slug) slug = slugify(title);
+  else slug = slugify(slug);
+
+  const allowedTypes = ['buying_guide', 'comparison', 'how_to', 'tech_tips', 'news', 'other'];
+  const type = allowedTypes.includes(article_type) ? article_type : 'other';
+  if (!['draft', 'published', 'archived'].includes(status)) {
+    return { error: 'Invalid status.' };
+  }
+
+  const supabase = await db();
+  const { error } = await supabase.from('articles').insert({
+    title,
+    slug,
+    excerpt,
+    content,
+    featured_image_url,
+    article_type: type,
+    status,
+    published_at: status === 'published' ? new Date().toISOString() : null,
+  });
+
+  if (error) {
+    return {
+      error: error.message.includes('duplicate')
+        ? 'Slug already exists. Change the slug.'
+        : error.message,
+    };
+  }
+
+  revalidatePath('/articles');
+  revalidatePath('/');
+  revalidatePath('/admin/articles');
+  redirect('/admin/articles');
+}
+
+export async function submitArticleComment(formData: FormData): Promise<{ ok: true } | { ok: false; error: string }> {
+  const article_id = String(formData.get('article_id') || '').trim();
+  const author_name = String(formData.get('author_name') || '').trim().slice(0, 80);
+  const author_email = String(formData.get('author_email') || '').trim().slice(0, 120) || null;
+  const body = String(formData.get('body') || '').trim().slice(0, 2000);
+
+  if (!article_id) return { ok: false, error: 'Missing article.' };
+  if (!author_name || author_name.length < 2) return { ok: false, error: 'Please enter your name.' };
+  if (!body || body.length < 3) return { ok: false, error: 'Write a short comment.' };
+
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from('article_comments').insert({
+      article_id,
+      author_name,
+      author_email,
+      body,
+      status: 'approved',
+    });
+    if (error) {
+      const service = createServiceClient();
+      const { error: e2 } = await service.from('article_comments').insert({
+        article_id,
+        author_name,
+        author_email,
+        body,
+        status: 'approved',
+      });
+      if (e2) {
+        console.error(e2);
+        return { ok: false, error: 'Could not post comment.' };
+      }
+    }
+    revalidatePath('/articles');
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, error: 'Could not post comment.' };
+  }
+}
