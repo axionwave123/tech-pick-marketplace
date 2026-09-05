@@ -10,6 +10,7 @@ const primaryNav = [
   { href: '/admin/stores', label: 'Stores' },
   { href: '/admin/research', label: 'AI Research' },
   { href: '/admin/reports', label: 'Reports' },
+  { href: '/admin/articles/new', label: 'Add article', highlight: true },
 ];
 
 const sideLinks = [
@@ -24,6 +25,7 @@ const sideLinks = [
   { href: '/admin/research', label: 'AI Research' },
   { href: '/admin/reviews', label: 'Reviews' },
   { href: '/admin/articles', label: 'Articles' },
+  { href: '/admin/articles/new', label: 'Add article' },
   { href: '/admin/moderation', label: 'Moderation' },
   { href: '/admin/reports', label: 'User reports' },
   { href: '/admin/analytics', label: 'Analytics' },
