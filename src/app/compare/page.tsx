@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import { formatNaira } from '@/lib/utils';
+import { RemoveFromCompare } from '@/components/product/RemoveFromCompare';
 
 export const metadata = { title: 'Compare Products' };
 export const dynamic = 'force-dynamic';
@@ -44,7 +45,6 @@ async function loadProducts(ids: string[]): Promise<CompareProduct[]> {
 
   if (error || !data) return [];
 
-  // Supabase join typing can be array | object — normalize via unknown
   const rows = data as unknown as CompareProduct[];
   const map = new Map(rows.map((p) => [p.id, p]));
   return ids.map((id) => map.get(id)).filter(Boolean) as CompareProduct[];
@@ -221,6 +221,7 @@ export default async function ComparePage({
                         >
                           {p.name}
                         </Link>
+                        <RemoveFromCompare productId={p.id} allIds={ids} />
                       </div>
                     </th>
                   );
