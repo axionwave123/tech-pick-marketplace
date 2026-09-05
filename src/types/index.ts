@@ -97,6 +97,7 @@ export interface Product {
   not_ideal_for: string[] | null;
   avg_rating: number;
   review_count: number;
+  review_video_url?: string | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
