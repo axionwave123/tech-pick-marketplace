@@ -48,6 +48,7 @@ export function ReportWidget() {
 
   return (
     <>
+      {/* Floating action button */}
       <button
         type="button"
         onClick={() => {
