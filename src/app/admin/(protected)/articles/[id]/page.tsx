@@ -27,7 +27,7 @@ export default async function EditArticlePage({
   return (
     <div>
       <Link href="/admin/articles" className="text-sm text-brand-400 hover:underline">
-        &larr; All articles
+        ← All articles
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-white">Edit article</h1>
       <p className="mt-1 text-sm text-surface-400">{article.title}</p>
