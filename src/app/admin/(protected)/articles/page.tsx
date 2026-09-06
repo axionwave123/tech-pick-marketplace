@@ -13,7 +13,7 @@ export default async function AdminArticlesPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from('articles')
-    .select('id, title, status, article_type, featured_image_url, updated_at, slug')
+    .select('id, title, status, article_type, featured_image_url, updated_at, slug, filter_category, filter_price, filter_need')
     .order('updated_at', { ascending: false });
 
   return (
@@ -59,6 +59,11 @@ export default async function AdminArticlesPage() {
                       <p className="truncate font-medium text-white">{a.title}</p>
                       {a.slug && (
                         <p className="truncate text-[11px] text-surface-500">/{a.slug}</p>
+                      )}
+                      {(a.filter_category || a.filter_price || a.filter_need) && (
+                        <p className="mt-0.5 truncate text-[10px] text-brand-400">
+                          {[a.filter_category, a.filter_price, a.filter_need].filter(Boolean).join(' · ')}
+                        </p>
                       )}
                     </div>
                   </div>
