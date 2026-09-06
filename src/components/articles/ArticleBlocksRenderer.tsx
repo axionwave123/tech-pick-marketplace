@@ -52,6 +52,7 @@ function Block({ block }: { block: ArticleBlock }) {
     );
   }
 
+  // product_embed
   const canLink = block.productStatus === 'published' && block.productSlug;
   const href = canLink ? `/products/${block.productSlug}` : null;
 
