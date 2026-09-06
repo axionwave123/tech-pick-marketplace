@@ -24,10 +24,12 @@ const CATEGORIES = [
 ] as const;
 
 const PRICES = [
+  { id: 'under50', label: 'Under 50k', keywords: ['under 50', 'below 50', '50,000', '50k', 'cheap'] },
   { id: 'under100', label: 'Under 100k', keywords: ['under 100', 'below 100', 'budget', '100,000', '100k'] },
   { id: '100to200', label: '100k - 200k', keywords: ['100k-200', '100k - 200', 'mid-range', '150,000', '200k'] },
   { id: '200to300', label: '200k - 300k', keywords: ['200k-300', '200k - 300', '250,000', '300,000'] },
-  { id: 'over300', label: '300k+', keywords: ['300k', 'above 300', 'premium', 'flagship', 'over 300'] },
+  { id: '300to500', label: '300k - 500k', keywords: ['300k-500', '300k - 500', '400,000', '500k'] },
+  { id: 'over500', label: '500k+', keywords: ['500k', 'above 500', 'premium', 'flagship', 'over 500'] },
 ] as const;
 
 const NEEDS = [
@@ -35,6 +37,10 @@ const NEEDS = [
   { id: 'content', label: 'Content creation', keywords: ['content', 'creator', 'camera', 'photo', 'video', 'vlog', 'youtube'] },
   { id: 'office', label: 'Office work', keywords: ['office', 'work', 'productivity', 'business', 'excel', 'docs'] },
   { id: 'students', label: 'Students', keywords: ['student', 'school', 'campus', 'study', 'college', 'uni'] },
+  { id: 'personal', label: 'Personal / everyday', keywords: ['personal', 'everyday', 'daily', 'casual', 'general use'] },
+  { id: 'battery', label: 'Long battery', keywords: ['battery', 'endurance', 'all-day', 'stamina'] },
+  { id: 'camera', label: 'Camera focus', keywords: ['camera', 'photo', 'selfie', 'zoom', 'portrait'] },
+  { id: 'travel', label: 'Travel', keywords: ['travel', 'portable', 'lightweight', 'trip'] },
 ] as const;
 
 const typeLabels: Record<string, string> = {
