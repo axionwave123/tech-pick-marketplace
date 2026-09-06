@@ -2,11 +2,27 @@
 
 import { useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { createArticle, type ArticleFormState } from '@/app/actions/articles';
+import {
+  createArticle,
+  updateArticle,
+  type ArticleFormState,
+} from '@/app/actions/articles';
 
-export function ArticleForm() {
+export type ArticleInitial = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string | null;
+  featured_image_url: string | null;
+  article_type: string | null;
+  status: string | null;
+};
+
+export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
+  const isEdit = Boolean(initial?.id);
   const [state, setState] = useState<ArticleFormState>({});
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState(initial?.featured_image_url || '');
   const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -45,8 +61,10 @@ export function ArticleForm() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     if (imageUrl) fd.set('featured_image_url', imageUrl);
+    else fd.set('featured_image_url', '');
+    if (isEdit && initial) fd.set('id', initial.id);
     startTransition(async () => {
-      const result = await createArticle({}, fd);
+      const result = isEdit ? await updateArticle({}, fd) : await createArticle({}, fd);
       if (result?.error) setState(result);
     });
   }
@@ -67,8 +85,9 @@ export function ArticleForm() {
         <input
           name="title"
           required
+          defaultValue={initial?.title || ''}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="Best Phones Under ₦200,000 in Nigeria"
+          placeholder="Best Phones Under \u20a6200,000 in Nigeria"
         />
       </label>
 
@@ -76,6 +95,7 @@ export function ArticleForm() {
         Slug (optional)
         <input
           name="slug"
+          defaultValue={initial?.slug || ''}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           placeholder="best-phones-under-200k"
         />
@@ -86,6 +106,7 @@ export function ArticleForm() {
           Type
           <select
             name="article_type"
+            defaultValue={initial?.article_type || 'buying_guide'}
             className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           >
             <option value="buying_guide">Buying guide</option>
@@ -100,7 +121,7 @@ export function ArticleForm() {
           Status
           <select
             name="status"
-            defaultValue="published"
+            defaultValue={initial?.status || 'published'}
             className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
           >
             <option value="draft">Draft</option>
@@ -115,8 +136,9 @@ export function ArticleForm() {
         <textarea
           name="excerpt"
           rows={2}
+          defaultValue={initial?.excerpt || ''}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="A quick guide to the best budget phones…"
+          placeholder="A quick guide to the best budget phones\u2026"
         />
       </label>
 
@@ -124,22 +146,25 @@ export function ArticleForm() {
         Full content
         <textarea
           name="content"
-          rows={10}
+          rows={12}
+          defaultValue={initial?.content || ''}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="Write your article here…"
+          placeholder="Write your article here\u2026"
         />
       </label>
 
       <div className="rounded-lg border border-surface-700 bg-surface-950 p-4">
         <p className="text-sm font-semibold text-white">Featured image</p>
-        <p className="mt-1 text-xs text-surface-400">Shows on homepage cards and the article page.</p>
+        <p className="mt-1 text-xs text-surface-400">
+          Shows on the articles list, homepage cards, and the top of the article page.
+        </p>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
           onChange={onFileChange}
           className="mt-3 block w-full text-sm text-surface-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
         />
-        {uploading && <p className="mt-2 text-xs text-brand-400">Uploading…</p>}
+        {uploading && <p className="mt-2 text-xs text-brand-400">Uploading\u2026</p>}
         <label className="mt-3 block text-sm text-surface-300">
           Or image URL
           <input
@@ -147,12 +172,23 @@ export function ArticleForm() {
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
-            placeholder="https://…"
+            placeholder="https://\u2026"
           />
         </label>
         {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="mt-3 h-36 w-full rounded-lg object-cover" />
+          <div className="mt-3 overflow-hidden rounded-xl border border-surface-700 bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt="" className="aspect-[16/10] w-full object-cover" />
+          </div>
+        )}
+        {imageUrl && (
+          <button
+            type="button"
+            onClick={() => setImageUrl('')}
+            className="mt-2 text-xs font-semibold text-red-400 hover:underline"
+          >
+            Remove image
+          </button>
         )}
       </div>
 
@@ -161,7 +197,7 @@ export function ArticleForm() {
         disabled={pending || uploading}
         className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
       >
-        {pending ? 'Saving…' : 'Publish article'}
+        {pending ? 'Saving\u2026' : isEdit ? 'Save changes' : 'Publish article'}
       </button>
     </form>
   );
