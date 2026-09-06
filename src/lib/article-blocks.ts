@@ -1,9 +1,16 @@
 /** Structured article body blocks */
 
+export type TextLevel = 'p' | 'h2' | 'h3';
+export type TextSpacing = 'tight' | 'normal' | 'loose';
+
 export type ArticleTextBlock = {
   id: string;
   type: 'text';
   text: string;
+  /** paragraph | section heading | subheading */
+  level?: TextLevel;
+  /** vertical spacing around the block */
+  spacing?: TextSpacing;
 };
 
 export type ButtonPosition =
@@ -44,7 +51,13 @@ export function parseContentBlocks(raw: unknown): ArticleBlock[] {
     const o = item as Record<string, unknown>;
     const id = typeof o.id === 'string' ? o.id : newId();
     if (o.type === 'text' && typeof o.text === 'string') {
-      out.push({ id, type: 'text', text: o.text });
+      const level = (['p', 'h2', 'h3'].includes(String(o.level))
+        ? o.level
+        : 'p') as TextLevel;
+      const spacing = (['tight', 'normal', 'loose'].includes(String(o.spacing))
+        ? o.spacing
+        : 'normal') as TextSpacing;
+      out.push({ id, type: 'text', text: o.text, level, spacing });
     } else if (o.type === 'product_embed') {
       out.push({
         id,
@@ -113,4 +126,16 @@ export const BUTTON_POSITION_CLASS: Record<ButtonPosition, string> = {
   center: 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
   'top-right': 'right-3 top-3',
   'top-left': 'left-3 top-3',
+};
+
+export const TEXT_LEVEL_CLASS: Record<TextLevel, string> = {
+  p: 'text-[1.075rem] leading-[1.85] text-slate-800 sm:text-[1.125rem]',
+  h2: 'font-display text-2xl font-extrabold leading-snug tracking-tight text-slate-900 sm:text-3xl',
+  h3: 'font-display text-xl font-bold leading-snug text-slate-900 sm:text-2xl',
+};
+
+export const TEXT_SPACING_CLASS: Record<TextSpacing, string> = {
+  tight: 'my-2',
+  normal: 'my-5',
+  loose: 'my-10',
 };
