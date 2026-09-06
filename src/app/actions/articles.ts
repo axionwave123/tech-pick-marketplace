@@ -8,6 +8,10 @@ import { slugify } from '@/lib/utils';
 
 export type ArticleFormState = { error?: string; success?: string };
 
+const ALLOWED_CATEGORIES = ['phone', 'laptop', 'audio', 'others'] as const;
+const ALLOWED_PRICES = ['under100', '100to200', '200to300', 'over300'] as const;
+const ALLOWED_NEEDS = ['gaming', 'content', 'office', 'students'] as const;
+
 async function db() {
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
   return createClient();
@@ -22,6 +26,10 @@ function parseArticleFields(formData: FormData) {
   const article_type = String(formData.get('article_type') || 'other');
   const status = String(formData.get('status') || 'draft');
 
+  const filter_category_raw = String(formData.get('filter_category') || '').trim();
+  const filter_price_raw = String(formData.get('filter_price') || '').trim();
+  const filter_need_raw = String(formData.get('filter_need') || '').trim();
+
   if (!title) return { error: 'Title is required.' as const };
   if (!slug) slug = slugify(title);
   else slug = slugify(slug);
@@ -32,6 +40,19 @@ function parseArticleFields(formData: FormData) {
     return { error: 'Invalid status.' as const };
   }
 
+  const filter_category =
+    filter_category_raw && (ALLOWED_CATEGORIES as readonly string[]).includes(filter_category_raw)
+      ? filter_category_raw
+      : null;
+  const filter_price =
+    filter_price_raw && (ALLOWED_PRICES as readonly string[]).includes(filter_price_raw)
+      ? filter_price_raw
+      : null;
+  const filter_need =
+    filter_need_raw && (ALLOWED_NEEDS as readonly string[]).includes(filter_need_raw)
+      ? filter_need_raw
+      : null;
+
   return {
     title,
     slug,
@@ -40,6 +61,9 @@ function parseArticleFields(formData: FormData) {
     featured_image_url,
     article_type: type,
     status,
+    filter_category,
+    filter_price,
+    filter_need,
   };
 }
 
@@ -54,7 +78,18 @@ export async function createArticle(
   if ('error' in parsed && !('title' in parsed)) {
     return { error: (parsed as { error: string }).error };
   }
-  const { title, slug, excerpt, content, featured_image_url, article_type, status } = parsed as {
+  const {
+    title,
+    slug,
+    excerpt,
+    content,
+    featured_image_url,
+    article_type,
+    status,
+    filter_category,
+    filter_price,
+    filter_need,
+  } = parsed as {
     title: string;
     slug: string;
     excerpt: string | null;
@@ -62,6 +97,9 @@ export async function createArticle(
     featured_image_url: string | null;
     article_type: string;
     status: string;
+    filter_category: string | null;
+    filter_price: string | null;
+    filter_need: string | null;
   };
 
   const supabase = await db();
@@ -73,6 +111,9 @@ export async function createArticle(
     featured_image_url,
     article_type,
     status,
+    filter_category,
+    filter_price,
+    filter_need,
     published_at: status === 'published' ? new Date().toISOString() : null,
   });
 
@@ -104,7 +145,18 @@ export async function updateArticle(
   if ('error' in parsed && !('title' in parsed)) {
     return { error: (parsed as { error: string }).error };
   }
-  const { title, slug, excerpt, content, featured_image_url, article_type, status } = parsed as {
+  const {
+    title,
+    slug,
+    excerpt,
+    content,
+    featured_image_url,
+    article_type,
+    status,
+    filter_category,
+    filter_price,
+    filter_need,
+  } = parsed as {
     title: string;
     slug: string;
     excerpt: string | null;
@@ -112,6 +164,9 @@ export async function updateArticle(
     featured_image_url: string | null;
     article_type: string;
     status: string;
+    filter_category: string | null;
+    filter_price: string | null;
+    filter_need: string | null;
   };
 
   const supabase = await db();
@@ -136,6 +191,9 @@ export async function updateArticle(
       featured_image_url,
       article_type,
       status,
+      filter_category,
+      filter_price,
+      filter_need,
       published_at,
       updated_at: new Date().toISOString(),
     })
