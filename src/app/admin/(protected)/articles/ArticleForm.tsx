@@ -154,11 +154,17 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
 
       <div className="rounded-xl border border-brand-600/30 bg-brand-950/20 p-4">
         <p className="text-sm font-bold text-white">Filter tags</p>
-        <p className="mt-1 text-xs text-surface-400">Used by the public articles filter for exact matches.</p>
+        <p className="mt-1 text-xs text-surface-400">
+          Used by the public articles filter for exact matches.
+        </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <label className="block text-sm text-surface-300">
             Category
-            <select name="filter_category" defaultValue={initial?.filter_category || ''} className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white">
+            <select
+              name="filter_category"
+              defaultValue={initial?.filter_category || ''}
+              className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+            >
               <option value="">None</option>
               <option value="phone">Phone</option>
               <option value="laptop">Laptop</option>
@@ -168,22 +174,36 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
           </label>
           <label className="block text-sm text-surface-300">
             Price
-            <select name="filter_price" defaultValue={initial?.filter_price || ''} className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white">
+            <select
+              name="filter_price"
+              defaultValue={initial?.filter_price || ''}
+              className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+            >
               <option value="">None</option>
+              <option value="under50">Under 50k</option>
               <option value="under100">Under 100k</option>
               <option value="100to200">100k - 200k</option>
               <option value="200to300">200k - 300k</option>
-              <option value="over300">300k+</option>
+              <option value="300to500">300k - 500k</option>
+              <option value="over500">500k+</option>
             </select>
           </label>
           <label className="block text-sm text-surface-300">
             Need
-            <select name="filter_need" defaultValue={initial?.filter_need || ''} className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white">
+            <select
+              name="filter_need"
+              defaultValue={initial?.filter_need || ''}
+              className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+            >
               <option value="">None</option>
               <option value="gaming">Gaming</option>
               <option value="content">Content creation</option>
               <option value="office">Office work</option>
               <option value="students">Students</option>
+              <option value="personal">Personal / everyday</option>
+              <option value="battery">Long battery</option>
+              <option value="camera">Camera focus</option>
+              <option value="travel">Travel</option>
             </select>
           </label>
         </div>
@@ -191,17 +211,36 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
 
       <label className="block text-sm text-surface-300">
         Excerpt (short summary)
-        <textarea name="excerpt" rows={2} defaultValue={initial?.excerpt || ''} className="mt-1 w-full rounded-xl border border-surface-700 bg-surface-950 px-3 py-2 text-white" placeholder="A quick guide to the best budget phones..." />
+        <textarea
+          name="excerpt"
+          rows={2}
+          defaultValue={initial?.excerpt || ''}
+          className="mt-1 w-full rounded-xl border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+          placeholder="A quick guide to the best budget phones..."
+        />
       </label>
 
       <div className="rounded-xl border border-surface-700 bg-surface-950 p-4">
         <p className="text-sm font-semibold text-white">Cover image</p>
-        <p className="mt-1 text-xs text-surface-400">Shows on the guides list and at the top of the article.</p>
-        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={onFileChange} className="mt-3 block w-full text-sm text-surface-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
+        <p className="mt-1 text-xs text-surface-400">
+          Shows on the guides list and at the top of the article.
+        </p>
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={onFileChange}
+          className="mt-3 block w-full text-sm text-surface-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+        />
         {uploading && <p className="mt-2 text-xs text-brand-400">Uploading...</p>}
         <label className="mt-3 block text-sm text-surface-300">
           Or image URL
-          <input name="featured_image_url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white" placeholder="https://..." />
+          <input
+            name="featured_image_url"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
+            placeholder="https://..."
+          />
         </label>
         {imageUrl && (
           <div className="mt-3 overflow-hidden rounded-xl border border-surface-700 bg-white">
@@ -210,7 +249,13 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
           </div>
         )}
         {imageUrl && (
-          <button type="button" onClick={() => setImageUrl('')} className="mt-2 text-xs font-semibold text-red-400 hover:underline">Remove image</button>
+          <button
+            type="button"
+            onClick={() => setImageUrl('')}
+            className="mt-2 text-xs font-semibold text-red-400 hover:underline"
+          >
+            Remove image
+          </button>
         )}
       </div>
 
@@ -218,7 +263,11 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
         <ArticleBlockEditor value={blocks} onChange={setBlocks} />
       </div>
 
-      <button type="submit" disabled={pending || uploading} className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white hover:bg-brand-500 disabled:opacity-50">
+      <button
+        type="submit"
+        disabled={pending || uploading}
+        className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white hover:bg-brand-500 disabled:opacity-50"
+      >
         {pending ? 'Saving...' : isEdit ? 'Save changes' : 'Publish article'}
       </button>
     </form>
