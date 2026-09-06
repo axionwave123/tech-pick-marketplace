@@ -9,8 +9,24 @@ import { slugify } from '@/lib/utils';
 export type ArticleFormState = { error?: string; success?: string };
 
 const ALLOWED_CATEGORIES = ['phone', 'laptop', 'audio', 'others'] as const;
-const ALLOWED_PRICES = ['under100', '100to200', '200to300', 'over300'] as const;
-const ALLOWED_NEEDS = ['gaming', 'content', 'office', 'students'] as const;
+const ALLOWED_PRICES = [
+  'under50',
+  'under100',
+  '100to200',
+  '200to300',
+  '300to500',
+  'over500',
+] as const;
+const ALLOWED_NEEDS = [
+  'gaming',
+  'content',
+  'office',
+  'students',
+  'personal',
+  'battery',
+  'camera',
+  'travel',
+] as const;
 
 async function db() {
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) return createServiceClient();
