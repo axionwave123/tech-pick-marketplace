@@ -105,7 +105,7 @@ function Block({ block }: { block: ArticleBlock }) {
           </Link>
         ) : (
           <span
-            className={`absolute ${BUTTON_POSITION_CLASS[block.buttonPosition]} z-10 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-slate-400 px-4 py-2 text-xs font-bold text-white opacity-70`
+            className={`absolute ${BUTTON_POSITION_CLASS[block.buttonPosition]} z-10 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-slate-400 px-4 py-2 text-xs font-bold text-white opacity-70`}
             title="Product not published"
           >
             {block.buttonLabel || 'View deal'}
