@@ -3,6 +3,8 @@ import {
   type ArticleBlock,
   BUTTON_POSITION_CLASS,
   IMAGE_SIZE_CLASS,
+  TEXT_LEVEL_CLASS,
+  TEXT_SPACING_CLASS,
   parseContentBlocks,
   blocksFromPlainContent,
 } from '@/lib/article-blocks';
@@ -37,8 +39,28 @@ export function ArticleBlocksRenderer({
 function Block({ block }: { block: ArticleBlock }) {
   if (block.type === 'text') {
     if (!block.text.trim()) return null;
+    const level = block.level || 'p';
+    const spacing = block.spacing || 'normal';
+    const levelClass = TEXT_LEVEL_CLASS[level];
+    const spacingClass = TEXT_SPACING_CLASS[spacing];
+
+    if (level === 'h2') {
+      return (
+        <h2 className={`${levelClass} ${spacingClass} whitespace-pre-wrap`}>
+          {block.text.trim()}
+        </h2>
+      );
+    }
+    if (level === 'h3') {
+      return (
+        <h3 className={`${levelClass} ${spacingClass} whitespace-pre-wrap`}>
+          {block.text.trim()}
+        </h3>
+      );
+    }
+
     return (
-      <div className="space-y-4 text-[1.075rem] leading-[1.85] text-slate-800 sm:text-[1.125rem]">
+      <div className={`${spacingClass} space-y-4 ${levelClass}`}>
         {block.text
           .split(/\n\n+/)
           .map((p) => p.trim())
@@ -83,7 +105,7 @@ function Block({ block }: { block: ArticleBlock }) {
           </Link>
         ) : (
           <span
-            className={`absolute ${BUTTON_POSITION_CLASS[block.buttonPosition]} z-10 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-slate-400 px-4 py-2 text-xs font-bold text-white opacity-70`}
+            className={`absolute ${BUTTON_POSITION_CLASS[block.buttonPosition]} z-10 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-slate-400 px-4 py-2 text-xs font-bold text-white opacity-70`
             title="Product not published"
           >
             {block.buttonLabel || 'View deal'}
