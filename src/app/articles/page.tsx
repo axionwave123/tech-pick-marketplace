@@ -41,58 +41,68 @@ export default async function ArticlesHub() {
   const guideCount = articles.length;
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,_rgba(37,99,235,0.22)_0%,_transparent_60%)] light:bg-[radial-gradient(ellipse_at_top,_rgba(37,99,235,0.12)_0%,_transparent_65%)]"
-      />
+    <div className="min-h-[70vh] bg-surface-950 light:bg-slate-50">
+      <section className="relative overflow-hidden border-b border-surface-800 light:border-slate-200/80">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(37,99,235,0.28),transparent)] light:bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(37,99,235,0.14),transparent)]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 top-10 h-64 w-64 rounded-full bg-brand-500/10 blur-3xl light:bg-brand-400/20"
+        />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12 lg:px-8">
-        {/* Hero */}
-        <header className="max-w-3xl">
-          <p className="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-600/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-300 light:border-brand-200 light:bg-brand-50 light:text-brand-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-400 light:bg-brand-500" />
-            Buying guides · Comparisons · Tips
-          </p>
-          <h1 className="mt-4 font-display text-3xl font-bold leading-tight tracking-tight text-white light:text-slate-900 sm:text-4xl md:text-5xl">
-            Find the right tech
-            <span className="block bg-gradient-to-r from-brand-300 via-brand-400 to-sky-300 bg-clip-text text-transparent light:from-brand-600 light:via-brand-500 light:to-sky-600">
-              before you spend
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/25 bg-brand-600/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200 light:border-brand-200 light:bg-white light:text-brand-700 light:shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400 light:bg-brand-500" />
+              </span>
+              Buying guides
             </span>
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-surface-300 light:text-slate-600 sm:text-lg">
-            Honest guides written for Nigerian shoppers — clear budgets, real needs, and picks you
-            can actually buy.
-          </p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-2xl border border-surface-700/80 bg-surface-900/70 px-4 py-2.5 light:border-slate-200 light:bg-white">
-              <span className="text-xl font-bold tabular-nums text-white light:text-slate-900">
-                {guideCount}
+            <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white light:text-slate-900 sm:text-5xl">
+              Guides that help you
+              <span className="mt-1 block text-brand-300 light:text-brand-600">
+                buy tech with confidence
               </span>
-              <span className="text-xs font-medium text-surface-400 light:text-slate-500">
-                published guide{guideCount === 1 ? '' : 's'}
-              </span>
-            </div>
-            <div className="hidden items-center gap-1.5 text-xs text-surface-400 sm:flex light:text-slate-500">
-              <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 font-semibold text-emerald-400 light:text-emerald-700">
-                No fluff
-              </span>
-              <span className="rounded-full bg-surface-800 px-2.5 py-1 font-semibold text-surface-300 light:bg-slate-100 light:text-slate-600">
-                Local prices
-              </span>
-              <span className="rounded-full bg-surface-800 px-2.5 py-1 font-semibold text-surface-300 light:bg-slate-100 light:text-slate-600">
-                Real needs
-              </span>
+            </h1>
+
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-surface-300 light:text-slate-600 sm:text-lg">
+              Clear budgets, real needs, and honest picks for shoppers in Nigeria - no jargon,
+              no filler.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <div className="flex items-baseline gap-2 rounded-2xl border border-surface-700 bg-surface-900/90 px-4 py-3 light:border-slate-200 light:bg-white light:shadow-sm">
+                <span className="font-display text-2xl font-bold tabular-nums text-white light:text-slate-900">
+                  {guideCount}
+                </span>
+                <span className="text-xs font-semibold text-surface-400 light:text-slate-500">
+                  guide{guideCount === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {['Phones', 'Laptops', 'Audio', 'Students', 'Gaming'].map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-surface-700 bg-surface-900/60 px-3 py-1.5 text-[11px] font-semibold text-surface-300 light:border-slate-200 light:bg-white light:text-slate-600 light:shadow-sm"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </header>
+        </div>
+      </section>
 
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         {articles.length === 0 ? (
-          <div className="mt-14 rounded-3xl border border-dashed border-surface-600 bg-surface-900/40 px-6 py-16 text-center light:border-slate-300 light:bg-white">
+          <div className="rounded-3xl border border-dashed border-surface-600 bg-surface-900/50 px-6 py-20 text-center light:border-slate-300 light:bg-white">
             <p className="text-base font-medium text-surface-300 light:text-slate-600">
-              No published guides yet — check back soon.
+              No published guides yet - check back soon.
             </p>
           </div>
         ) : (
