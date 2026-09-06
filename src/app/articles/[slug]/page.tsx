@@ -64,7 +64,7 @@ export default async function ArticlePage({
     )[article.article_type || 'other'] || 'Article';
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
       <nav className="text-sm text-surface-400 light:text-surface-500">
         <Link href="/articles" className="hover:text-brand-400 light:hover:text-brand-600">
           Articles
@@ -76,7 +76,7 @@ export default async function ArticlePage({
       <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-brand-400">
         {typeLabel}
       </p>
-      <h1 className="mt-2 text-3xl font-bold text-white light:text-surface-900 sm:text-4xl">
+      <h1 className="mt-2 text-2xl font-bold leading-tight text-white light:text-surface-900 sm:text-3xl md:text-4xl">
         {article.title}
       </h1>
       {article.published_at && (
@@ -89,21 +89,24 @@ export default async function ArticlePage({
         </p>
       )}
       {article.excerpt && (
-        <p className="mt-4 text-lg text-surface-200 light:text-surface-600">{article.excerpt}</p>
+        <p className="mt-4 text-base leading-relaxed text-surface-200 light:text-surface-600 sm:text-lg">
+          {article.excerpt}
+        </p>
       )}
 
       {article.featured_image_url && (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-surface-700 light:border-slate-200">
+        <figure className="mt-6 overflow-hidden rounded-2xl border border-surface-700 bg-white shadow-sm light:border-slate-200 sm:mt-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={article.featured_image_url}
-            alt=""
-            className="aspect-[16/9] w-full object-cover"
+            alt={article.title}
+            className="aspect-[16/10] w-full object-cover sm:aspect-[2/1]"
+            sizes="(max-width: 768px) 100vw, 768px"
           />
-        </div>
+        </figure>
       )}
 
-      <div className="prose prose-invert light:prose-slate mt-8 max-w-none whitespace-pre-wrap text-surface-100 light:text-surface-800">
+      <div className="prose prose-invert light:prose-slate mt-8 max-w-none whitespace-pre-wrap text-base leading-relaxed text-surface-100 light:text-surface-800 sm:mt-10">
         {article.content}
       </div>
 
@@ -112,7 +115,6 @@ export default async function ArticlePage({
         retailer sites.
       </p>
 
-      {/* Comments */}
       <section className="mt-12 border-t border-surface-800 pt-10 light:border-slate-200">
         <h2 className="font-display text-xl font-bold text-white light:text-slate-900">
           Comments ({(comments || []).length})
