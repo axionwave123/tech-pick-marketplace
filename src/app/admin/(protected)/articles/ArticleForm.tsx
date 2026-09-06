@@ -17,6 +17,9 @@ export type ArticleInitial = {
   featured_image_url: string | null;
   article_type: string | null;
   status: string | null;
+  filter_category?: string | null;
+  filter_price?: string | null;
+  filter_need?: string | null;
 };
 
 export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
@@ -87,7 +90,7 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
           required
           defaultValue={initial?.title || ''}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="Best Phones Under \u20a6200,000 in Nigeria"
+          placeholder="Best Phones Under 200k in Nigeria"
         />
       </label>
 
@@ -131,14 +134,65 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
         </label>
       </div>
 
+      <div className="rounded-xl border border-brand-600/30 bg-brand-950/20 p-4">
+        <p className="text-sm font-bold text-white">Filter tags</p>
+        <p className="mt-1 text-xs text-surface-400">
+          Set these so the public articles filter returns this guide exactly when users pick Category / Price / Need.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <label className="block text-sm text-surface-300">
+            Category
+            <select
+              name="filter_category"
+              defaultValue={initial?.filter_category || ''}
+              className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+            >
+              <option value="">None</option>
+              <option value="phone">Phone</option>
+              <option value="laptop">Laptop</option>
+              <option value="audio">Audio</option>
+              <option value="others">Others</option>
+            </select>
+          </label>
+          <label className="block text-sm text-surface-300">
+            Price
+            <select
+              name="filter_price"
+              defaultValue={initial?.filter_price || ''}
+              className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+            >
+              <option value="">None</option>
+              <option value="under100">Under 100k</option>
+              <option value="100to200">100k - 200k</option>
+              <option value="200to300">200k - 300k</option>
+              <option value="over300">300k+</option>
+            </select>
+          </label>
+          <label className="block text-sm text-surface-300">
+            Need
+            <select
+              name="filter_need"
+              defaultValue={initial?.filter_need || ''}
+              className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
+            >
+              <option value="">None</option>
+              <option value="gaming">Gaming</option>
+              <option value="content">Content creation</option>
+              <option value="office">Office work</option>
+              <option value="students">Students</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
       <label className="block text-sm text-surface-300">
-        Excerpt (short summary for cards)
+        Excerpt (short summary)
         <textarea
           name="excerpt"
           rows={2}
           defaultValue={initial?.excerpt || ''}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="A quick guide to the best budget phones\u2026"
+          placeholder="A quick guide to the best budget phones"
         />
       </label>
 
@@ -149,7 +203,7 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
           rows={12}
           defaultValue={initial?.content || ''}
           className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-white"
-          placeholder="Write your article here\u2026"
+          placeholder="Write your article here"
         />
       </label>
 
@@ -164,7 +218,7 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
           onChange={onFileChange}
           className="mt-3 block w-full text-sm text-surface-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
         />
-        {uploading && <p className="mt-2 text-xs text-brand-400">Uploading\u2026</p>}
+        {uploading && <p className="mt-2 text-xs text-brand-400">Uploading...</p>}
         <label className="mt-3 block text-sm text-surface-300">
           Or image URL
           <input
@@ -172,7 +226,7 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-white"
-            placeholder="https://\u2026"
+            placeholder="https://..."
           />
         </label>
         {imageUrl && (
@@ -197,7 +251,7 @@ export function ArticleForm({ initial }: { initial?: ArticleInitial }) {
         disabled={pending || uploading}
         className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
       >
-        {pending ? 'Saving\u2026' : isEdit ? 'Save changes' : 'Publish article'}
+        {pending ? 'Saving...' : isEdit ? 'Save changes' : 'Publish article'}
       </button>
     </form>
   );
