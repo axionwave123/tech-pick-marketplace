@@ -13,13 +13,7 @@ async function db() {
   return createClient();
 }
 
-export async function createArticle(
-  _prev: ArticleFormState,
-  formData: FormData
-): Promise<ArticleFormState> {
-  const auth = await requireAdmin();
-  if (!auth.authorized) return { error: 'Not authorized.' };
-
+function parseArticleFields(formData: FormData) {
   const title = String(formData.get('title') || '').trim();
   let slug = String(formData.get('slug') || '').trim();
   const excerpt = String(formData.get('excerpt') || '').trim() || null;
@@ -28,15 +22,47 @@ export async function createArticle(
   const article_type = String(formData.get('article_type') || 'other');
   const status = String(formData.get('status') || 'draft');
 
-  if (!title) return { error: 'Title is required.' };
+  if (!title) return { error: 'Title is required.' as const };
   if (!slug) slug = slugify(title);
   else slug = slugify(slug);
 
   const allowedTypes = ['buying_guide', 'comparison', 'how_to', 'tech_tips', 'news', 'other'];
   const type = allowedTypes.includes(article_type) ? article_type : 'other';
   if (!['draft', 'published', 'archived'].includes(status)) {
-    return { error: 'Invalid status.' };
+    return { error: 'Invalid status.' as const };
   }
+
+  return {
+    title,
+    slug,
+    excerpt,
+    content,
+    featured_image_url,
+    article_type: type,
+    status,
+  };
+}
+
+export async function createArticle(
+  _prev: ArticleFormState,
+  formData: FormData
+): Promise<ArticleFormState> {
+  const auth = await requireAdmin();
+  if (!auth.authorized) return { error: 'Not authorized.' };
+
+  const parsed = parseArticleFields(formData);
+  if ('error' in parsed && !('title' in parsed)) {
+    return { error: (parsed as { error: string }).error };
+  }
+  const { title, slug, excerpt, content, featured_image_url, article_type, status } = parsed as {
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    content: string | null;
+    featured_image_url: string | null;
+    article_type: string;
+    status: string;
+  };
 
   const supabase = await db();
   const { error } = await supabase.from('articles').insert({
@@ -45,7 +71,7 @@ export async function createArticle(
     excerpt,
     content,
     featured_image_url,
-    article_type: type,
+    article_type,
     status,
     published_at: status === 'published' ? new Date().toISOString() : null,
   });
@@ -57,6 +83,90 @@ export async function createArticle(
         : error.message,
     };
   }
+
+  revalidatePath('/articles');
+  revalidatePath('/');
+  revalidatePath('/admin/articles');
+  redirect('/admin/articles');
+}
+
+export async function updateArticle(
+  _prev: ArticleFormState,
+  formData: FormData
+): Promise<ArticleFormState> {
+  const auth = await requireAdmin();
+  if (!auth.authorized) return { error: 'Not authorized.' };
+
+  const id = String(formData.get('id') || '').trim();
+  if (!id) return { error: 'Missing article id.' };
+
+  const parsed = parseArticleFields(formData);
+  if ('error' in parsed && !('title' in parsed)) {
+    return { error: (parsed as { error: string }).error };
+  }
+  const { title, slug, excerpt, content, featured_image_url, article_type, status } = parsed as {
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    content: string | null;
+    featured_image_url: string | null;
+    article_type: string;
+    status: string;
+  };
+
+  const supabase = await db();
+  const { data: existing } = await supabase
+    .from('articles')
+    .select('status, published_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  const published_at =
+    status === 'published'
+      ? existing?.published_at || new Date().toISOString()
+      : null;
+
+  const { error } = await supabase
+    .from('articles')
+    .update({
+      title,
+      slug,
+      excerpt,
+      content,
+      featured_image_url,
+      article_type,
+      status,
+      published_at,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+
+  if (error) {
+    return {
+      error: error.message.includes('duplicate')
+        ? 'Slug already exists. Change the slug.'
+        : error.message,
+    };
+  }
+
+  revalidatePath('/articles');
+  revalidatePath(`/articles/${slug}`);
+  revalidatePath('/');
+  revalidatePath('/admin/articles');
+  redirect('/admin/articles');
+}
+
+export async function deleteArticle(articleId: string): Promise<ArticleFormState> {
+  const auth = await requireAdmin();
+  if (!auth.authorized) return { error: 'Not authorized.' };
+  if (!articleId) return { error: 'Missing article id.' };
+
+  const supabase = await db();
+
+  await supabase.from('article_comments').delete().eq('article_id', articleId);
+
+  const { error } = await supabase.from('articles').delete().eq('id', articleId);
+  if (error) return { error: error.message };
 
   revalidatePath('/articles');
   revalidatePath('/');
@@ -96,7 +206,7 @@ export async function submitArticleComment(
       });
       if (e2) {
         console.error(e2);
-        return { ok: false, error: 'Could not post comment. Ensure article_comments table exists.' };
+        return { ok: false, error: 'Could not post comment.' };
       }
     }
     revalidatePath('/articles');
