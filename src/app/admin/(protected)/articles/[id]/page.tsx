@@ -19,7 +19,7 @@ export default async function EditArticlePage({
   const { data: article } = await supabase
     .from('articles')
     .select(
-      'id, title, slug, excerpt, content, featured_image_url, article_type, status, filter_category, filter_price, filter_need'
+      'id, title, slug, excerpt, content, content_blocks, featured_image_url, article_type, status, filter_category, filter_price, filter_need'
     )
     .eq('id', id)
     .maybeSingle();
@@ -27,9 +27,9 @@ export default async function EditArticlePage({
   if (!article) notFound();
 
   return (
-    <div>
+    <div className="pb-10">
       <Link href="/admin/articles" className="text-sm text-brand-400 hover:underline">
-        ← All articles
+        <- All articles
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-white">Edit article</h1>
       <p className="mt-1 text-sm text-surface-400">{article.title}</p>
@@ -40,6 +40,7 @@ export default async function EditArticlePage({
           slug: article.slug,
           excerpt: article.excerpt,
           content: article.content,
+          content_blocks: article.content_blocks,
           featured_image_url: article.featured_image_url,
           article_type: article.article_type,
           status: article.status,
