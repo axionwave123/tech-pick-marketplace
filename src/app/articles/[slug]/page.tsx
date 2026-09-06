@@ -134,42 +134,47 @@ export default async function ArticlePage({
     related = [];
   }
 
-  return (
-    <div className="relative">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,_rgba(37,99,235,0.18)_0%,_transparent_70%)] light:bg-[radial-gradient(ellipse_at_top,_rgba(37,99,235,0.1)_0%,_transparent_70%)]"
-      />
+  const paragraphs = (article.content || '')
+    .split(/\n\n+/)
+    .map((p: string) => p.trim())
+    .filter(Boolean);
 
-      <article className="relative mx-auto max-w-3xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
-        <nav className="flex flex-wrap items-center gap-1.5 text-sm text-surface-400 light:text-slate-500">
-          <Link href="/articles" className="font-medium transition hover:text-brand-400 light:hover:text-brand-600">
+  return (
+    <div className="min-h-screen bg-surface-950 light:bg-slate-50">
+      <article className="mx-auto max-w-3xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
+        <nav className="flex flex-wrap items-center gap-1.5 text-sm">
+          <Link
+            href="/articles"
+            className="font-semibold text-brand-400 transition hover:text-brand-300 light:text-brand-600 light:hover:text-brand-700"
+          >
             Guides
           </Link>
-          <svg className="h-3.5 w-3.5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="line-clamp-1 text-surface-300 light:text-slate-700">{article.title}</span>
+          <span className="text-surface-600 light:text-slate-400">/</span>
+          <span className="line-clamp-1 font-medium text-surface-400 light:text-slate-500">
+            {article.title}
+          </span>
         </nav>
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-brand-600/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-300 light:bg-brand-50 light:text-brand-700">
+          <span className="rounded-full bg-brand-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
             {typeLabel}
           </span>
           {tags.map((t) => (
             <span
               key={t}
-              className="rounded-full border border-surface-700 bg-surface-900/80 px-2.5 py-1 text-[11px] font-semibold text-surface-300 light:border-slate-200 light:bg-slate-50 light:text-slate-600"
+              className="rounded-full border border-surface-700 bg-surface-900 px-2.5 py-1 text-[11px] font-semibold text-surface-300 light:border-slate-200 light:bg-white light:text-slate-600 light:shadow-sm"
             >
               {t}
             </span>
           ))}
           {published && (
-            <time className="text-[12px] text-surface-500 light:text-slate-500">{published}</time>
+            <time className="text-xs font-medium text-surface-500 light:text-slate-500">
+              {published}
+            </time>
           )}
         </div>
 
-        <h1 className="mt-4 font-display text-3xl font-bold leading-[1.15] tracking-tight text-white light:text-slate-900 sm:text-4xl md:text-[2.75rem]">
+        <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.12] tracking-tight text-white light:text-slate-900 sm:text-4xl md:text-[2.6rem]">
           {article.title}
         </h1>
 
@@ -180,7 +185,7 @@ export default async function ArticlePage({
         )}
 
         {article.featured_image_url && (
-          <figure className="mt-8 overflow-hidden rounded-3xl border border-surface-700/80 bg-white shadow-neon light:border-slate-200 light:shadow-lg">
+          <figure className="mt-8 overflow-hidden rounded-3xl border border-surface-700/60 bg-white shadow-lg light:border-slate-200 light:shadow-xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={article.featured_image_url}
@@ -190,29 +195,27 @@ export default async function ArticlePage({
           </figure>
         )}
 
-        <div className="prose-article mt-10 space-y-4 text-[1.05rem] leading-[1.8] text-surface-100 light:text-slate-800 sm:mt-12 sm:text-[1.1rem]">
-          {(article.content || '')
-            .split(/\n\n+/)
-            .filter((p: string) => p.trim())
-            .map((para: string, i: number) => (
+        <div className="mt-10 rounded-3xl border border-surface-800 bg-surface-900/40 px-5 py-8 light:border-slate-200 light:bg-white light:px-8 light:py-10 light:shadow-sm sm:mt-12 sm:px-8 sm:py-10">
+          <div className="space-y-5 text-[1.05rem] leading-[1.85] text-surface-100 light:text-slate-700 sm:text-[1.125rem]">
+            {paragraphs.map((para: string, i: number) => (
               <p key={i} className="whitespace-pre-wrap">
-                {para.trim()}
+                {para}
               </p>
             ))}
+          </div>
         </div>
 
-        <div className="mt-12 rounded-2xl border border-surface-800 bg-surface-900/50 px-5 py-4 light:border-slate-200 light:bg-slate-50">
-          <p className="text-xs leading-relaxed text-surface-400 light:text-slate-500">
-            Editorial content for shoppers in Nigeria. Prices and availability change - always
-            verify on the retailer site. Affiliate links may earn a small commission at no extra
-            cost to you.
+        <div className="mt-8 rounded-2xl border border-surface-800 bg-surface-900/50 px-5 py-4 light:border-amber-100 light:bg-amber-50/80">
+          <p className="text-xs leading-relaxed text-surface-400 light:text-amber-900/70">
+            Editorial guide for Nigerian shoppers. Prices change - always confirm on the retailer
+            site. Affiliate links may earn a small commission at no extra cost to you.
           </p>
         </div>
 
         <div className="mt-8">
           <Link
             href="/articles"
-            className="inline-flex items-center gap-2 text-sm font-bold text-brand-400 transition hover:text-brand-300 light:text-brand-600 light:hover:text-brand-700"
+            className="inline-flex items-center gap-2 rounded-full border border-surface-700 bg-surface-900 px-4 py-2 text-sm font-bold text-brand-300 transition hover:border-brand-500/50 hover:text-brand-200 light:border-slate-200 light:bg-white light:text-brand-700 light:shadow-sm light:hover:border-brand-300"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -234,9 +237,9 @@ export default async function ArticlePage({
                 <Link
                   key={r.id}
                   href={`/articles/${r.slug}`}
-                  className="group overflow-hidden rounded-2xl border border-surface-700/80 bg-surface-900/80 transition hover:border-brand-500/40 light:border-slate-200 light:bg-white"
+                  className="group overflow-hidden rounded-2xl border border-surface-700/80 bg-surface-900 transition hover:border-brand-500/40 light:border-slate-200 light:bg-white light:shadow-sm light:hover:border-brand-300 light:hover:shadow-md"
                 >
-                  <div className="aspect-[16/10] overflow-hidden bg-surface-800 light:bg-slate-100">
+                  <div className="aspect-[16/10] overflow-hidden bg-slate-200 light:bg-slate-100">
                     {r.featured_image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -245,7 +248,7 @@ export default async function ArticlePage({
                         className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-surface-600">
+                      <div className="flex h-full items-center justify-center text-slate-400">
                         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                         </svg>
@@ -274,26 +277,26 @@ export default async function ArticlePage({
             Share a tip or ask a question about this guide
           </p>
 
-          <div className="mt-6">
+          <div className="mt-6 rounded-2xl border border-surface-800 bg-surface-900/50 p-4 light:border-slate-200 light:bg-white light:p-5 light:shadow-sm">
             <ArticleCommentForm articleId={article.id} />
           </div>
 
-          <ul className="mt-8 space-y-4">
+          <ul className="mt-6 space-y-3">
             {(comments || []).map((c) => (
               <li
                 key={c.id}
-                className="rounded-2xl border border-surface-700/80 bg-surface-900/60 p-4 light:border-slate-200 light:bg-slate-50"
+                className="rounded-2xl border border-surface-700/80 bg-surface-900/60 p-4 light:border-slate-200 light:bg-white light:shadow-sm"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600/20 text-xs font-bold text-brand-300 light:bg-brand-100 light:text-brand-700">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
                       {(c.author_name || '?').slice(0, 1).toUpperCase()}
                     </span>
                     <p className="text-sm font-bold text-white light:text-slate-900">
                       {c.author_name}
                     </p>
                   </div>
-                  <time className="text-[11px] text-surface-500">
+                  <time className="text-[11px] font-medium text-surface-500 light:text-slate-500">
                     {new Date(c.created_at).toLocaleDateString('en-NG', {
                       dateStyle: 'medium',
                     })}
@@ -305,7 +308,7 @@ export default async function ArticlePage({
               </li>
             ))}
             {(comments || []).length === 0 && (
-              <p className="rounded-2xl border border-dashed border-surface-700 px-4 py-8 text-center text-sm text-surface-500 light:border-slate-300">
+              <p className="rounded-2xl border border-dashed border-surface-700 px-4 py-10 text-center text-sm text-surface-500 light:border-slate-300 light:bg-slate-50 light:text-slate-500">
                 Be the first to comment.
               </p>
             )}
