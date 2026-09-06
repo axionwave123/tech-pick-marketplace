@@ -38,10 +38,9 @@ export default async function ArticlesHub() {
     }
   }
 
-  const guideCount = articles.length;
-
   return (
     <div className="min-h-[70vh] bg-surface-950 light:bg-slate-50">
+      {/* Hero band */}
       <section className="relative overflow-hidden border-b border-surface-800 light:border-slate-200/80">
         <div
           aria-hidden
@@ -70,30 +69,9 @@ export default async function ArticlesHub() {
             </h1>
 
             <p className="mt-4 max-w-xl text-base leading-relaxed text-surface-300 light:text-slate-600 sm:text-lg">
-              Clear budgets, real needs, and honest picks for shoppers in Nigeria - no jargon,
+              Clear budgets, real needs, and honest picks for shoppers in Nigeria — no jargon,
               no filler.
             </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <div className="flex items-baseline gap-2 rounded-2xl border border-surface-700 bg-surface-900/90 px-4 py-3 light:border-slate-200 light:bg-white light:shadow-sm">
-                <span className="font-display text-2xl font-bold tabular-nums text-white light:text-slate-900">
-                  {guideCount}
-                </span>
-                <span className="text-xs font-semibold text-surface-400 light:text-slate-500">
-                  guide{guideCount === 1 ? '' : 's'}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {['Phones', 'Laptops', 'Audio', 'Students', 'Gaming'].map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-surface-700 bg-surface-900/60 px-3 py-1.5 text-[11px] font-semibold text-surface-300 light:border-slate-200 light:bg-white light:text-slate-600 light:shadow-sm"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -102,7 +80,7 @@ export default async function ArticlesHub() {
         {articles.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-surface-600 bg-surface-900/50 px-6 py-20 text-center light:border-slate-300 light:bg-white">
             <p className="text-base font-medium text-surface-300 light:text-slate-600">
-              No published guides yet - check back soon.
+              No published guides yet — check back soon.
             </p>
           </div>
         ) : (
