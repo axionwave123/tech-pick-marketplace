@@ -29,6 +29,14 @@ function parseArticleFields(formData: FormData) {
   const filter_category_raw = String(formData.get('filter_category') || '').trim();
   const filter_price_raw = String(formData.get('filter_price') || '').trim();
   const filter_need_raw = String(formData.get('filter_need') || '').trim();
+  let content_blocks: unknown = [];
+  try {
+    const raw = String(formData.get('content_blocks') || '[]');
+    content_blocks = JSON.parse(raw);
+    if (!Array.isArray(content_blocks)) content_blocks = [];
+  } catch {
+    content_blocks = [];
+  }
 
   if (!title) return { error: 'Title is required.' as const };
   if (!slug) slug = slugify(title);
@@ -58,6 +66,7 @@ function parseArticleFields(formData: FormData) {
     slug,
     excerpt,
     content,
+    content_blocks,
     featured_image_url,
     article_type: type,
     status,
@@ -83,6 +92,7 @@ export async function createArticle(
     slug,
     excerpt,
     content,
+    content_blocks,
     featured_image_url,
     article_type,
     status,
@@ -94,6 +104,7 @@ export async function createArticle(
     slug: string;
     excerpt: string | null;
     content: string | null;
+    content_blocks: unknown;
     featured_image_url: string | null;
     article_type: string;
     status: string;
@@ -108,6 +119,7 @@ export async function createArticle(
     slug,
     excerpt,
     content,
+    content_blocks,
     featured_image_url,
     article_type,
     status,
@@ -150,6 +162,7 @@ export async function updateArticle(
     slug,
     excerpt,
     content,
+    content_blocks,
     featured_image_url,
     article_type,
     status,
@@ -161,6 +174,7 @@ export async function updateArticle(
     slug: string;
     excerpt: string | null;
     content: string | null;
+    content_blocks: unknown;
     featured_image_url: string | null;
     article_type: string;
     status: string;
@@ -188,6 +202,7 @@ export async function updateArticle(
       slug,
       excerpt,
       content,
+      content_blocks,
       featured_image_url,
       article_type,
       status,
