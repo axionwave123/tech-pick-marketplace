@@ -18,7 +18,9 @@ export default async function EditArticlePage({
   const supabase = await createClient();
   const { data: article } = await supabase
     .from('articles')
-    .select('id, title, slug, excerpt, content, featured_image_url, article_type, status')
+    .select(
+      'id, title, slug, excerpt, content, featured_image_url, article_type, status, filter_category, filter_price, filter_need'
+    )
     .eq('id', id)
     .maybeSingle();
 
@@ -41,6 +43,9 @@ export default async function EditArticlePage({
           featured_image_url: article.featured_image_url,
           article_type: article.article_type,
           status: article.status,
+          filter_category: article.filter_category,
+          filter_price: article.filter_price,
+          filter_need: article.filter_need,
         }}
       />
     </div>

@@ -13,6 +13,9 @@ export default async function ArticlesHub() {
     article_type: string | null;
     featured_image_url: string | null;
     published_at: string | null;
+    filter_category: string | null;
+    filter_price: string | null;
+    filter_need: string | null;
   }[] = [];
 
   if (isSupabaseConfigured()) {
@@ -20,7 +23,9 @@ export default async function ArticlesHub() {
       const supabase = await createClient();
       const { data } = await supabase
         .from('articles')
-        .select('id, title, slug, excerpt, article_type, featured_image_url, published_at')
+        .select(
+          'id, title, slug, excerpt, article_type, featured_image_url, published_at, filter_category, filter_price, filter_need'
+        )
         .eq('status', 'published')
         .order('published_at', { ascending: false });
       articles = data || [];
