@@ -11,6 +11,9 @@ export type ArticleCard = {
   article_type: string | null;
   featured_image_url: string | null;
   published_at: string | null;
+  filter_category?: string | null;
+  filter_price?: string | null;
+  filter_need?: string | null;
 };
 
 const CATEGORIES = [
@@ -21,10 +24,10 @@ const CATEGORIES = [
 ] as const;
 
 const PRICES = [
-  { id: 'under100', label: 'Under ₦100k', keywords: ['under 100', 'under ₦100', 'below 100', 'budget', '100,000', '100k', 'under ₦200'] },
-  { id: '100to200', label: '₦100k – ₦200k', keywords: ['100k-200', '100k – 200', 'mid-range', '150,000', 'between 100', '100,000', '200,000', '200k'] },
-  { id: '200to300', label: '₦200k – ₦300k', keywords: ['200k-300', '200k – 300', '250,000', '300,000', '200,000'] },
-  { id: 'over300', label: '₦300k+', keywords: ['300k', 'above 300', 'premium', 'flagship', 'over 300', '500,000'] },
+  { id: 'under100', label: 'Under 100k', keywords: ['under 100', 'under n100', 'below 100', 'budget', '100,000', '100k'] },
+  { id: '100to200', label: '100k - 200k', keywords: ['100k-200', '100k - 200', 'mid-range', '150,000', 'between 100', '200k'] },
+  { id: '200to300', label: '200k - 300k', keywords: ['200k-300', '200k - 300', '250,000', '300,000'] },
+  { id: 'over300', label: '300k+', keywords: ['300k', 'above 300', 'premium', 'flagship', 'over 300', '500,000'] },
 ] as const;
 
 const NEEDS = [
@@ -52,12 +55,44 @@ function matchesKeywords(hay: string, keywords: readonly string[]) {
   return keywords.some((k) => hay.includes(k.toLowerCase()));
 }
 
+function matchesCategory(a: ArticleCard, selected: string) {
+  if (a.filter_category) {
+    if (selected === 'others') {
+      return a.filter_category === 'others' || !['phone', 'laptop', 'audio'].includes(a.filter_category);
+    }
+    return a.filter_category === selected;
+  }
+  const cat = CATEGORIES.find((c) => c.id === selected);
+  if (!cat) return true;
+  const hay = textHaystack(a);
+  if (cat.id === 'others') {
+    const isKnown = CATEGORIES.filter((c) => c.id !== 'others').some((c) =>
+      matchesKeywords(hay, c.keywords)
+    );
+    return !isKnown;
+  }
+  return matchesKeywords(hay, cat.keywords);
+}
+
+function matchesPrice(a: ArticleCard, selected: string) {
+  if (a.filter_price) return a.filter_price === selected;
+  const p = PRICES.find((x) => x.id === selected);
+  if (!p) return true;
+  return matchesKeywords(textHaystack(a), p.keywords);
+}
+
+function matchesNeed(a: ArticleCard, selected: string) {
+  if (a.filter_need) return a.filter_need === selected;
+  const n = NEEDS.find((x) => x.id === selected);
+  if (!n) return true;
+  return matchesKeywords(textHaystack(a), n.keywords);
+}
+
 export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
   const [price, setPrice] = useState<string | null>(null);
   const [need, setNeed] = useState<string | null>(null);
-  // Applied filters (only after Search click)
   const [applied, setApplied] = useState<{
     category: string | null;
     price: string | null;
@@ -66,32 +101,9 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
-      const hay = textHaystack(a);
-
-      if (applied.category) {
-        const cat = CATEGORIES.find((c) => c.id === applied.category);
-        if (cat) {
-          if (cat.id === 'others') {
-            const isKnown = CATEGORIES.filter((c) => c.id !== 'others').some((c) =>
-              matchesKeywords(hay, c.keywords)
-            );
-            if (isKnown) return false;
-          } else if (!matchesKeywords(hay, cat.keywords)) {
-            return false;
-          }
-        }
-      }
-
-      if (applied.price) {
-        const p = PRICES.find((x) => x.id === applied.price);
-        if (p && !matchesKeywords(hay, p.keywords)) return false;
-      }
-
-      if (applied.need) {
-        const n = NEEDS.find((x) => x.id === applied.need);
-        if (n && !matchesKeywords(hay, n.keywords)) return false;
-      }
-
+      if (applied.category && !matchesCategory(a, applied.category)) return false;
+      if (applied.price && !matchesPrice(a, applied.price)) return false;
+      if (applied.need && !matchesNeed(a, applied.need)) return false;
       return true;
     });
   }, [articles, applied]);
@@ -117,11 +129,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
     if (group === 'need') setNeed((n) => (n === id ? null : id));
   }
 
-  const chip = (
-    active: boolean,
-    label: string,
-    onClick: () => void
-  ) => (
+  const chip = (active: boolean, label: string, onClick: () => void) => (
     <button
       type="button"
       onClick={onClick}
@@ -137,7 +145,6 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
 
   return (
     <div>
-      {/* Filter control bar — always visible, easy to reach */}
       <div className="mt-6 rounded-2xl border border-surface-700/80 bg-surface-900/80 light:border-slate-200 light:bg-white">
         <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:px-4">
           <button
@@ -190,41 +197,26 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
           </p>
         </div>
 
-        {/* Expandable filter panel — scrollable so it never covers the whole screen */}
         {open && (
           <div className="border-t border-surface-800 px-3 pb-4 pt-3 light:border-slate-200 sm:px-4">
             <div className="max-h-[min(52vh,360px)] overflow-y-auto overscroll-contain pr-1">
-              {/* Mobile: stacked rows with horizontal chip scroll */}
-              {/* Desktop: 3-column table-like layout */}
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500">
-                    Category
-                  </p>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500">Category</p>
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
-                    {CATEGORIES.map((c) =>
-                      chip(category === c.id, c.label, () => toggle('category', c.id))
-                    )}
+                    {CATEGORIES.map((c) => chip(category === c.id, c.label, () => toggle('category', c.id)))}
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500">
-                    Price
-                  </p>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500">Price</p>
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
-                    {PRICES.map((p) =>
-                      chip(price === p.id, p.label, () => toggle('price', p.id))
-                    )}
+                    {PRICES.map((p) => chip(price === p.id, p.label, () => toggle('price', p.id)))}
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500">
-                    Need
-                  </p>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500">Need</p>
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
-                    {NEEDS.map((n) =>
-                      chip(need === n.id, n.label, () => toggle('need', n.id))
-                    )}
+                    {NEEDS.map((n) => chip(need === n.id, n.label, () => toggle('need', n.id)))}
                   </div>
                 </div>
               </div>
@@ -246,25 +238,16 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
               >
                 Reset
               </button>
-              <p className="text-[11px] text-surface-500 sm:ml-2">
-                Pick category, price or need — then Search
-              </p>
+              <p className="text-[11px] text-surface-500 sm:ml-2">Pick category, price or need then Search</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Results */}
       {filtered.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-surface-600 bg-surface-900/50 px-6 py-12 text-center light:border-slate-300 light:bg-slate-50">
-          <p className="text-sm font-medium text-surface-300 light:text-slate-600">
-            No guides match these filters.
-          </p>
-          <button
-            type="button"
-            onClick={onClear}
-            className="mt-3 text-sm font-bold text-brand-400 hover:underline"
-          >
+          <p className="text-sm font-medium text-surface-300 light:text-slate-600">No guides match these filters.</p>
+          <button type="button" onClick={onClear} className="mt-3 text-sm font-bold text-brand-400 hover:underline">
             Clear filters
           </button>
         </div>
@@ -290,38 +273,20 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
                     />
                   ) : (
                     <div className="flex h-full min-h-[140px] items-center justify-center text-surface-500 sm:absolute sm:inset-0">
-                      <svg
-                        className="h-12 w-12 opacity-40"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
-                        />
+                      <svg className="h-12 w-12 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
                       </svg>
                     </div>
                   )}
                 </div>
-
                 <div className="flex flex-1 flex-col justify-center p-4 sm:p-5 md:p-6">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-brand-400 light:text-brand-600">
-                    {label}
-                  </p>
-                  <h2 className="mt-1 text-base font-bold leading-snug text-white light:text-slate-900 sm:text-lg">
-                    {a.title}
-                  </h2>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-brand-400 light:text-brand-600">{label}</p>
+                  <h2 className="mt-1 text-base font-bold leading-snug text-white light:text-slate-900 sm:text-lg">{a.title}</h2>
                   {a.excerpt && (
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-surface-300 light:text-slate-600">
-                      {a.excerpt}
-                    </p>
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-surface-300 light:text-slate-600">{a.excerpt}</p>
                   )}
                   <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white transition group-hover:bg-brand-500">
-                    Read Guide
-                    <span aria-hidden>→</span>
+                    Read Guide <span aria-hidden>→</span>
                   </span>
                 </div>
               </Link>
