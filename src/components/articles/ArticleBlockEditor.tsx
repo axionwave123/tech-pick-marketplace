@@ -5,8 +5,11 @@ import { createClient } from '@/lib/supabase/client';
 import {
   type ArticleBlock,
   type ArticleProductBlock,
+  type ArticleTextBlock,
   type ButtonPosition,
   type ImageSize,
+  type TextLevel,
+  type TextSpacing,
   BUTTON_POSITION_CLASS,
   IMAGE_SIZE_CLASS,
   newId,
@@ -36,6 +39,18 @@ const SIZES: { id: ImageSize; label: string }[] = [
   { id: 'full', label: 'Full width' },
 ];
 
+const TEXT_LEVELS: { id: TextLevel; label: string }[] = [
+  { id: 'p', label: 'Paragraph' },
+  { id: 'h2', label: 'Heading' },
+  { id: 'h3', label: 'Subheading' },
+];
+
+const TEXT_SPACINGS: { id: TextSpacing; label: string }[] = [
+  { id: 'tight', label: 'Tight' },
+  { id: 'normal', label: 'Normal' },
+  { id: 'loose', label: 'Loose' },
+];
+
 export function ArticleBlockEditor({
   value,
   onChange,
@@ -62,7 +77,11 @@ export function ArticleBlockEditor({
     onChange(next);
   };
 
-  const addText = () => onChange([...value, { id: newId(), type: 'text', text: '' }]);
+  const addText = () =>
+    onChange([
+      ...value,
+      { id: newId(), type: 'text', text: '', level: 'p', spacing: 'normal' },
+    ]);
 
   const addProduct = () =>
     onChange([
@@ -91,10 +110,18 @@ export function ArticleBlockEditor({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={addText} className="rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-xs font-bold text-surface-200 hover:border-brand-500 hover:text-white">
+          <button
+            type="button"
+            onClick={addText}
+            className="rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-xs font-bold text-surface-200 hover:border-brand-500 hover:text-white"
+          >
             + Text
           </button>
-          <button type="button" onClick={addProduct} className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-500">
+          <button
+            type="button"
+            onClick={addProduct}
+            className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-500"
+          >
             + Product image
           </button>
         </div>
@@ -108,32 +135,124 @@ export function ArticleBlockEditor({
 
       <div className="space-y-4">
         {value.map((block, index) => (
-          <div key={block.id} className="rounded-2xl border border-surface-700 bg-surface-950/80 p-3 sm:p-4">
+          <div
+            key={block.id}
+            className="rounded-2xl border border-surface-700 bg-surface-950/80 p-3 sm:p-4"
+          >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <span className="rounded-full bg-surface-800 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-surface-300">
                 {block.type === 'text' ? 'Text' : 'Product image'} - {index + 1}
               </span>
               <div className="flex flex-wrap gap-1">
-                <button type="button" onClick={() => move(block.id, -1)} disabled={index === 0} className="rounded-lg border border-surface-700 px-2 py-1 text-[11px] font-semibold text-surface-300 disabled:opacity-30">Up</button>
-                <button type="button" onClick={() => move(block.id, 1)} disabled={index === value.length - 1} className="rounded-lg border border-surface-700 px-2 py-1 text-[11px] font-semibold text-surface-300 disabled:opacity-30">Down</button>
-                <button type="button" onClick={() => remove(block.id)} className="rounded-lg border border-red-800/50 px-2 py-1 text-[11px] font-semibold text-red-400">Remove</button>
+                <button
+                  type="button"
+                  onClick={() => move(block.id, -1)}
+                  disabled={index === 0}
+                  className="rounded-lg border border-surface-700 px-2 py-1 text-[11px] font-semibold text-surface-300 disabled:opacity-30"
+                >
+                  Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(block.id, 1)}
+                  disabled={index === value.length - 1}
+                  className="rounded-lg border border-surface-700 px-2 py-1 text-[11px] font-semibold text-surface-300 disabled:opacity-30"
+                >
+                  Down
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(block.id)}
+                  className="rounded-lg border border-red-800/50 px-2 py-1 text-[11px] font-semibold text-red-400"
+                >
+                  Remove
+                </button>
               </div>
             </div>
 
             {block.type === 'text' ? (
-              <textarea
-                value={block.text}
-                onChange={(e) => update(block.id, { text: e.target.value })}
-                rows={5}
-                className="w-full rounded-xl border border-surface-700 bg-surface-900 px-3 py-2 text-sm leading-relaxed text-white placeholder:text-surface-500"
-                placeholder="Write a paragraph..."
+              <TextBlockEditor
+                block={block}
+                onChange={(patch) => update(block.id, patch)}
               />
             ) : (
-              <ProductEmbedEditor block={block} onChange={(patch) => update(block.id, patch)} />
+              <ProductEmbedEditor
+                block={block}
+                onChange={(patch) => update(block.id, patch)}
+              />
             )}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function TextBlockEditor({
+  block,
+  onChange,
+}: {
+  block: ArticleTextBlock;
+  onChange: (patch: Partial<ArticleTextBlock>) => void;
+}) {
+  const level = block.level || 'p';
+  const spacing = block.spacing || 'normal';
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-4">
+        <div>
+          <p className="mb-1.5 text-xs font-semibold text-surface-400">Letter size</p>
+          <div className="flex flex-wrap gap-1.5">
+            {TEXT_LEVELS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => onChange({ level: t.id })}
+                className={
+                  level === t.id
+                    ? 'rounded-lg bg-brand-600 px-2.5 py-1.5 text-[11px] font-bold text-white'
+                    : 'rounded-lg border border-surface-700 px-2.5 py-1.5 text-[11px] font-semibold text-surface-300'
+                }
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-semibold text-surface-400">Spacing</p>
+          <div className="flex flex-wrap gap-1.5">
+            {TEXT_SPACINGS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => onChange({ spacing: s.id })}
+                className={
+                  spacing === s.id
+                    ? 'rounded-lg bg-brand-600 px-2.5 py-1.5 text-[11px] font-bold text-white'
+                    : 'rounded-lg border border-surface-700 px-2.5 py-1.5 text-[11px] font-semibold text-surface-300'
+                }
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <textarea
+        value={block.text}
+        onChange={(e) => onChange({ text: e.target.value })}
+        rows={level === 'p' ? 5 : 2}
+        className="w-full rounded-xl border border-surface-700 bg-surface-900 px-3 py-2 text-sm leading-relaxed text-white placeholder:text-surface-500"
+        placeholder={
+          level === 'h2'
+            ? 'Section heading...'
+            : level === 'h3'
+              ? 'Subheading...'
+              : 'Write a paragraph...'
+        }
+      />
     </div>
   );
 }
@@ -180,7 +299,13 @@ function ProductEmbedEditor({
             imgs.find((i) => i.is_primary)?.url ||
             imgs.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.url ||
             null;
-          return { id: p.id, name: p.name, slug: p.slug, status: p.status, imageUrl: primary };
+          return {
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            status: p.status,
+            imageUrl: primary,
+          };
         });
         setHits(mapped);
         setOpen(true);
@@ -249,13 +374,20 @@ function ProductEmbedEditor({
   return (
     <div className="space-y-4">
       <div className="relative">
-        <label className="block text-xs font-semibold text-surface-400">Product name (search catalog)</label>
+        <label className="block text-xs font-semibold text-surface-400">
+          Product name (search published catalog)
+        </label>
         <input
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             if (!e.target.value.trim()) {
-              onChange({ productId: '', productSlug: '', productName: '', productStatus: 'missing' });
+              onChange({
+                productId: '',
+                productSlug: '',
+                productName: '',
+                productStatus: 'missing',
+              });
             }
           }}
           onFocus={() => hits.length > 0 && setOpen(true)}
@@ -263,23 +395,37 @@ function ProductEmbedEditor({
           placeholder="Type product name..."
           autoComplete="off"
         />
-        {searching && <p className="mt-1 text-[11px] text-surface-500">Searching...</p>}
+        {searching && (
+          <p className="mt-1 text-[11px] text-surface-500">Searching...</p>
+        )}
         {open && hits.length > 0 && (
           <ul className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-surface-600 bg-surface-900 shadow-xl">
             {hits.map((p) => (
               <li key={p.id}>
-                <button type="button" onClick={() => pickProduct(p)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-800">
+                <button
+                  type="button"
+                  onClick={() => pickProduct(p)}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-800"
+                >
                   {p.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.imageUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
                   ) : (
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-800 text-[10px] text-surface-500">-</span>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-800 text-[10px] text-surface-500">
+                      -
+                    </span>
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-white">{p.name}</span>
                     <span className="text-[11px] text-surface-500">/{p.slug}</span>
                   </span>
-                  <span className={p.status === 'published' ? 'shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400' : 'shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-400'}>
+                  <span
+                    className={
+                      p.status === 'published'
+                        ? 'shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400'
+                        : 'shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-400'
+                    }
+                  >
                     {p.status}
                   </span>
                 </button>
@@ -289,23 +435,46 @@ function ProductEmbedEditor({
         )}
       </div>
 
-      <div className={statusOk ? 'rounded-xl border border-emerald-700/40 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300' : 'rounded-xl border border-amber-700/40 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-300'}>
+      <div
+        className={
+          statusOk
+            ? 'rounded-xl border border-emerald-700/40 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300'
+            : 'rounded-xl border border-amber-700/40 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-300'
+        }
+      >
         {statusLabel}
         {statusOk && (
-          <span className="mt-0.5 block font-normal text-emerald-400/80">View deal -&gt; /products/{block.productSlug}</span>
+          <span className="mt-0.5 block font-normal text-emerald-400/80">
+            View deal -&gt; /products/{block.productSlug}
+          </span>
         )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="block text-xs font-semibold text-surface-400">Image</label>
-          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={onUpload} className="mt-1 block w-full text-xs text-surface-300 file:mr-2 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white" />
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={onUpload}
+            className="mt-1 block w-full text-xs text-surface-300 file:mr-2 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+          />
           {uploading && <p className="mt-1 text-[11px] text-brand-400">Uploading...</p>}
-          <input value={block.imageUrl} onChange={(e) => onChange({ imageUrl: e.target.value })} className="mt-2 w-full rounded-lg border border-surface-700 bg-surface-900 px-2 py-1.5 text-xs text-white" placeholder="Or paste image URL" />
+          <input
+            value={block.imageUrl}
+            onChange={(e) => onChange({ imageUrl: e.target.value })}
+            className="mt-2 w-full rounded-lg border border-surface-700 bg-surface-900 px-2 py-1.5 text-xs text-white"
+            placeholder="Or paste image URL"
+          />
         </div>
         <div>
           <label className="block text-xs font-semibold text-surface-400">Button label</label>
-          <input value={block.buttonLabel} onChange={(e) => onChange({ buttonLabel: e.target.value })} className="mt-1 w-full rounded-xl border border-surface-700 bg-surface-900 px-3 py-2 text-sm text-white" placeholder="View deal" />
+          <input
+            value={block.buttonLabel}
+            onChange={(e) => onChange({ buttonLabel: e.target.value })}
+            className="mt-1 w-full rounded-xl border border-surface-700 bg-surface-900 px-3 py-2 text-sm text-white"
+            placeholder="View deal"
+          />
         </div>
       </div>
 
@@ -314,7 +483,16 @@ function ProductEmbedEditor({
           <p className="mb-1.5 text-xs font-semibold text-surface-400">Image size</p>
           <div className="flex flex-wrap gap-1.5">
             {SIZES.map((s) => (
-              <button key={s.id} type="button" onClick={() => onChange({ size: s.id })} className={block.size === s.id ? 'rounded-lg bg-brand-600 px-2.5 py-1.5 text-[11px] font-bold text-white' : 'rounded-lg border border-surface-700 px-2.5 py-1.5 text-[11px] font-semibold text-surface-300'}>
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => onChange({ size: s.id })}
+                className={
+                  block.size === s.id
+                    ? 'rounded-lg bg-brand-600 px-2.5 py-1.5 text-[11px] font-bold text-white'
+                    : 'rounded-lg border border-surface-700 px-2.5 py-1.5 text-[11px] font-semibold text-surface-300'
+                }
+              >
                 {s.label}
               </button>
             ))}
@@ -324,7 +502,16 @@ function ProductEmbedEditor({
           <p className="mb-1.5 text-xs font-semibold text-surface-400">View deal position</p>
           <div className="grid grid-cols-3 gap-1.5">
             {POSITIONS.map((p) => (
-              <button key={p.id} type="button" onClick={() => onChange({ buttonPosition: p.id })} className={block.buttonPosition === p.id ? 'rounded-lg bg-brand-600 px-1.5 py-1.5 text-[10px] font-bold text-white' : 'rounded-lg border border-surface-700 px-1.5 py-1.5 text-[10px] font-semibold text-surface-300'}>
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onChange({ buttonPosition: p.id })}
+                className={
+                  block.buttonPosition === p.id
+                    ? 'rounded-lg bg-brand-600 px-1.5 py-1.5 text-[10px] font-bold text-white'
+                    : 'rounded-lg border border-surface-700 px-1.5 py-1.5 text-[10px] font-semibold text-surface-300'
+                }
+              >
                 {p.label}
               </button>
             ))}
@@ -336,7 +523,9 @@ function ProductEmbedEditor({
         <div className={`${IMAGE_SIZE_CLASS[block.size]} relative overflow-hidden rounded-2xl border border-surface-700 bg-white`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={block.imageUrl} alt="" className="aspect-[4/3] w-full object-cover" />
-          <span className={`absolute ${BUTTON_POSITION_CLASS[block.buttonPosition]} rounded-full bg-brand-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-lg`}>
+          <span
+            className={`absolute ${BUTTON_POSITION_CLASS[block.buttonPosition]} rounded-full bg-brand-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-lg`}
+          >
             {block.buttonLabel || 'View deal'}
           </span>
         </div>
