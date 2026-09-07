@@ -102,28 +102,28 @@ function FeedRow({ a }: { a: ArticleCard }) {
   return (
     <Link
       href={`/articles/${a.slug}`}
-      className="group flex items-center gap-3 rounded-[1.15rem] border border-white/[0.06] bg-[#1a1a1c] px-3.5 py-3.5 shadow-[0_0_0_1px_rgba(47,107,255,0.04)] transition hover:border-[#2f6bff]/45 hover:bg-[#222226] hover:shadow-[0_0_24px_-8px_rgba(47,107,255,0.45)] sm:gap-4 sm:px-4 sm:py-4"
+      className="group flex items-center gap-3 rounded-[1.25rem] border border-white/10 bg-white/[0.06] px-3.5 py-3.5 shadow-[0_0_0_1px_rgba(47,107,255,0.06)] backdrop-blur-md transition hover:border-[#2f6bff]/40 hover:bg-white/[0.1] hover:shadow-[0_0_28px_-10px_rgba(47,107,255,0.4)] light:border-slate-200/80 light:bg-white/70 light:shadow-sm light:hover:border-brand-300 light:hover:bg-white light:hover:shadow-md sm:gap-4 sm:px-4 sm:py-4"
     >
       <div className="min-w-0 flex-1">
-        <h2 className="line-clamp-3 text-[15px] font-semibold leading-snug tracking-tight text-zinc-50 group-hover:text-[#9db7ff] sm:text-[16px]">
+        <h2 className="line-clamp-3 text-[15px] font-semibold leading-snug tracking-tight text-zinc-50 group-hover:text-[#9db7ff] light:text-slate-900 light:group-hover:text-brand-700 sm:text-[16px]">
           {a.title}
         </h2>
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-zinc-400">
-          <span className="inline-flex items-center gap-1.5 font-medium text-zinc-300">
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-zinc-400 light:text-slate-500">
+          <span className="inline-flex items-center gap-1.5 font-medium text-zinc-300 light:text-slate-600">
             <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-gradient-to-br from-[#2f6bff] to-sky-400 text-[9px] font-bold text-white shadow-[0_0_10px_rgba(47,107,255,0.55)]">
               T
             </span>
             TechPick NG
           </span>
-          <span className="text-zinc-600">·</span>
+          <span className="text-zinc-600 light:text-slate-300">·</span>
           <span>{when}</span>
-          <span className="hidden text-zinc-600 sm:inline">·</span>
-          <span className="hidden rounded-full bg-[#2f6bff]/15 px-2 py-0.5 text-[10px] font-semibold text-[#9db7ff] sm:inline">
+          <span className="hidden text-zinc-600 light:text-slate-300 sm:inline">·</span>
+          <span className="hidden rounded-full bg-[#2f6bff]/15 px-2 py-0.5 text-[10px] font-semibold text-[#9db7ff] light:bg-brand-50 light:text-brand-700 sm:inline">
             {label}
           </span>
         </div>
       </div>
-      <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl bg-zinc-800 ring-1 ring-white/10 sm:h-[80px] sm:w-[80px]">
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-zinc-800/80 ring-1 ring-white/15 backdrop-blur-sm light:bg-slate-100 light:ring-slate-200/80 sm:h-28 sm:w-28">
         {a.featured_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -132,7 +132,7 @@ function FeedRow({ a }: { a: ArticleCard }) {
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1a2550] to-zinc-900 text-[10px] font-semibold text-[#9db7ff]">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1a2550]/80 to-zinc-900/80 text-[10px] font-semibold text-[#9db7ff] light:from-brand-50 light:to-slate-100 light:text-brand-600">
             Guide
           </div>
         )}
@@ -189,7 +189,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
       className={
         active
           ? 'shrink-0 rounded-full bg-[#2f6bff] px-3.5 py-1.5 text-xs font-bold text-white shadow-[0_0_12px_rgba(47,107,255,0.45)]'
-          : 'shrink-0 rounded-full border border-white/10 bg-[#141416] px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:border-[#2f6bff]/50 hover:text-white'
+          : 'shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-zinc-300 backdrop-blur-sm hover:border-[#2f6bff]/50 hover:text-white light:border-slate-200 light:bg-white/80 light:text-slate-700 light:hover:border-brand-400 light:hover:bg-brand-50 light:hover:text-brand-800'
       }
     >
       {label}
@@ -198,7 +198,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
 
   return (
     <div>
-      <div className="rounded-2xl border border-white/10 bg-[#141416] shadow-[0_0_0_1px_rgba(47,107,255,0.08)]">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] shadow-[0_0_0_1px_rgba(47,107,255,0.08)] backdrop-blur-xl light:border-slate-200/80 light:bg-white/75 light:shadow-sm">
         <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:px-4">
           <button
             type="button"
@@ -211,28 +211,53 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <p className="ml-auto text-[12px] font-medium text-zinc-500">
-            <span className="font-bold tabular-nums text-zinc-200">{filtered.length}</span> result
+
+          <button
+            type="button"
+            onClick={onSearch}
+            disabled={!hasSelection && !hasApplied && !open}
+            title="Search guides"
+            aria-label="Search guides"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-zinc-200 backdrop-blur-md transition hover:border-[#2f6bff]/50 hover:bg-[#2f6bff]/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 light:border-slate-200 light:bg-white/80 light:text-slate-700 light:hover:border-brand-400 light:hover:bg-brand-50 light:hover:text-brand-700"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <circle cx="11" cy="11" r="7" />
+              <path strokeLinecap="round" d="m20 20-3.5-3.5" />
+            </svg>
+          </button>
+
+          {hasApplied && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="text-[11px] font-semibold text-zinc-400 underline underline-offset-2 hover:text-white light:text-slate-500 light:hover:text-slate-800"
+            >
+              Clear
+            </button>
+          )}
+
+          <p className="ml-auto text-[12px] font-medium text-zinc-500 light:text-slate-500">
+            <span className="font-bold tabular-nums text-zinc-200 light:text-slate-800">{filtered.length}</span> result
             {filtered.length === 1 ? '' : 's'}
           </p>
         </div>
 
         {open && (
-          <div className="space-y-4 border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+          <div className="space-y-4 border-t border-white/10 px-3 pb-4 pt-3 light:border-slate-200/80 sm:px-4">
             <div>
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500">Category</p>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500 light:text-slate-500">Category</p>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
                 {CATEGORIES.map((c) => chip(category === c.id, c.label, () => toggle('category', c.id)))}
               </div>
             </div>
             <div>
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500">Price</p>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500 light:text-slate-500">Price</p>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
                 {PRICES.map((p) => chip(price === p.id, p.label, () => toggle('price', p.id)))}
               </div>
             </div>
             <div>
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500">Need</p>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500 light:text-slate-500">Need</p>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
                 {NEEDS.map((n) => chip(need === n.id, n.label, () => toggle('need', n.id)))}
               </div>
@@ -242,14 +267,18 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
                 type="button"
                 onClick={onSearch}
                 disabled={!hasSelection && !hasApplied}
-                className="rounded-xl bg-[#2f6bff] px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#2f6bff] px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                  <circle cx="11" cy="11" r="7" />
+                  <path strokeLinecap="round" d="m20 20-3.5-3.5" />
+                </svg>
                 Search guides
               </button>
               <button
                 type="button"
                 onClick={onClear}
-                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5"
+                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5 light:border-slate-200 light:text-slate-700 light:hover:bg-slate-50"
               >
                 Reset
               </button>
@@ -259,9 +288,9 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-white/15 bg-[#141416] px-6 py-16 text-center">
-          <p className="text-base font-semibold text-zinc-200">No guides match these filters</p>
-          <p className="mt-1 text-sm text-zinc-500">Try another combination or clear filters</p>
+        <div className="mt-8 rounded-2xl border border-dashed border-white/15 bg-white/[0.04] px-6 py-16 text-center backdrop-blur-md light:border-slate-300 light:bg-white/80">
+          <p className="text-base font-semibold text-zinc-200 light:text-slate-800">No guides match these filters</p>
+          <p className="mt-1 text-sm text-zinc-500 light:text-slate-500">Try another combination or clear filters</p>
           <button
             type="button"
             onClick={onClear}
