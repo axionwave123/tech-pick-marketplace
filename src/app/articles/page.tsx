@@ -39,47 +39,35 @@ export default async function ArticlesHub() {
   }
 
   return (
-    <div className="min-h-[70vh] bg-surface-950 light:bg-slate-50">
-      {/* Hero band */}
-      <section className="relative overflow-hidden border-b border-surface-800 light:border-slate-200/80">
+    <div className="min-h-[70vh] bg-[#0b0b0c]">
+      <section className="relative overflow-hidden border-b border-white/5">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(37,99,235,0.28),transparent)] light:bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(37,99,235,0.14),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_-20%,rgba(47,107,255,0.35),transparent_60%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 top-10 h-64 w-64 rounded-full bg-brand-500/10 blur-3xl light:bg-brand-400/20"
+          className="pointer-events-none absolute -right-20 top-0 h-72 w-72 rounded-full bg-sky-500/15 blur-3xl"
         />
-
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-          <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/25 bg-brand-600/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200 light:border-brand-200 light:bg-white light:text-brand-700 light:shadow-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400 light:bg-brand-500" />
-              </span>
-              Buying guides
-            </span>
-
-            <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white light:text-slate-900 sm:text-5xl">
-              Guides that help you
-              <span className="mt-1 block text-brand-300 light:text-brand-600">
-                buy tech with confidence
-              </span>
-            </h1>
-
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-surface-300 light:text-slate-600 sm:text-lg">
-              Clear budgets, real needs, and honest picks for shoppers in Nigeria — no jargon,
-              no filler.
-            </p>
-          </div>
+        <div className="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+          <span className="inline-flex items-center gap-2 rounded-full border border-brand-400/30 bg-brand-600/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+            Buying guides
+          </span>
+          <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            Guides worth your time
+          </h1>
+          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-zinc-400">
+            Clear budgets, real needs, and honest picks for shoppers in Nigeria — designed for
+            reading, not skimming past.
+          </p>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {articles.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-surface-600 bg-surface-900/50 px-6 py-20 text-center light:border-slate-300 light:bg-white">
-            <p className="text-base font-medium text-surface-300 light:text-slate-600">
+          <div className="rounded-2xl border border-dashed border-white/15 bg-[#141416] px-6 py-20 text-center">
+            <p className="text-base font-medium text-zinc-400">
               No published guides yet — check back soon.
             </p>
           </div>
