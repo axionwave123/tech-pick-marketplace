@@ -129,9 +129,9 @@ export const BUTTON_POSITION_CLASS: Record<ButtonPosition, string> = {
 };
 
 export const TEXT_LEVEL_CLASS: Record<TextLevel, string> = {
-  p: 'text-[1.075rem] leading-[1.85] text-slate-800 sm:text-[1.125rem]',
-  h2: 'font-display text-2xl font-extrabold leading-snug tracking-tight text-slate-900 sm:text-3xl',
-  h3: 'font-display text-xl font-bold leading-snug text-slate-900 sm:text-2xl',
+  p: 'text-[1.075rem] leading-[1.85] text-zinc-200 sm:text-[1.125rem]',
+  h2: 'font-display text-2xl font-extrabold leading-snug tracking-tight text-white sm:text-3xl',
+  h3: 'font-display text-xl font-bold leading-snug text-zinc-100 sm:text-2xl',
 };
 
 export const TEXT_SPACING_CLASS: Record<TextSpacing, string> = {
