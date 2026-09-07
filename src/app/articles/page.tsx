@@ -39,19 +39,26 @@ export default async function ArticlesHub() {
   }
 
   return (
-    <div className="min-h-[70vh] bg-[#0b0b0c]">
+    <div className="min-h-[70vh] bg-[#0a0a0b]">
       <section className="relative overflow-hidden border-b border-white/5">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_-20%,rgba(47,107,255,0.35),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(47,107,255,0.42),transparent_55%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-20 top-0 h-72 w-72 rounded-full bg-sky-500/15 blur-3xl"
+          className="pointer-events-none absolute -left-16 top-8 h-56 w-56 rounded-full bg-sky-400/20 blur-3xl"
         />
-        <div className="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-full border border-brand-400/30 bg-brand-600/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-10 top-0 h-72 w-72 rounded-full bg-[#2f6bff]/25 blur-3xl"
+        />
+        <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#2f6bff]/40 bg-[#2f6bff]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#9db7ff] shadow-[0_0_20px_rgba(47,107,255,0.25)]">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f6bff] opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#2f6bff]" />
+            </span>
             Buying guides
           </span>
           <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
