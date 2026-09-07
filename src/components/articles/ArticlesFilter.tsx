@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { relativeTime } from '@/lib/utils';
 
 export type ArticleCard = {
   id: string;
@@ -52,13 +53,6 @@ const typeLabels: Record<string, string> = {
   other: 'Guide',
 };
 
-const categoryLabels: Record<string, string> = {
-  phone: 'Phone',
-  laptop: 'Laptop',
-  audio: 'Audio',
-  others: 'Others',
-};
-
 function textHaystack(a: ArticleCard) {
   return `${a.title} ${a.excerpt || ''} ${a.article_type || ''}`.toLowerCase();
 }
@@ -101,17 +95,50 @@ function matchesNeed(a: ArticleCard, selected: string) {
   return matchesKeywords(textHaystack(a), n.keywords);
 }
 
-function formatDate(iso: string | null) {
-  if (!iso) return null;
-  try {
-    return new Date(iso).toLocaleDateString('en-NG', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  } catch {
-    return null;
-  }
+function FeedRow({ a }: { a: ArticleCard }) {
+  const label = typeLabels[a.article_type || 'other'] || 'Guide';
+  const when = relativeTime(a.published_at);
+
+  return (
+    <Link
+      href={`/articles/${a.slug}`}
+      className="group flex items-center gap-3 rounded-[1.15rem] border border-white/[0.06] bg-[#1a1a1c] px-3.5 py-3.5 shadow-[0_0_0_1px_rgba(47,107,255,0.04)] transition hover:border-[#2f6bff]/45 hover:bg-[#222226] hover:shadow-[0_0_24px_-8px_rgba(47,107,255,0.45)] sm:gap-4 sm:px-4 sm:py-4"
+    >
+      <div className="min-w-0 flex-1">
+        <h2 className="line-clamp-3 text-[15px] font-semibold leading-snug tracking-tight text-zinc-50 group-hover:text-[#9db7ff] sm:text-[16px]">
+          {a.title}
+        </h2>
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-zinc-400">
+          <span className="inline-flex items-center gap-1.5 font-medium text-zinc-300">
+            <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-gradient-to-br from-[#2f6bff] to-sky-400 text-[9px] font-bold text-white shadow-[0_0_10px_rgba(47,107,255,0.55)]">
+              T
+            </span>
+            TechPick NG
+          </span>
+          <span className="text-zinc-600">·</span>
+          <span>{when}</span>
+          <span className="hidden text-zinc-600 sm:inline">·</span>
+          <span className="hidden rounded-full bg-[#2f6bff]/15 px-2 py-0.5 text-[10px] font-semibold text-[#9db7ff] sm:inline">
+            {label}
+          </span>
+        </div>
+      </div>
+      <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl bg-zinc-800 ring-1 ring-white/10 sm:h-[80px] sm:w-[80px]">
+        {a.featured_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={a.featured_image_url}
+            alt=""
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1a2550] to-zinc-900 text-[10px] font-semibold text-[#9db7ff]">
+            Guide
+          </div>
+        )}
+      </div>
+    </Link>
+  );
 }
 
 export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
@@ -119,11 +146,14 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
   const [category, setCategory] = useState<string | null>(null);
   const [price, setPrice] = useState<string | null>(null);
   const [need, setNeed] = useState<string | null>(null);
-  const [applied, setApplied] = useState<{
-    category: string | null;
-    price: string | null;
-    need: string | null;
-  }>({ category: null, price: null, need: null });
+  const [applied, setApplied] = useState({
+    category: null as string | null,
+    price: null as string | null,
+    need: null as string | null,
+  });
+
+  const hasSelection = !!(category || price || need);
+  const hasApplied = !!(applied.category || applied.price || applied.need);
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
@@ -133,11 +163,6 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
       return true;
     });
   }, [articles, applied]);
-
-  const hasSelection = !!(category || price || need);
-  const hasApplied = !!(applied.category || applied.price || applied.need);
-  const featured = !hasApplied && filtered.length > 0 ? filtered[0] : null;
-  const rest = featured ? filtered.slice(1) : filtered;
 
   function onSearch() {
     setApplied({ category, price, need });
@@ -163,224 +188,68 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
       onClick={onClick}
       className={
         active
-          ? 'shrink-0 rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm'
-          : 'shrink-0 rounded-full border border-surface-600 bg-surface-900 px-3.5 py-1.5 text-xs font-semibold text-surface-200 hover:border-brand-500/60 hover:text-white light:border-slate-300 light:bg-slate-50 light:text-slate-700 light:hover:border-brand-400 light:hover:bg-brand-50 light:hover:text-brand-800'
+          ? 'shrink-0 rounded-full bg-[#2f6bff] px-3.5 py-1.5 text-xs font-bold text-white shadow-[0_0_12px_rgba(47,107,255,0.45)]'
+          : 'shrink-0 rounded-full border border-white/10 bg-[#141416] px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:border-[#2f6bff]/50 hover:text-white'
       }
     >
       {label}
     </button>
   );
 
-  function Card({ a, large }: { a: ArticleCard; large?: boolean }) {
-    const label =
-      typeLabels[a.article_type || 'other'] ||
-      (a.article_type || 'Guide').replace(/_/g, ' ');
-    const date = formatDate(a.published_at);
-    const cat = a.filter_category ? categoryLabels[a.filter_category] : null;
-
-    if (large) {
-      return (
-        <Link
-          href={`/articles/${a.slug}`}
-          className="group grid overflow-hidden rounded-3xl border border-surface-700/80 bg-surface-900 shadow-card transition duration-300 hover:border-brand-500/50 hover:shadow-card-hover light:border-slate-200 light:bg-white light:shadow-md light:hover:border-brand-300 light:hover:shadow-lg lg:grid-cols-5"
-        >
-          <div className="relative aspect-[16/11] overflow-hidden bg-slate-200 light:bg-slate-100 lg:col-span-3 lg:aspect-auto lg:min-h-[300px]">
-            {a.featured_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={a.featured_image_url}
-                alt=""
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-              />
-            ) : (
-              <div className="flex h-full min-h-[240px] items-center justify-center bg-gradient-to-br from-brand-100 to-slate-200 light:from-brand-50 light:to-slate-100">
-                <span className="text-sm font-semibold text-slate-500">Featured guide</span>
-              </div>
-            )}
-            <span className="absolute left-4 top-4 rounded-full bg-brand-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
-              Latest
-            </span>
-          </div>
-          <div className="flex flex-col justify-center p-6 sm:p-8 lg:col-span-2 lg:p-9">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-brand-600/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-300 light:bg-brand-50 light:text-brand-700">
-                {label}
-              </span>
-              {cat && (
-                <span className="rounded-full bg-surface-800 px-2.5 py-0.5 text-[10px] font-semibold text-surface-300 light:bg-slate-100 light:text-slate-600">
-                  {cat}
-                </span>
-              )}
-            </div>
-            <h2 className="mt-3 font-display text-2xl font-bold leading-snug text-white group-hover:text-brand-300 light:text-slate-900 light:group-hover:text-brand-700 sm:text-[1.7rem]">
-              {a.title}
-            </h2>
-            {a.excerpt && (
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-surface-300 light:text-slate-600">
-                {a.excerpt}
-              </p>
-            )}
-            <div className="mt-6 flex items-center gap-4">
-              <span className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition group-hover:bg-brand-500">
-                Read guide
-                <svg className="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-              {date && (
-                <span className="text-xs font-medium text-surface-500 light:text-slate-500">{date}</span>
-              )}
-            </div>
-          </div>
-        </Link>
-      );
-    }
-
-    return (
-      <Link
-        href={`/articles/${a.slug}`}
-        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-surface-700/80 bg-surface-900 shadow-card transition duration-300 hover:-translate-y-1 hover:border-brand-500/40 hover:shadow-card-hover light:border-slate-200 light:bg-white light:shadow-sm light:hover:border-brand-300 light:hover:shadow-md"
-      >
-        <div className="relative aspect-[16/10] overflow-hidden bg-slate-200 light:bg-slate-100">
-          {a.featured_image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={a.featured_image_url}
-              alt=""
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 light:from-slate-100 light:to-slate-200">
-              <svg className="h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-              </svg>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-1 flex-col p-4 sm:p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-400 light:text-brand-600">
-              {label}
-            </span>
-            {cat && (
-              <span className="rounded-full bg-surface-800 px-2 py-0.5 text-[10px] font-semibold text-surface-400 light:bg-slate-100 light:text-slate-600">
-                {cat}
-              </span>
-            )}
-          </div>
-          <h2 className="mt-2 line-clamp-2 text-base font-bold leading-snug text-white group-hover:text-brand-300 light:text-slate-900 light:group-hover:text-brand-700 sm:text-lg">
-            {a.title}
-          </h2>
-          {a.excerpt && (
-            <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-surface-400 light:text-slate-600">
-              {a.excerpt}
-            </p>
-          )}
-          <div className="mt-4 flex items-center justify-between border-t border-surface-800 pt-3 light:border-slate-100">
-            <span className="text-[11px] font-medium text-surface-500 light:text-slate-500">
-              {date || 'Guide'}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-400 light:text-brand-600">
-              Read
-              <svg className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </span>
-          </div>
-        </div>
-      </Link>
-    );
-  }
-
   return (
     <div>
-      <div className="rounded-2xl border border-surface-700/80 bg-surface-900/90 shadow-sm light:border-slate-200 light:bg-white light:shadow-md">
+      <div className="rounded-2xl border border-white/10 bg-[#141416] shadow-[0_0_0_1px_rgba(47,107,255,0.08)]">
         <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:px-4">
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-brand-500"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#2f6bff] px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(47,107,255,0.35)] transition hover:bg-blue-500"
             aria-expanded={open}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
-            </svg>
             Filter
             <svg className={`h-3.5 w-3.5 transition ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-
-          {hasApplied && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {applied.category && (
-                <span className="rounded-full bg-brand-600/20 px-2.5 py-1 text-[11px] font-bold text-brand-300 light:bg-brand-100 light:text-brand-800">
-                  {CATEGORIES.find((c) => c.id === applied.category)?.label}
-                </span>
-              )}
-              {applied.price && (
-                <span className="rounded-full bg-brand-600/20 px-2.5 py-1 text-[11px] font-bold text-brand-300 light:bg-brand-100 light:text-brand-800">
-                  {PRICES.find((p) => p.id === applied.price)?.label}
-                </span>
-              )}
-              {applied.need && (
-                <span className="rounded-full bg-brand-600/20 px-2.5 py-1 text-[11px] font-bold text-brand-300 light:bg-brand-100 light:text-brand-800">
-                  {NEEDS.find((n) => n.id === applied.need)?.label}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={onClear}
-                className="text-[11px] font-semibold text-surface-400 underline underline-offset-2 hover:text-white light:text-slate-500 light:hover:text-slate-800"
-              >
-                Clear
-              </button>
-            </div>
-          )}
-
-          <p className="ml-auto text-[12px] font-medium text-surface-400 light:text-slate-500">
-            <span className="font-bold tabular-nums text-surface-200 light:text-slate-800">{filtered.length}</span>
-            {' '}result{filtered.length === 1 ? '' : 's'}
+          <p className="ml-auto text-[12px] font-medium text-zinc-500">
+            <span className="font-bold tabular-nums text-zinc-200">{filtered.length}</span> result
+            {filtered.length === 1 ? '' : 's'}
           </p>
         </div>
 
         {open && (
-          <div className="border-t border-surface-800 px-3 pb-4 pt-3 light:border-slate-100 sm:px-4">
-            <div className="max-h-[min(50vh,340px)] overflow-y-auto overscroll-contain pr-1">
-              <div className="grid gap-5 sm:grid-cols-3">
-                <div>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500 light:text-slate-500">Category</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
-                    {CATEGORIES.map((c) => chip(category === c.id, c.label, () => toggle('category', c.id)))}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500 light:text-slate-500">Price</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
-                    {PRICES.map((p) => chip(price === p.id, p.label, () => toggle('price', p.id)))}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-surface-500 light:text-slate-500">Need</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
-                    {NEEDS.map((n) => chip(need === n.id, n.label, () => toggle('need', n.id)))}
-                  </div>
-                </div>
+          <div className="space-y-4 border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+            <div>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500">Category</p>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
+                {CATEGORIES.map((c) => chip(category === c.id, c.label, () => toggle('category', c.id)))}
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500">Price</p>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
+                {PRICES.map((p) => chip(price === p.id, p.label, () => toggle('price', p.id)))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500">Need</p>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
+                {NEEDS.map((n) => chip(need === n.id, n.label, () => toggle('need', n.id)))}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
               <button
                 type="button"
                 onClick={onSearch}
                 disabled={!hasSelection && !hasApplied}
-                className="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-xl bg-[#2f6bff] px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Search guides
               </button>
               <button
                 type="button"
                 onClick={onClear}
-                className="rounded-xl border border-surface-600 px-4 py-2.5 text-sm font-semibold text-surface-300 hover:border-surface-500 hover:text-white light:border-slate-300 light:bg-slate-50 light:text-slate-700 light:hover:bg-slate-100"
+                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5"
               >
                 Reset
               </button>
@@ -390,31 +259,22 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="mt-10 rounded-3xl border border-dashed border-surface-600 bg-surface-900/40 px-6 py-16 text-center light:border-slate-300 light:bg-white">
-          <p className="text-base font-semibold text-surface-200 light:text-slate-800">
-            No guides match these filters
-          </p>
-          <p className="mt-1 text-sm text-surface-500 light:text-slate-500">
-            Try another combination or clear filters
-          </p>
+        <div className="mt-8 rounded-2xl border border-dashed border-white/15 bg-[#141416] px-6 py-16 text-center">
+          <p className="text-base font-semibold text-zinc-200">No guides match these filters</p>
+          <p className="mt-1 text-sm text-zinc-500">Try another combination or clear filters</p>
           <button
             type="button"
             onClick={onClear}
-            className="mt-5 rounded-full bg-brand-600 px-5 py-2 text-sm font-bold text-white hover:bg-brand-500"
+            className="mt-5 rounded-full bg-[#2f6bff] px-5 py-2 text-sm font-bold text-white hover:bg-blue-500"
           >
             Clear filters
           </button>
         </div>
       ) : (
-        <div className="mt-8 space-y-6">
-          {featured && <Card a={featured} large />}
-          {rest.length > 0 && (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {rest.map((a) => (
-                <Card key={a.id} a={a} />
-              ))}
-            </div>
-          )}
+        <div className="mt-5 flex flex-col gap-2.5 sm:gap-3">
+          {filtered.map((a) => (
+            <FeedRow key={a.id} a={a} />
+          ))}
         </div>
       )}
     </div>
