@@ -39,32 +39,32 @@ export default async function ArticlesHub() {
   }
 
   return (
-    <div className="min-h-[70vh] bg-[#0a0a0b]">
-      <section className="relative overflow-hidden border-b border-white/5">
+    <div className="min-h-[70vh] bg-[#0a0a0b] light:bg-slate-50">
+      <section className="relative overflow-hidden border-b border-white/5 light:border-slate-200/80">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(47,107,255,0.42),transparent_55%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(47,107,255,0.42),transparent_55%)] light:bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(47,107,255,0.12),transparent_55%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-16 top-8 h-56 w-56 rounded-full bg-sky-400/20 blur-3xl"
+          className="pointer-events-none absolute -left-16 top-8 h-56 w-56 rounded-full bg-sky-400/20 blur-3xl light:bg-sky-300/25"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-10 top-0 h-72 w-72 rounded-full bg-[#2f6bff]/25 blur-3xl"
+          className="pointer-events-none absolute -right-10 top-0 h-72 w-72 rounded-full bg-[#2f6bff]/25 blur-3xl light:bg-brand-400/20"
         />
         <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#2f6bff]/40 bg-[#2f6bff]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#9db7ff] shadow-[0_0_20px_rgba(47,107,255,0.25)]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#2f6bff]/40 bg-[#2f6bff]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#9db7ff] shadow-[0_0_20px_rgba(47,107,255,0.25)] light:border-brand-200 light:bg-white/90 light:text-brand-700 light:shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f6bff] opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#2f6bff]" />
             </span>
             Buying guides
           </span>
-          <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-white light:text-slate-900 sm:text-4xl">
             Guides worth your time
           </h1>
-          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-zinc-400">
+          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-zinc-400 light:text-slate-600">
             Clear budgets, real needs, and honest picks for shoppers in Nigeria — designed for
             reading, not skimming past.
           </p>
@@ -73,8 +73,8 @@ export default async function ArticlesHub() {
 
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {articles.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-[#141416] px-6 py-20 text-center">
-            <p className="text-base font-medium text-zinc-400">
+          <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.04] px-6 py-20 text-center backdrop-blur-md light:border-slate-300 light:bg-white">
+            <p className="text-base font-medium text-zinc-400 light:text-slate-600">
               No published guides yet — check back soon.
             </p>
           </div>
