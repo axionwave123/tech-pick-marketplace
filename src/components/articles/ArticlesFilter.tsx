@@ -102,15 +102,15 @@ function FeedRow({ a }: { a: ArticleCard }) {
   return (
     <Link
       href={`/articles/${a.slug}`}
-      className="group flex items-center gap-3 rounded-[1.25rem] border border-white/10 bg-white/[0.06] px-3.5 py-3.5 shadow-[0_0_0_1px_rgba(47,107,255,0.06)] backdrop-blur-md transition hover:border-[#2f6bff]/40 hover:bg-white/[0.1] hover:shadow-[0_0_28px_-10px_rgba(47,107,255,0.4)] light:border-slate-200/80 light:bg-white/70 light:shadow-sm light:hover:border-brand-300 light:hover:bg-white light:hover:shadow-md sm:gap-4 sm:px-4 sm:py-4"
+      className="group flex items-center gap-3.5 rounded-[1.35rem] border border-white/12 bg-white/[0.07] px-3.5 py-3.5 shadow-[0_0_0_1px_rgba(47,107,255,0.05)] backdrop-blur-md transition hover:border-[#2f6bff]/45 hover:bg-white/[0.11] hover:shadow-[0_0_32px_-12px_rgba(47,107,255,0.45)] light:border-slate-200/90 light:bg-white/85 light:shadow-[0_1px_3px_rgba(15,23,42,0.06)] light:hover:border-brand-300 light:hover:bg-white light:hover:shadow-md sm:gap-5 sm:px-5 sm:py-4"
     >
       <div className="min-w-0 flex-1">
-        <h2 className="line-clamp-3 text-[15px] font-semibold leading-snug tracking-tight text-zinc-50 group-hover:text-[#9db7ff] light:text-slate-900 light:group-hover:text-brand-700 sm:text-[16px]">
+        <h2 className="line-clamp-3 text-[15px] font-semibold leading-snug tracking-tight text-zinc-50 group-hover:text-[#9db7ff] light:text-slate-900 light:group-hover:text-brand-700 sm:text-[17px]">
           {a.title}
         </h2>
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-zinc-400 light:text-slate-500">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-zinc-400 light:text-slate-500">
           <span className="inline-flex items-center gap-1.5 font-medium text-zinc-300 light:text-slate-600">
-            <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-gradient-to-br from-[#2f6bff] to-sky-400 text-[9px] font-bold text-white shadow-[0_0_10px_rgba(47,107,255,0.55)]">
+            <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-gradient-to-br from-[#2f6bff] to-sky-400 text-[9px] font-bold text-white shadow-[0_0_10px_rgba(47,107,255,0.55)] light:shadow-none">
               T
             </span>
             TechPick NG
@@ -123,7 +123,8 @@ function FeedRow({ a }: { a: ArticleCard }) {
           </span>
         </div>
       </div>
-      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-zinc-800/80 ring-1 ring-white/15 backdrop-blur-sm light:bg-slate-100 light:ring-slate-200/80 sm:h-28 sm:w-28">
+      {/* Much larger article thumbnails */}
+      <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl bg-zinc-800/70 ring-1 ring-white/15 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-sm light:bg-slate-100 light:ring-slate-200/90 light:shadow-sm sm:h-36 sm:w-36">
         {a.featured_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -132,7 +133,7 @@ function FeedRow({ a }: { a: ArticleCard }) {
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1a2550]/80 to-zinc-900/80 text-[10px] font-semibold text-[#9db7ff] light:from-brand-50 light:to-slate-100 light:text-brand-600">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1a2550]/80 to-zinc-900/80 text-[11px] font-semibold text-[#9db7ff] light:from-brand-50 light:to-slate-100 light:text-brand-600">
             Guide
           </div>
         )}
@@ -198,12 +199,13 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
 
   return (
     <div>
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] shadow-[0_0_0_1px_rgba(47,107,255,0.08)] backdrop-blur-xl light:border-slate-200/80 light:bg-white/75 light:shadow-sm">
+      {/* Subtle glass filter bar */}
+      <div className="rounded-2xl border border-white/12 bg-white/[0.07] shadow-[0_0_0_1px_rgba(47,107,255,0.06)] backdrop-blur-xl light:border-slate-200/90 light:bg-white/90 light:shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
         <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:px-4">
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#2f6bff] px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(47,107,255,0.35)] transition hover:bg-blue-500"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#2f6bff] px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(47,107,255,0.35)] transition hover:bg-blue-500 light:shadow-[0_2px_10px_rgba(37,99,235,0.25)]"
             aria-expanded={open}
           >
             Filter
@@ -212,13 +214,14 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
             </svg>
           </button>
 
+          {/* Search logo near filter */}
           <button
             type="button"
             onClick={onSearch}
             disabled={!hasSelection && !hasApplied && !open}
             title="Search guides"
             aria-label="Search guides"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-zinc-200 backdrop-blur-md transition hover:border-[#2f6bff]/50 hover:bg-[#2f6bff]/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 light:border-slate-200 light:bg-white/80 light:text-slate-700 light:hover:border-brand-400 light:hover:bg-brand-50 light:hover:text-brand-700"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-zinc-100 backdrop-blur-md transition hover:border-[#2f6bff]/55 hover:bg-[#2f6bff]/18 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 light:border-slate-200 light:bg-white light:text-slate-700 light:shadow-sm light:hover:border-brand-400 light:hover:bg-brand-50 light:hover:text-brand-700"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
               <circle cx="11" cy="11" r="7" />
@@ -243,7 +246,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
         </div>
 
         {open && (
-          <div className="space-y-4 border-t border-white/10 px-3 pb-4 pt-3 light:border-slate-200/80 sm:px-4">
+          <div className="space-y-4 border-t border-white/10 px-3 pb-4 pt-3 light:border-slate-200/90 sm:px-4">
             <div>
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500 light:text-slate-500">Category</p>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap">
@@ -267,7 +270,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
                 type="button"
                 onClick={onSearch}
                 disabled={!hasSelection && !hasApplied}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#2f6bff] px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#2f6bff] px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 light:shadow-[0_2px_10px_rgba(37,99,235,0.2)]"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
                   <circle cx="11" cy="11" r="7" />
@@ -278,7 +281,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
               <button
                 type="button"
                 onClick={onClear}
-                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5 light:border-slate-200 light:text-slate-700 light:hover:bg-slate-50"
+                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5 light:border-slate-200 light:bg-white light:text-slate-700 light:hover:bg-slate-50"
               >
                 Reset
               </button>
@@ -288,7 +291,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-white/15 bg-white/[0.04] px-6 py-16 text-center backdrop-blur-md light:border-slate-300 light:bg-white/80">
+        <div className="mt-8 rounded-2xl border border-dashed border-white/15 bg-white/[0.04] px-6 py-16 text-center backdrop-blur-md light:border-slate-300 light:bg-white light:shadow-sm">
           <p className="text-base font-semibold text-zinc-200 light:text-slate-800">No guides match these filters</p>
           <p className="mt-1 text-sm text-zinc-500 light:text-slate-500">Try another combination or clear filters</p>
           <button
@@ -300,7 +303,7 @@ export function ArticlesFilter({ articles }: { articles: ArticleCard[] }) {
           </button>
         </div>
       ) : (
-        <div className="mt-5 flex flex-col gap-2.5 sm:gap-3">
+        <div className="mt-5 flex flex-col gap-3 sm:gap-3.5">
           {filtered.map((a) => (
             <FeedRow key={a.id} a={a} />
           ))}
