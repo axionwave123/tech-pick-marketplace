@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Search, Menu, X, User } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const nav = [
@@ -18,11 +18,17 @@ export function Header() {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!q.trim()) return;
-    router.push(`/search?q=${encodeURIComponent(q.trim())}`);
+    const params = new URLSearchParams();
+    params.set('q', q.trim());
+    // If user is browsing a category, keep results inside that category
+    const catMatch = pathname?.match(/^\/categories\/([^/?#]+)/);
+    if (catMatch?.[1]) params.set('category', catMatch[1]);
+    router.push(`/search?${params.toString()}`);
     setOpen(false);
   }
 
@@ -56,24 +62,23 @@ export function Header() {
           </div>
         </form>
 
-        <nav className="hidden items-center gap-0.5 lg:flex">
+        <nav className="ml-auto hidden items-center gap-1 lg:flex">
           {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-surface-100 hover:bg-white/5 hover:text-white light:text-slate-700 light:hover:bg-slate-100 light:hover:text-slate-900"
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-surface-300 transition hover:bg-white/5 hover:text-white light:text-slate-600 light:hover:bg-slate-100 light:hover:text-slate-900"
             >
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        <div className="ml-auto flex items-center gap-1.5 md:ml-0">
           <ThemeToggle />
-
           <Link
-            href="/profile"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-surface-700 text-surface-100 hover:bg-white/5 light:border-slate-200 light:text-slate-700 light:hover:bg-slate-100"
+            href="/account"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-600 text-white light:border-slate-200 light:text-slate-800"
             aria-label="Account"
           >
             <User className="h-4 w-4" />
