@@ -64,3 +64,46 @@ export function matchesAllTokens(haystack: string, tokens: string[]): boolean {
   const h = (haystack || '').toLowerCase();
   return tokens.every((t) => h.includes(t));
 }
+
+/** Levenshtein distance between two strings (for typo-tolerant search). */
+export function levenshtein(a: string, b: string): number {
+  const s = (a || '').toLowerCase();
+  const t = (b || '').toLowerCase();
+  if (s === t) return 0;
+  if (!s.length) return t.length;
+  if (!t.length) return s.length;
+  const rows = s.length + 1;
+  const cols = t.length + 1;
+  const d: number[] = new Array(cols);
+  for (let j = 0; j < cols; j++) d[j] = j;
+  for (let i = 1; i < rows; i++) {
+    let prev = d[0];
+    d[0] = i;
+    for (let j = 1; j < cols; j++) {
+      const tmp = d[j];
+      const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+      d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + cost);
+      prev = tmp;
+    }
+  }
+  return d[cols - 1];
+}
+
+/**
+ * True if haystack matches query with typo tolerance.
+ * - Every query token must match some word (exact substring OR small edit distance).
+ */
+export function fuzzyMatches(haystack: string, query: string): boolean {
+  const tokens = searchTokens(query);
+  if (!tokens.length) return true;
+  const text = (haystack || '').toLowerCase();
+  const words = text.split(/[^a-z0-9]+/).filter(Boolean);
+  return tokens.every((token) => {
+    if (text.includes(token)) return true;
+    const maxDist = token.length <= 3 ? 0 : token.length <= 5 ? 1 : 2;
+    return words.some((w) => {
+      if (w.includes(token) || token.includes(w)) return true;
+      return levenshtein(w, token) <= maxDist;
+    });
+  });
+}

@@ -22,6 +22,7 @@ export default async function AdminOffersPage() {
       name,
       slug,
       status,
+      brands ( id, name ),
       product_offers (
         id,
         price,
@@ -71,11 +72,14 @@ export default async function AdminOffersPage() {
         })
         .sort((a, b) => a.price - b.price);
 
+      const brandRaw = (p as { brands?: { name?: string } | { name?: string }[] | null }).brands;
+      const brandObj = Array.isArray(brandRaw) ? brandRaw[0] : brandRaw;
       return {
         id: p.id,
         name: p.name,
         slug: p.slug,
         status: p.status || 'draft',
+        brand: brandObj?.name || null,
         offers,
       };
     })
