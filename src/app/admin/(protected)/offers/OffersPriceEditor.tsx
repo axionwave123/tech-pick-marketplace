@@ -14,6 +14,7 @@ export type EditorOffer = {
   product_url: string | null;
   store_id: string;
   store_name: string;
+  store_logo: string | null;
 };
 
 export type EditorProduct = {
@@ -222,8 +223,26 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                         key={o.id}
                         className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-end sm:justify-between ${dirtyRow ? 'bg-brand-500/5' : ''}`}
                       >
-                        <div className="min-w-0 sm:w-40">
-                          <p className="text-sm font-semibold text-white">{o.store_name}</p>
+                        <div className="min-w-0 sm:w-44">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-white/20">
+                              {o.store_logo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={o.store_logo}
+                                  alt=""
+                                  width={28}
+                                  height={28}
+                                  className="h-full w-full object-contain p-0.5"
+                                />
+                              ) : (
+                                <span className="text-[11px] font-bold text-surface-800">
+                                  {(o.store_name || '?').charAt(0)}
+                                </span>
+                              )}
+                            </span>
+                            <p className="text-sm font-semibold text-white">{o.store_name}</p>
+                          </div>
                           <p className="mt-0.5 text-[11px] text-surface-500">Checked {relativeShort(o.last_checked_at)}</p>
                           {o.product_url && (
                             <a href={o.product_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block truncate text-[11px] font-medium text-brand-300 hover:underline">
