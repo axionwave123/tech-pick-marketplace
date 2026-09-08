@@ -46,3 +46,21 @@ export function ratingStars(rating: number, max = 5): string {
   const half = rating - full >= 0.5 ? 1 : 0;
   return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(Math.max(0, max - full - half));
 }
+
+/** Split a search query into safe tokens (words) for multi-word matching. */
+export function searchTokens(query: string): string[] {
+  return (query || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((t) => t.replace(/[%_,]/g, '').trim())
+    .filter((t) => t.length > 0)
+    .slice(0, 8);
+}
+
+/** True if haystack contains every token (word-by-word). */
+export function matchesAllTokens(haystack: string, tokens: string[]): boolean {
+  if (!tokens.length) return true;
+  const h = (haystack || '').toLowerCase();
+  return tokens.every((t) => h.includes(t));
+}

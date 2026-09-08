@@ -1,5 +1,5 @@
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
-import { slugify } from '@/lib/utils';
+import { slugify, searchTokens } from '@/lib/utils';
 import type { Product } from '@/types';
 
 const productSelect = `
@@ -84,33 +84,19 @@ export async function getProductBySlug(rawSlug: string): Promise<Product | null>
       .maybeSingle();
 
     if (!data && clean && clean !== slug) {
-      const res = await supabase
+      ({ data, error } = await supabase
         .from('products')
         .select(detailSelect)
         .eq('slug', clean)
         .eq('status', 'published')
-        .maybeSingle();
-      data = res.data;
-      error = res.error;
-    }
-
-    if (!data && clean) {
-      const res = await supabase
-        .from('products')
-        .select(detailSelect)
-        .eq('status', 'published')
-        .or(`slug.ilike.%${clean}%,name.ilike.%${slug.replace(/-/g, ' ')}%`)
-        .limit(1)
-        .maybeSingle();
-      data = res.data;
-      error = res.error;
+        .maybeSingle());
     }
 
     if (error) {
       console.error(error);
       return null;
     }
-    return data as Product | null;
+    return (data as Product) || null;
   } catch (e) {
     console.error(e);
     return null;
@@ -150,8 +136,10 @@ export async function searchProducts(
     }
 
     const q = query.trim();
-    if (q) {
-      req = req.ilike('name', `%${q}%`);
+    // Word-by-word: every token must appear in name or slug (AND across words)
+    const tokens = searchTokens(q);
+    for (const token of tokens) {
+      req = req.or(`name.ilike.%${token}%,slug.ilike.%${token}%`);
     }
 
     // If no query and no category, still return recent published
@@ -208,7 +196,7 @@ export async function getDeals(limit = 24): Promise<Product[]> {
   return products
     .filter((p) =>
       p.product_offers?.some(
-        (o) => o.status === 'active' && o.original_price && o.original_price > o.price
+        (o) => o.status === 'active' && o.original_price != null && o.original_price > o.price
       )
     )
     .slice(0, limit);
