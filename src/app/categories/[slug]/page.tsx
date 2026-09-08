@@ -106,6 +106,41 @@ export default async function CategoryPage({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Search within this category */}
+        <form
+          action="/search"
+          method="get"
+          className="mb-6 flex max-w-xl overflow-hidden rounded-2xl border border-surface-600/80 bg-surface-900/80 shadow-md ring-1 ring-white/5 light:border-slate-200 light:bg-white light:ring-slate-200/80"
+        >
+          <input type="hidden" name="category" value={slug} />
+          <div className="flex flex-1 items-center gap-2 px-4">
+            <svg
+              className="h-5 w-5 shrink-0 text-surface-400 light:text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+              />
+            </svg>
+            <input
+              name="q"
+              placeholder={`Search in ${category.name}… e.g. Samsung`}
+              className="min-w-0 flex-1 bg-transparent py-3 text-sm text-white placeholder:text-surface-500 focus:outline-none light:text-slate-900 light:placeholder:text-slate-400"
+            />
+          </div>
+          <button
+            type="submit"
+            className="shrink-0 bg-brand-600 px-4 text-sm font-bold text-white hover:bg-brand-500 sm:px-5"
+          >
+            Search
+          </button>
+        </form>
+
         {/* Category switcher */}
         <div className="mb-6">
           <p className="mb-3 text-xs font-bold uppercase tracking-wide text-surface-400 light:text-slate-500">
