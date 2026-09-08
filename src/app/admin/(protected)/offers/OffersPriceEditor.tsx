@@ -245,12 +245,15 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
             const lowest = bestPrice(p);
             const saving = pending && savingId === p.id;
             return (
-              <div key={p.id} className="overflow-hidden rounded-2xl border border-white/10 bg-[#000000]">
-                {/* Product header — pure black bg, pure white name (matches screenshot) */}
-                <div className="border-b border-white/10 bg-[#000000] px-4 py-3.5">
+              <div
+                key={p.id}
+                className="overflow-hidden rounded-2xl border border-blue-400/25 bg-blue-950/40 shadow-[0_0_24px_rgba(37,99,235,0.12)] backdrop-blur-xl"
+              >
+                {/* Product header — blue glass morphism */}
+                <div className="border-b border-blue-300/20 bg-gradient-to-r from-blue-600/35 via-blue-500/20 to-blue-900/30 px-4 py-3.5 backdrop-blur-md">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2
-                      className="text-[15px] font-bold leading-snug tracking-tight text-[#ffffff]"
+                      className="text-[15px] font-bold leading-snug tracking-tight text-white drop-shadow-sm"
                       title={p.name}
                     >
                       {p.name}
@@ -258,19 +261,19 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                     <span
                       className={
                         p.status === 'published'
-                          ? 'shrink-0 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400'
-                          : 'shrink-0 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300'
+                          ? 'shrink-0 rounded-full bg-emerald-400/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300 ring-1 ring-emerald-400/30'
+                          : 'shrink-0 rounded-full bg-amber-400/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200 ring-1 ring-amber-400/30'
                       }
                     >
                       {p.status === 'published' ? 'Published' : 'Needs update'}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-xs text-zinc-400">
+                  <p className="mt-1.5 text-xs font-medium text-blue-100/90">
                     {p.offers.length} store{p.offers.length === 1 ? '' : 's'}
                     {lowest != null && (
                       <>
                         {' '}
-                        · best <span className="font-semibold text-emerald-400">{formatNaira(lowest)}</span>
+                        · best <span className="font-bold text-emerald-300">{formatNaira(lowest)}</span>
                       </>
                     )}
                   </p>
@@ -279,13 +282,13 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                       <>
                         <Link
                           href={`/products/${p.slug}`}
-                          className="rounded-full border border-zinc-600 bg-transparent px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:border-zinc-400 hover:text-white"
+                          className="rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm hover:bg-white/20"
                         >
                           View
                         </Link>
                         <Link
                           href={`/admin/products/${p.id}`}
-                          className="rounded-full border border-zinc-600 bg-transparent px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:border-zinc-400 hover:text-white"
+                          className="rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm hover:bg-white/20"
                         >
                           Edit product
                         </Link>
@@ -295,14 +298,14 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                       type="button"
                       disabled={dirty.length === 0 || pending}
                       onClick={() => saveOffers(dirty, p.id)}
-                      className="rounded-full bg-[#1e3a8a] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-full bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-blue-600/30 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {saving ? 'Saving…' : dirty.length ? `Save ${dirty.length}` : 'Saved'}
                     </button>
                   </div>
                 </div>
 
-                <div className="divide-y divide-white/5 bg-[#0a0a0a]">
+                <div className="divide-y divide-blue-400/10 bg-slate-950/80">
                   {p.offers.map((o) => {
                     const d = getDraft(o);
                     const dirtyRow = isDirty(o);
@@ -332,7 +335,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                               )}
                             </span>
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-white">{o.store_name}</p>
+                              <p className="text-sm font-bold text-white">{o.store_name}</p>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -340,13 +343,13 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                                   el?.focus();
                                   el?.select();
                                 }}
-                                className="mt-0.5 text-[11px] font-bold text-brand-300 hover:text-brand-200 hover:underline"
+                                className="mt-0.5 text-[11px] font-bold text-sky-300 hover:text-sky-200 hover:underline"
                               >
                                 Edit store price
                               </button>
                             </div>
                           </div>
-                          <p className="mt-1 text-[11px] text-surface-500">
+                          <p className="mt-1 text-[11px] font-medium text-slate-300">
                             Checked {relativeShort(o.last_checked_at)}
                           </p>
                           {o.product_url && (
@@ -354,7 +357,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                               href={o.product_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-1 inline-block truncate text-[11px] font-medium text-brand-300 hover:underline"
+                              className="mt-1 inline-block truncate text-[11px] font-semibold text-sky-300 hover:text-sky-200 hover:underline"
                             >
                               Open store link
                             </a>
@@ -362,7 +365,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                         </div>
                         <div className="grid flex-1 grid-cols-2 gap-2 sm:max-w-md">
                           <label className="block">
-                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-surface-500">
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-300">
                               Current ₦
                             </span>
                             <input
@@ -376,7 +379,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                             />
                           </label>
                           <label className="block">
-                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-surface-500">
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-300">
                               Original ₦
                             </span>
                             <input
