@@ -31,7 +31,7 @@ export default async function AdminOffersPage() {
         product_url,
         status,
         store_id,
-        stores ( id, name )
+        stores ( id, name, logo_url )
       )
     `
     )
@@ -50,7 +50,7 @@ export default async function AdminOffersPage() {
         product_url: string | null;
         status: string | null;
         store_id: string;
-        stores: { id: string; name: string } | { id: string; name: string }[] | null;
+        stores: { id: string; name: string; logo_url?: string | null } | { id: string; name: string; logo_url?: string | null }[] | null;
       }[];
 
       const offers: EditorOffer[] = rawOffers
@@ -66,6 +66,7 @@ export default async function AdminOffersPage() {
             product_url: o.product_url,
             store_id: o.store_id,
             store_name: store?.name || 'Store',
+            store_logo: store?.logo_url || null,
           };
         })
         .sort((a, b) => a.price - b.price);
