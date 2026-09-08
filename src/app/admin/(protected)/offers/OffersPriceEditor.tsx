@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { updateOfferPrices, type UpdateOfferPriceState } from './actions';
-import { formatNaira } from '@/lib/utils';
+import { formatNaira, fuzzyMatches } from '@/lib/utils';
 
 export type EditorOffer = {
   id: string;
@@ -22,6 +22,7 @@ export type EditorProduct = {
   name: string;
   slug: string;
   status: string;
+  brand: string | null;
   offers: EditorOffer[];
 };
 
@@ -39,31 +40,44 @@ function relativeShort(iso: string | null) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
+function bestPrice(p: EditorProduct) {
+  if (!p.offers.length) return null;
+  return Math.min(...p.offers.map((o) => o.price));
+}
+
 export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [q, setQ] = useState('');
+  const [brand, setBrand] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [message, setMessage] = useState<UpdateOfferPriceState>({});
   const [pending, startTransition] = useTransition();
   const [savingId, setSavingId] = useState<string | null>(null);
 
+  const brands = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of products) {
+      if (p.brand?.trim()) set.add(p.brand.trim());
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'en'));
+  }, [products]);
+
   const filtered = useMemo(() => {
-    const tokens = q
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const min = minPrice.trim() === '' ? null : Number(minPrice);
+    const max = maxPrice.trim() === '' ? null : Number(maxPrice);
     return products.filter((p) => {
       if (filter === 'published' && p.status !== 'published') return false;
       if (filter === 'draft' && p.status !== 'draft') return false;
-      if (tokens.length) {
-        const name = p.name.toLowerCase();
-        if (!tokens.every((t) => name.includes(t))) return false;
-      }
+      if (brand && (p.brand || '') !== brand) return false;
+      if (q.trim() && !fuzzyMatches(`${p.name} ${p.brand || ''}`, q)) return false;
+      const best = bestPrice(p);
+      if (min != null && !Number.isNaN(min) && (best == null || best < min)) return false;
+      if (max != null && !Number.isNaN(max) && (best == null || best > max)) return false;
       return true;
     });
-  }, [products, filter, q]);
+  }, [products, filter, q, brand, minPrice, maxPrice]);
 
   function getDraft(o: EditorOffer): Draft {
     return (
@@ -124,9 +138,11 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
     { id: 'draft' as const, label: 'Needs update / drafts' },
   ];
 
+  const hasExtraFilters = Boolean(brand || minPrice || maxPrice);
+
   return (
     <div>
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 flex flex-col gap-3">
         <div className="flex flex-wrap gap-1.5">
           {tabs.map((t) => (
             <button
@@ -143,13 +159,67 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
             </button>
           ))}
         </div>
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search product (e.g. Samsung)…"
-          className="w-full rounded-xl border border-surface-700 bg-surface-950 px-3 py-2 text-sm text-white placeholder:text-surface-500 focus:border-brand-500 focus:outline-none sm:w-64"
-        />
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search (typos ok) e.g. Samung, Elitebok…"
+            className="w-full rounded-xl border border-surface-700 bg-surface-950 px-3 py-2 text-sm text-white placeholder:text-surface-500 focus:border-brand-500 focus:outline-none sm:min-w-[220px] sm:flex-1"
+          />
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="rounded-xl border border-surface-700 bg-surface-950 px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none"
+          >
+            <option value="">All brands</option>
+            {brands.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              placeholder="Min ₦"
+              className="w-24 rounded-xl border border-surface-700 bg-surface-950 px-2.5 py-2 text-sm text-white placeholder:text-surface-500 focus:border-brand-500 focus:outline-none"
+            />
+            <span className="text-xs text-surface-500">–</span>
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Max ₦"
+              className="w-24 rounded-xl border border-surface-700 bg-surface-950 px-2.5 py-2 text-sm text-white placeholder:text-surface-500 focus:border-brand-500 focus:outline-none"
+            />
+          </div>
+          {(q || hasExtraFilters) && (
+            <button
+              type="button"
+              onClick={() => {
+                setQ('');
+                setBrand('');
+                setMinPrice('');
+                setMaxPrice('');
+              }}
+              className="text-xs font-semibold text-surface-400 hover:text-white"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] text-surface-500">
+          {filtered.length} product{filtered.length === 1 ? '' : 's'}
+          {q ? ' · fuzzy search on' : ''}
+        </p>
       </div>
 
       {(message.success || message.error) && (
@@ -166,50 +236,56 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
 
       {filtered.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-surface-700 bg-surface-900/50 px-6 py-16 text-center text-sm text-surface-400">
-          No products with store prices in this filter.
+          No products match these filters.
         </div>
       ) : (
-        <div className="mt-6 space-y-5">
+        <div className="mt-4 space-y-4">
           {filtered.map((p) => {
             const dirty = p.offers.filter(isDirty);
-            const lowest = [...p.offers].sort((a, b) => a.price - b.price)[0]?.price;
+            const lowest = bestPrice(p);
             const saving = pending && savingId === p.id;
             return (
               <div key={p.id} className="overflow-hidden rounded-xl border border-surface-800 bg-surface-900/40">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-500/25 bg-gradient-to-r from-brand-600/25 via-surface-900 to-surface-900 px-4 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-800 bg-surface-900/90 px-3 py-2.5">
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-extrabold leading-snug tracking-tight text-white sm:text-lg">
+                    <div className="flex items-center gap-2">
+                      <h2 className="truncate text-sm font-bold text-white" title={p.name}>
                         {p.name}
                       </h2>
                       <span
                         className={
                           p.status === 'published'
-                            ? 'shrink-0 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300 ring-1 ring-emerald-400/30'
-                            : 'shrink-0 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300 ring-1 ring-amber-400/30'
+                            ? 'shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300'
+                            : 'shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-300'
                         }
                       >
                         {p.status === 'published' ? 'Published' : 'Needs update'}
                       </span>
                     </div>
-                    <p className="mt-1.5 text-xs font-medium text-surface-300">
+                    <p className="mt-0.5 truncate text-[11px] text-surface-500">
+                      {p.brand ? `${p.brand} · ` : ''}
                       {p.offers.length} store{p.offers.length === 1 ? '' : 's'}
                       {lowest != null && (
                         <>
                           {' '}
-                          · best{' '}
-                          <span className="font-bold text-emerald-400">{formatNaira(lowest)}</span>
+                          · best <span className="font-semibold text-emerald-400">{formatNaira(lowest)}</span>
                         </>
                       )}
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-wrap gap-2">
+                  <div className="flex shrink-0 flex-wrap gap-1.5">
                     {p.slug && (
                       <>
-                        <Link href={`/products/${p.slug}`} className="rounded-lg border border-surface-700 px-2.5 py-1 text-[11px] font-semibold text-surface-300 hover:border-brand-500 hover:text-white">
+                        <Link
+                          href={`/products/${p.slug}`}
+                          className="rounded-lg border border-surface-700 px-2 py-1 text-[10px] font-semibold text-surface-300 hover:border-brand-500 hover:text-white"
+                        >
                           View
                         </Link>
-                        <Link href={`/admin/products/${p.id}`} className="rounded-lg border border-surface-700 px-2.5 py-1 text-[11px] font-semibold text-surface-300 hover:border-brand-500 hover:text-white">
+                        <Link
+                          href={`/admin/products/${p.id}`}
+                          className="rounded-lg border border-surface-700 px-2 py-1 text-[10px] font-semibold text-surface-300 hover:border-brand-500 hover:text-white"
+                        >
                           Edit product
                         </Link>
                       </>
@@ -218,7 +294,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                       type="button"
                       disabled={dirty.length === 0 || pending}
                       onClick={() => saveOffers(dirty, p.id)}
-                      className="rounded-lg bg-brand-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg bg-brand-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {saving ? 'Saving…' : dirty.length ? `Save ${dirty.length}` : 'Saved'}
                     </button>
@@ -232,7 +308,9 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                     return (
                       <div
                         key={o.id}
-                        className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-end sm:justify-between ${dirtyRow ? 'bg-brand-500/5' : ''}`}
+                        className={`flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-end sm:justify-between ${
+                          dirtyRow ? 'bg-brand-500/5' : ''
+                        }`}
                       >
                         <div className="min-w-0 sm:w-48">
                           <div className="flex items-center gap-2">
@@ -267,16 +345,25 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                               </button>
                             </div>
                           </div>
-                          <p className="mt-1 text-[11px] text-surface-500">Checked {relativeShort(o.last_checked_at)}</p>
+                          <p className="mt-1 text-[11px] text-surface-500">
+                            Checked {relativeShort(o.last_checked_at)}
+                          </p>
                           {o.product_url && (
-                            <a href={o.product_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block truncate text-[11px] font-medium text-brand-300 hover:underline">
+                            <a
+                              href={o.product_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-1 inline-block truncate text-[11px] font-medium text-brand-300 hover:underline"
+                            >
                               Open store link
                             </a>
                           )}
                         </div>
                         <div className="grid flex-1 grid-cols-2 gap-2 sm:max-w-md">
                           <label className="block">
-                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-surface-500">Current ₦</span>
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-surface-500">
+                              Current ₦
+                            </span>
                             <input
                               id={`price-${o.id}`}
                               type="number"
@@ -288,7 +375,9 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                             />
                           </label>
                           <label className="block">
-                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-surface-500">Original ₦</span>
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-surface-500">
+                              Original ₦
+                            </span>
                             <input
                               type="number"
                               min="0"
