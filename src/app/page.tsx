@@ -89,6 +89,48 @@ export default async function HomePage() {
                 </button>
               </div>
             </form>
+
+            {/* Mature secondary CTA — guides / articles */}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link
+                href={articles[0] ? `/articles/${articles[0].slug}` : '/articles'}
+                className="group inline-flex items-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold tracking-wide text-white shadow-lg shadow-black/20 backdrop-blur-md transition hover:border-brand-300/50 hover:bg-white/15 hover:shadow-brand-500/10"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-500/90 text-white shadow-sm ring-1 ring-white/20 transition group-hover:bg-brand-400">
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.2}
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                    />
+                  </svg>
+                </span>
+                <span>Read article</span>
+                <svg
+                  className="h-4 w-4 text-white/70 transition group-hover:translate-x-0.5 group-hover:text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+              <Link
+                href="/articles"
+                className="text-sm font-medium text-white/70 underline-offset-4 transition hover:text-white hover:underline"
+              >
+                All guides
+              </Link>
+            </div>
           </div>
         </div>
       </section>
