@@ -168,26 +168,29 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
             const saving = pending && savingId === p.id;
             return (
               <div key={p.id} className="overflow-hidden rounded-xl border border-surface-800 bg-surface-900/40">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-800 bg-surface-900 px-4 py-3">
-                  <div className="min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-500/25 bg-gradient-to-r from-brand-600/25 via-surface-900 to-surface-900 px-4 py-4">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="truncate text-sm font-bold text-white sm:text-base">{p.name}</h2>
+                      <h2 className="text-base font-extrabold leading-snug tracking-tight text-white sm:text-lg">
+                        {p.name}
+                      </h2>
                       <span
                         className={
                           p.status === 'published'
-                            ? 'rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300'
-                            : 'rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300'
+                            ? 'shrink-0 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300 ring-1 ring-emerald-400/30'
+                            : 'shrink-0 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300 ring-1 ring-amber-400/30'
                         }
                       >
                         {p.status === 'published' ? 'Published' : 'Needs update'}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-surface-500">
+                    <p className="mt-1.5 text-xs font-medium text-surface-300">
                       {p.offers.length} store{p.offers.length === 1 ? '' : 's'}
                       {lowest != null && (
                         <>
                           {' '}
-                          · best <span className="font-semibold text-emerald-400">{formatNaira(lowest)}</span>
+                          · best{' '}
+                          <span className="font-bold text-emerald-400">{formatNaira(lowest)}</span>
                         </>
                       )}
                     </p>
@@ -223,7 +226,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                         key={o.id}
                         className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-end sm:justify-between ${dirtyRow ? 'bg-brand-500/5' : ''}`}
                       >
-                        <div className="min-w-0 sm:w-44">
+                        <div className="min-w-0 sm:w-48">
                           <div className="flex items-center gap-2">
                             <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-white/20">
                               {o.store_logo ? (
@@ -241,9 +244,22 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                                 </span>
                               )}
                             </span>
-                            <p className="text-sm font-semibold text-white">{o.store_name}</p>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-white">{o.store_name}</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const el = document.getElementById(`price-${o.id}`) as HTMLInputElement | null;
+                                  el?.focus();
+                                  el?.select();
+                                }}
+                                className="mt-0.5 text-[11px] font-bold text-brand-300 hover:text-brand-200 hover:underline"
+                              >
+                                Edit store price
+                              </button>
+                            </div>
                           </div>
-                          <p className="mt-0.5 text-[11px] text-surface-500">Checked {relativeShort(o.last_checked_at)}</p>
+                          <p className="mt-1 text-[11px] text-surface-500">Checked {relativeShort(o.last_checked_at)}</p>
                           {o.product_url && (
                             <a href={o.product_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block truncate text-[11px] font-medium text-brand-300 hover:underline">
                               Open store link
@@ -254,6 +270,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                           <label className="block">
                             <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-surface-500">Current ₦</span>
                             <input
+                              id={`price-${o.id}`}
                               type="number"
                               min="1"
                               step="1"
@@ -279,9 +296,9 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                           type="button"
                           disabled={!dirtyRow || pending}
                           onClick={() => saveOffers([o], p.id)}
-                          className="shrink-0 rounded-lg border border-surface-600 px-3 py-2 text-xs font-bold text-surface-200 hover:border-brand-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                          className="shrink-0 rounded-lg border border-brand-500/40 bg-brand-600/20 px-3 py-2 text-xs font-bold text-brand-200 hover:bg-brand-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          Update
+                          Save price
                         </button>
                       </div>
                     );
