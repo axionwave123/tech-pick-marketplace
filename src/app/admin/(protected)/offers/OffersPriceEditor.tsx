@@ -48,11 +48,19 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
+    const tokens = q
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
     return products.filter((p) => {
       if (filter === 'published' && p.status !== 'published') return false;
       if (filter === 'draft' && p.status !== 'draft') return false;
-      if (term && !p.name.toLowerCase().includes(term)) return false;
+      if (tokens.length) {
+        const name = p.name.toLowerCase();
+        if (!tokens.every((t) => name.includes(t))) return false;
+      }
       return true;
     });
   }, [products, filter, q]);
@@ -139,7 +147,7 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search product…"
+          placeholder="Search product (e.g. Samsung)…"
           className="w-full rounded-xl border border-surface-700 bg-surface-950 px-3 py-2 text-sm text-white placeholder:text-surface-500 focus:border-brand-500 focus:outline-none sm:w-64"
         />
       </div>
