@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/admin';
 import { redirect } from 'next/navigation';
-import { formatNaira } from '@/lib/utils';
+import { formatNaira, searchTokens } from '@/lib/utils';
 import { DeleteProductButton } from './DeleteProductButton';
 
 export default async function AdminProductsPage({
@@ -38,8 +38,10 @@ export default async function AdminProductsPage({
     .order('updated_at', { ascending: false })
     .limit(200);
 
-  if (query) {
-    req = req.or(`name.ilike.%${query}%,slug.ilike.%${query}%`);
+  // Word-by-word: each typed word must match name or slug
+  const tokens = searchTokens(query);
+  for (const token of tokens) {
+    req = req.or(`name.ilike.%${token}%,slug.ilike.%${token}%`);
   }
   if (categoryId) {
     req = req.eq('category_id', categoryId);
@@ -88,7 +90,7 @@ export default async function AdminProductsPage({
         <input
           name="q"
           defaultValue={query}
-          placeholder="Search by product name…"
+          placeholder="Search e.g. Samsung Galaxy…"
           className="min-w-0 flex-1 rounded-lg border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm text-white placeholder:text-surface-500"
         />
         <select
