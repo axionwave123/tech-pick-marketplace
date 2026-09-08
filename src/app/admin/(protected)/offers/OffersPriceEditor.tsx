@@ -245,46 +245,47 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
             const lowest = bestPrice(p);
             const saving = pending && savingId === p.id;
             return (
-              <div key={p.id} className="overflow-hidden rounded-xl border border-surface-800 bg-surface-900/40">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-800 bg-surface-900/90 px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h2 className="truncate text-sm font-bold text-white" title={p.name}>
-                        {p.name}
-                      </h2>
-                      <span
-                        className={
-                          p.status === 'published'
-                            ? 'shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300'
-                            : 'shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-300'
-                        }
-                      >
-                        {p.status === 'published' ? 'Published' : 'Needs update'}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 truncate text-[11px] text-surface-500">
-                      {p.brand ? `${p.brand} · ` : ''}
-                      {p.offers.length} store{p.offers.length === 1 ? '' : 's'}
-                      {lowest != null && (
-                        <>
-                          {' '}
-                          · best <span className="font-semibold text-emerald-400">{formatNaira(lowest)}</span>
-                        </>
-                      )}
-                    </p>
+              <div key={p.id} className="overflow-hidden rounded-2xl border border-white/10 bg-[#000000]">
+                {/* Product header — pure black bg, pure white name (matches screenshot) */}
+                <div className="border-b border-white/10 bg-[#000000] px-4 py-3.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2
+                      className="text-[15px] font-bold leading-snug tracking-tight text-[#ffffff]"
+                      title={p.name}
+                    >
+                      {p.name}
+                    </h2>
+                    <span
+                      className={
+                        p.status === 'published'
+                          ? 'shrink-0 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400'
+                          : 'shrink-0 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300'
+                      }
+                    >
+                      {p.status === 'published' ? 'Published' : 'Needs update'}
+                    </span>
                   </div>
-                  <div className="flex shrink-0 flex-wrap gap-1.5">
+                  <p className="mt-1.5 text-xs text-zinc-400">
+                    {p.offers.length} store{p.offers.length === 1 ? '' : 's'}
+                    {lowest != null && (
+                      <>
+                        {' '}
+                        · best <span className="font-semibold text-emerald-400">{formatNaira(lowest)}</span>
+                      </>
+                    )}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {p.slug && (
                       <>
                         <Link
                           href={`/products/${p.slug}`}
-                          className="rounded-lg border border-surface-700 px-2 py-1 text-[10px] font-semibold text-surface-300 hover:border-brand-500 hover:text-white"
+                          className="rounded-full border border-zinc-600 bg-transparent px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:border-zinc-400 hover:text-white"
                         >
                           View
                         </Link>
                         <Link
                           href={`/admin/products/${p.id}`}
-                          className="rounded-lg border border-surface-700 px-2 py-1 text-[10px] font-semibold text-surface-300 hover:border-brand-500 hover:text-white"
+                          className="rounded-full border border-zinc-600 bg-transparent px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:border-zinc-400 hover:text-white"
                         >
                           Edit product
                         </Link>
@@ -294,14 +295,14 @@ export function OffersPriceEditor({ products }: { products: EditorProduct[] }) {
                       type="button"
                       disabled={dirty.length === 0 || pending}
                       onClick={() => saveOffers(dirty, p.id)}
-                      className="rounded-lg bg-brand-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-full bg-[#1e3a8a] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {saving ? 'Saving…' : dirty.length ? `Save ${dirty.length}` : 'Saved'}
                     </button>
                   </div>
                 </div>
 
-                <div className="divide-y divide-surface-800/80">
+                <div className="divide-y divide-white/5 bg-[#0a0a0a]">
                   {p.offers.map((o) => {
                     const d = getDraft(o);
                     const dirtyRow = isDirty(o);
