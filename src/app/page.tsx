@@ -90,10 +90,10 @@ export default async function HomePage() {
               </div>
             </form>
 
-            {/* Mature secondary CTA — guides / articles */}
+            {/* Mature secondary CTA — guides / articles list */}
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
-                href={articles[0] ? `/articles/${articles[0].slug}` : '/articles'}
+                href="/articles"
                 className="group inline-flex items-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold tracking-wide text-white shadow-lg shadow-black/20 backdrop-blur-md transition hover:border-brand-300/50 hover:bg-white/15 hover:shadow-brand-500/10"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-500/90 text-white shadow-sm ring-1 ring-white/20 transition group-hover:bg-brand-400">
