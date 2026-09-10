@@ -7,6 +7,7 @@ const primaryNav = [
   { href: '/admin/products/new', label: 'Add product', highlight: true },
   { href: '/admin/drafts', label: 'Drafts' },
   { href: '/admin/offers', label: 'See prices' },
+  { href: '/admin/missing-review', label: 'No YouTube' },
   { href: '/admin/stores', label: 'Stores' },
   { href: '/admin/research', label: 'AI Research' },
   { href: '/admin/reports', label: 'Reports' },
@@ -22,6 +23,7 @@ const sideLinks = [
   { href: '/admin/stores', label: 'Stores (Jumia, Amazon…)' },
   { href: '/admin/tracking', label: 'Price tracking' },
   { href: '/admin/needs-update', label: 'Needs update' },
+  { href: '/admin/missing-review', label: 'Missing YouTube review' },
   { href: '/admin/research', label: 'AI Research' },
   { href: '/admin/reviews', label: 'Reviews' },
   { href: '/admin/articles', label: 'Articles' },
@@ -59,13 +61,12 @@ export default async function ProtectedAdminLayout({
     <div className="flex min-h-screen flex-col bg-surface-950 text-surface-100">
       <header className="sticky top-0 z-40 border-b border-surface-800 bg-surface-900">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
-          <Link href="/admin/dashboard" className="flex shrink-0 items-center gap-2 font-bold text-white">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm">
+          <Link href="/admin/dashboard" className="flex shrink-0 items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-xs font-bold text-white">
               TP
             </span>
-            <span className="hidden sm:inline">Admin</span>
+            <span className="hidden font-display text-sm font-bold text-white sm:inline">Admin</span>
           </Link>
-
           <nav className="flex flex-1 items-center gap-1.5 overflow-x-auto scrollbar-hide sm:gap-2">
             {primaryNav.map((l) => (
               <Link
@@ -81,38 +82,30 @@ export default async function ProtectedAdminLayout({
               </Link>
             ))}
           </nav>
-
           <Link
             href="/"
-            className="shrink-0 text-xs font-medium text-surface-400 hover:text-white sm:text-sm"
+            className="shrink-0 rounded-lg border border-surface-700 px-3 py-1.5 text-xs font-semibold text-surface-300 hover:border-brand-500 hover:text-white"
           >
-            ← Site
+            Site
           </Link>
         </div>
       </header>
 
       <div className="flex flex-1">
-        <aside className="hidden w-56 shrink-0 border-r border-surface-800 bg-surface-900 p-4 md:block">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-surface-500">Menu</p>
-          <nav className="flex flex-col gap-1">
+        <aside className="hidden w-56 shrink-0 border-r border-surface-800 bg-surface-900/50 p-4 lg:block">
+          <nav className="space-y-1">
             {sideLinks.map((l) => (
               <Link
-                key={l.href + l.label}
+                key={l.href}
                 href={l.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-surface-300 hover:bg-surface-800 hover:text-white"
+                className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-300 hover:bg-surface-800 hover:text-white"
               >
                 {l.label}
               </Link>
             ))}
           </nav>
-          <Link href="/" className="mt-8 block text-xs text-surface-500 hover:text-surface-300">
-            ← Public site
-          </Link>
         </aside>
-
-        <div className="flex-1 overflow-auto">
-          <div className="p-4 sm:p-6">{children}</div>
-        </div>
+        <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );
