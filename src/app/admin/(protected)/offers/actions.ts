@@ -16,7 +16,7 @@ async function db() {
 
 /**
  * Update one or more store offers' prices from the See prices admin page.
- * Body: offers = [{ id, price, original_price? }]
+ * Body: offers = [{ id, price, original_price?, shipping_fee? }]
  */
 export async function updateOfferPrices(
   _prev: UpdateOfferPriceState,
@@ -28,19 +28,23 @@ export async function updateOfferPrices(
   const raw = String(formData.get('offers_json') || '').trim();
   if (!raw) return { error: 'No prices to save' };
 
-  let items: { id: string; price: number; original_price?: number | null }[] = [];
+  let items: { id: string; price: number; original_price?: number | null; shipping_fee?: number | null }[] = [];
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return { error: 'Invalid payload' };
     items = parsed
-      .map((o: { id?: string; price?: unknown; original_price?: unknown }) => {
+      .map((o: { id?: string; price?: unknown; original_price?: unknown; shipping_fee?: unknown }) => {
         const id = typeof o?.id === 'string' ? o.id : '';
         const price = Number(o?.price);
         const original_price =
           o?.original_price === '' || o?.original_price == null
             ? null
             : Number(o.original_price);
-        return { id, price, original_price };
+        const shipping_fee =
+          o?.shipping_fee === '' || o?.shipping_fee == null
+            ? null
+            : Number(o.shipping_fee);
+        return { id, price, original_price, shipping_fee };
       })
       .filter((o) => o.id && !Number.isNaN(o.price) && o.price > 0);
   } catch {
@@ -64,6 +68,7 @@ export async function updateOfferPrices(
       .update({
         price: item.price,
         original_price: item.original_price,
+        shipping_fee: item.shipping_fee,
         discount_percent,
         last_checked_at: now,
         updated_at: now,
