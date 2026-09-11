@@ -34,9 +34,18 @@ export default async function ProductPage({
   const images = product.product_images || [];
   const offers = (product.product_offers || [])
     .filter((o) => o.status === 'active')
-    .sort((a, b) => a.price - b.price);
+    .map((o) => {
+      const ship =
+        o.shipping_fee != null && !Number.isNaN(Number(o.shipping_fee))
+          ? Number(o.shipping_fee)
+          : null;
+      const productPrice = Number(o.price) || 0;
+      const total = productPrice + (ship ?? 0);
+      return { ...o, shipping_fee: ship, _total: total };
+    })
+    .sort((a, b) => a._total - b._total);
   const best = offers[0];
-  const lowestPrice = best?.price;
+  const lowestTotal = best?._total;
   const specs = (product.product_specifications || []).sort(
     (a, b) =>
       (a.specification_definitions?.sort_order ?? 0) -
@@ -94,7 +103,6 @@ export default async function ProductPage({
             )}
           </div>
 
-          {/* Price comparison — primary CTA (replaces Best deal card) */}
           <div className="mt-6 overflow-hidden rounded-2xl border border-surface-600/80 bg-gradient-to-b from-surface-900 to-surface-950 shadow-lg ring-1 ring-white/5 light:border-slate-200 light:from-white light:to-slate-50 light:ring-slate-200/60">
             <div className="border-b border-surface-700/80 bg-surface-900/80 px-5 py-4 light:border-slate-100 light:bg-white">
               <div className="flex items-center justify-between gap-2">
@@ -106,16 +114,17 @@ export default async function ProductPage({
                 </span>
               </div>
               <p className="mt-1 text-xs text-surface-400 light:text-slate-500">
-                Sorted by lowest price · verify on retailer site
+                Product price + shipping · sorted by total to pay · verify on retailer site
               </p>
             </div>
             <ul className="divide-y divide-surface-800/80 light:divide-slate-100">
-              {offers.map((o, index) => {
-                const isBest = o.price === lowestPrice;
+              {offers.map((o) => {
+                const isBest = o._total === lowestTotal;
                 const storeName = o.stores?.name || 'Store';
                 const logoUrl = o.stores?.logo_url;
                 const dealHref = o.affiliate_url || o.product_url;
                 const hasDiscount = o.original_price != null && o.original_price > o.price;
+                const ship = o.shipping_fee;
                 return (
                   <li
                     key={o.id}
@@ -127,7 +136,7 @@ export default async function ProductPage({
                   >
                     {isBest && (
                       <span className="absolute right-3 top-3 rounded-md bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                        Best price
+                        Best total
                       </span>
                     )}
                     <div className="flex items-start gap-3">
@@ -137,27 +146,48 @@ export default async function ProductPage({
                         <p className="mt-0.5 text-[11px] text-surface-400 light:text-slate-500">
                           Checked {relativeTime(o.last_checked_at)}
                         </p>
-                        <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
-                          <div>
-                            <p
+                        <div className="mt-2.5 space-y-1">
+                          <div className="flex items-center justify-between gap-2 text-xs text-surface-300 light:text-slate-600">
+                            <span>Product</span>
+                            <span className="font-semibold tabular-nums text-white light:text-slate-900">
+                              {formatNaira(o.price)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 text-xs text-surface-300 light:text-slate-600">
+                            <span>Shipping</span>
+                            <span className="font-semibold tabular-nums text-white light:text-slate-900">
+                              {ship == null ? 'Check on site' : ship === 0 ? 'Free' : formatNaira(ship)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 border-t border-surface-700/60 pt-1.5 light:border-slate-200">
+                            <span className="text-xs font-bold uppercase tracking-wide text-surface-400 light:text-slate-500">
+                              Total
+                            </span>
+                            <span
                               className={
                                 isBest
-                                  ? 'text-lg font-bold text-emerald-300 light:text-emerald-700'
-                                  : 'text-lg font-bold text-white light:text-slate-900'
+                                  ? 'text-lg font-bold tabular-nums text-emerald-300 light:text-emerald-700'
+                                  : 'text-lg font-bold tabular-nums text-white light:text-slate-900'
                               }
                             >
-                              {formatNaira(o.price)}
-                            </p>
-                            {hasDiscount && (
-                              <p className="text-xs text-surface-400 light:text-slate-500">
-                                <span className="line-through">{formatNaira(o.original_price!)}</span>{' '}
-                                <span className="font-semibold text-red-400 light:text-red-600">
-                                  {formatDiscount(o.original_price!, o.price)}
-                                </span>
-                              </p>
-                            )}
+                              {formatNaira(o._total)}
+                              {ship == null && (
+                                <span className="ml-1 text-[10px] font-medium text-amber-400/90">+ shipping?</span>
+                              )}
+                            </span>
                           </div>
-                          {dealHref && (
+                          {hasDiscount && (
+                            <p className="text-[11px] text-surface-400 light:text-slate-500">
+                              Was <span className="line-through">{formatNaira(o.original_price!)}</span>{' '}
+                              <span className="font-semibold text-red-400 light:text-red-600">
+                                {formatDiscount(o.original_price!, o.price)}
+                              </span>{' '}
+                              on product price
+                            </p>
+                          )}
+                        </div>
+                        {dealHref && (
+                          <div className="mt-3">
                             <a
                               href={dealHref}
                               target="_blank"
@@ -170,8 +200,8 @@ export default async function ProductPage({
                             >
                               View deal →
                             </a>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -187,13 +217,13 @@ export default async function ProductPage({
               <div className="border-t border-surface-700/80 bg-surface-900/50 px-5 py-3 text-center text-[11px] text-surface-400 light:border-slate-100 light:bg-slate-50 light:text-slate-500">
                 Save up to{' '}
                 <span className="font-bold text-emerald-400 light:text-emerald-600">
-                  {formatNaira(Math.max(...offers.map((o) => o.price)) - (lowestPrice || 0))}
+                  {formatNaira(Math.max(...offers.map((o) => o._total)) - (lowestTotal || 0))}
                 </span>{' '}
-                by picking the best price
+                by picking the best total
               </div>
             )}
             <p className="border-t border-surface-800 px-4 py-2 text-[10px] text-surface-500 light:border-slate-100 light:text-slate-500">
-              Affiliate links may earn TechPick NG a commission. Prices change on retailer sites.
+              Affiliate links may earn TechPick NG a commission. Prices and shipping change on retailer sites.
             </p>
           </div>
 
@@ -279,7 +309,7 @@ export default async function ProductPage({
               {editorial.verdict && (
                 <div className="mt-4 rounded-xl bg-surface-800 light:bg-surface-50 p-4">
                   <p className="text-sm font-semibold text-white light:text-surface-900">Verdict</p>
-                  <p className="mt-1 text-sm text-surface-200 light:text-surface-700">{editorial.verdict}</p>
+                  <p className="mt-1 text-sm text-sm text-surface-200 light:text-surface-700">{editorial.verdict}</p>
                 </div>
               )}
             </section>
