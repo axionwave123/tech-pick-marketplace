@@ -206,39 +206,89 @@ html.light .liquid-header {
 
 .liquid-blob {
   position: absolute;
-  border-radius: 9999px;
-  filter: blur(48px);
-  opacity: 0.35;
+  border-radius: 60% 40% 50% 50% / 50% 55% 45% 50%;
+  filter: blur(36px);
+  opacity: 0.55;
   pointer-events: none;
+  will-change: transform, border-radius;
+  mix-blend-mode: screen;
+}
+html.light .liquid-blob {
+  mix-blend-mode: multiply;
+  opacity: 0.35;
 }
 .liquid-blob-a {
-  top: -40%;
-  left: 15%;
-  width: 220px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.55), transparent 70%);
-  animation: liquid-float-a 12s ease-in-out infinite;
+  top: -55%;
+  left: 8%;
+  width: 280px;
+  height: 160px;
+  background: radial-gradient(circle at 30% 40%, rgba(59, 130, 246, 0.75), rgba(37, 99, 235, 0.15) 55%, transparent 75%);
+  animation: liquid-morph-a 9s ease-in-out infinite;
 }
 .liquid-blob-b {
-  top: -30%;
-  right: 10%;
-  width: 180px;
-  height: 100px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.4), transparent 70%);
-  animation: liquid-float-b 14s ease-in-out infinite;
+  top: -45%;
+  right: 5%;
+  width: 240px;
+  height: 140px;
+  background: radial-gradient(circle at 60% 35%, rgba(129, 140, 248, 0.7), rgba(99, 102, 241, 0.2) 50%, transparent 72%);
+  animation: liquid-morph-b 11s ease-in-out infinite;
+}
+.liquid-blob-c {
+  top: -35%;
+  left: 42%;
+  width: 200px;
+  height: 110px;
+  background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.55), rgba(14, 165, 233, 0.12) 50%, transparent 70%);
+  animation: liquid-morph-c 8s ease-in-out infinite;
+  opacity: 0.45;
 }
 html.light .liquid-blob-a,
-html.light .liquid-blob-b {
-  opacity: 0.22;
+html.light .liquid-blob-b,
+html.light .liquid-blob-c {
+  opacity: 0.28;
 }
 
-@keyframes liquid-float-a {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(24px, 8px) scale(1.08); }
+@keyframes liquid-morph-a {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 60% 40% 50% 50% / 50% 55% 45% 50%;
+  }
+  25% {
+    transform: translate(36px, 12px) scale(1.12) rotate(4deg);
+    border-radius: 45% 55% 40% 60% / 55% 40% 60% 45%;
+  }
+  50% {
+    transform: translate(18px, -10px) scale(0.95) rotate(-3deg);
+    border-radius: 55% 45% 60% 40% / 40% 60% 40% 60%;
+  }
+  75% {
+    transform: translate(-20px, 8px) scale(1.08) rotate(2deg);
+    border-radius: 40% 60% 55% 45% / 60% 45% 55% 40%;
+  }
 }
-@keyframes liquid-float-b {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-20px, 6px) scale(1.06); }
+@keyframes liquid-morph-b {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 50% 50% 40% 60% / 45% 55% 45% 55%;
+  }
+  33% {
+    transform: translate(-32px, 14px) scale(1.15) rotate(-5deg);
+    border-radius: 60% 40% 55% 45% / 50% 40% 60% 50%;
+  }
+  66% {
+    transform: translate(16px, -12px) scale(0.92) rotate(6deg);
+    border-radius: 40% 60% 45% 55% / 55% 50% 45% 50%;
+  }
+}
+@keyframes liquid-morph-c {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    border-radius: 55% 45% 50% 50% / 50% 50% 50% 50%;
+  }
+  50% {
+    transform: translate(28px, 10px) scale(1.2);
+    border-radius: 40% 60% 45% 55% / 60% 40% 55% 45%;
+  }
 }
 
 .liquid-nav-pill {
