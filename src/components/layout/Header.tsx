@@ -41,6 +41,7 @@ export function Header() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden" aria-hidden>
         <div className="liquid-blob liquid-blob-a" />
         <div className="liquid-blob liquid-blob-b" />
+        <div className="liquid-blob liquid-blob-c" />
       </div>
 
       <div className="relative mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-6 lg:px-8">
