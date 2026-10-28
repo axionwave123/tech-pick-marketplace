@@ -1,7 +1,7 @@
 import { ImportClient } from './ImportClient';
 
 export const metadata = {
-  title: 'Import Jumia XML · Admin',
+  title: 'Import assistant · Admin',
 };
 
 export default function ImportPage() {
@@ -15,8 +15,9 @@ export default function ImportPage() {
           Import assistant
         </h1>
         <p className="mt-2 text-sm text-surface-300 light:text-slate-600">
-          Phase 1 of the plan: fill the catalog from Jumia XML (products + Jumia prices and links).
-          Amazon / Temu matching comes later.
+          <strong>Phase 1:</strong> Jumia XML creates products + Jumia prices.{' '}
+          <strong>Phase 2:</strong> Amazon / Temu / Konga CSV matches by name and attaches store
+          offers under the same product.
         </p>
       </div>
       <ImportClient />
