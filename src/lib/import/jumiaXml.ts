@@ -18,11 +18,11 @@ export type ParsedJumiaProduct = {
 function decodeXmlEntities(s: string): string {
   return s
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, "'")
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .trim();
@@ -30,8 +30,9 @@ function decodeXmlEntities(s: string): string {
 
 function tagValue(block: string, tags: string[]): string | null {
   for (const tag of tags) {
+    const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const re = new RegExp(
-      `<(?:\\w+:)?${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/(?:\\w+:)?${tag}>`,
+      '<(?:[A-Za-z0-9_]+:)?' + escaped + '(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[A-Za-z0-9_]+:)?' + escaped + '>',
       'i'
     );
     const m = block.match(re);
@@ -39,7 +40,10 @@ function tagValue(block: string, tags: string[]): string | null {
       const v = decodeXmlEntities(m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
       if (v) return v;
     }
-    const attrRe = new RegExp(`<(?:\\w+:)?${tag}[^>]*\\s(?:href|url|src)=["']([^"']+)["']`, 'i');
+    const attrRe = new RegExp(
+      '<(?:[A-Za-z0-9_]+:)?' + escaped + '[^>]*(?:href|url|src)=["\']([^"\']+)["\']',
+      'i'
+    );
     const am = block.match(attrRe);
     if (am?.[1]) return decodeXmlEntities(am[1]);
   }
@@ -56,16 +60,11 @@ function parsePrice(raw: string | null): number | null {
 
 function extractBlocks(xml: string): string[] {
   const blocks: string[] = [];
-  const patterns = [
-    /<(?:product|item|entry|offer)(?:\s[^>]*)?>[\s\S]*?<\/(?:product|item|entry|offer)>/gi,
-  ];
-  for (const re of patterns) {
-    let m: RegExpExecArray | null;
-    const r = new RegExp(re.source, re.flags);
-    while ((m = r.exec(xml)) !== null) {
-      blocks.push(m[0]);
-    }
-    if (blocks.length) break;
+  const re =
+    /<(?:product|item|entry|offer)(?:\s[^>]*)?>[\s\S]*?<\/(?:product|item|entry|offer)>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml)) !== null) {
+    blocks.push(m[0]);
   }
   return blocks;
 }
@@ -92,14 +91,7 @@ export function parseJumiaXml(xmlText: string): ParsedJumiaProduct[] {
     if (!name || name.length < 2) continue;
 
     const externalId =
-      tagValue(block, [
-        'product_id',
-        'id',
-        'sku',
-        'offer_id',
-        'g:id',
-        'mpn',
-      ]) || null;
+      tagValue(block, ['product_id', 'id', 'sku', 'offer_id', 'mpn']) || null;
 
     const productUrl = tagValue(block, [
       'link',
@@ -107,7 +99,6 @@ export function parseJumiaXml(xmlText: string): ParsedJumiaProduct[] {
       'url',
       'deep_link',
       'affiliate_url',
-      'g:link',
       'click_url',
     ]);
 
@@ -117,30 +108,23 @@ export function parseJumiaXml(xmlText: string): ParsedJumiaProduct[] {
       'image',
       'picture',
       'thumbnail',
-      'g:image_link',
       'main_image',
     ]);
 
     const price =
-      parsePrice(tagValue(block, ['sale_price', 'price', 'g:price', 'g:sale_price'])) ||
-      null;
+      parsePrice(tagValue(block, ['sale_price', 'price'])) || null;
     const originalPrice =
-      parsePrice(
-        tagValue(block, ['original_price', 'list_price', 'regular_price', 'g:price'])
-      ) || null;
+      parsePrice(tagValue(block, ['original_price', 'list_price', 'regular_price'])) || null;
 
-    const brand = tagValue(block, ['brand', 'manufacturer', 'g:brand']);
+    const brand = tagValue(block, ['brand', 'manufacturer']);
     const category = tagValue(block, [
       'category',
       'product_type',
       'google_product_category',
-      'g:product_type',
-      'g:google_product_category',
     ]);
     const description = tagValue(block, [
       'description',
       'short_description',
-      'g:description',
       'summary',
     ]);
 
@@ -165,7 +149,10 @@ export function parseJumiaXml(xmlText: string): ParsedJumiaProduct[] {
   return out;
 }
 
-export function guessCategorySlug(categoryText: string | null, productName: string): string | null {
+export function guessCategorySlug(
+  categoryText: string | null,
+  productName: string
+): string | null {
   const hay = `${categoryText || ''} ${productName}`.toLowerCase();
   const rules: [RegExp, string][] = [
     [/smart\s*phone|mobile phone|android|iphone|phone/, 'smartphones'],
@@ -185,7 +172,10 @@ export function guessCategorySlug(categoryText: string | null, productName: stri
   return null;
 }
 
-export function guessBrandSlug(brandText: string | null, productName: string): string | null {
+export function guessBrandSlug(
+  brandText: string | null,
+  productName: string
+): string | null {
   const hay = `${brandText || ''} ${productName}`.toLowerCase();
   const brands = [
     'samsung',
