@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { PageNav } from '@/components/layout/PageNav';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { ReportWidget } from '@/components/ReportWidget';
+import { SiteAssistant } from '@/components/assistant/SiteAssistant';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -44,6 +45,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <ReportWidget />
+          <SiteAssistant />
         </ThemeProvider>
       </body>
     </html>
