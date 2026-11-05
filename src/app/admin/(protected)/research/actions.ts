@@ -58,7 +58,6 @@ function guessBrandName(name: string): string | null {
 
 /** Prefer service role so inserts never fail RLS during research. */
 async function dbClient() {
-  // Always prefer service role when present — research must write images/offers
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return createServiceClient();
   }
@@ -172,7 +171,6 @@ export async function runResearch(
     return { error: error.message };
   }
 
-  // ——— Images: download → Supabase Storage, else keep remote URL ———
   let imagesSaved = 0;
   let imageNote = '';
   const imageList = [web?.imageUrl, ...(web?.imageCandidates || [])].filter(
@@ -206,7 +204,6 @@ export async function runResearch(
     }
   }
 
-  // ——— Always save 4 store offers ———
   const { data: stores } = await supabase.from('stores').select('id, slug, name');
   const storeBySlug = new Map((stores || []).map((s) => [s.slug, s]));
 
@@ -287,6 +284,8 @@ export async function runResearch(
   revalidatePath('/admin/needs-update');
   revalidatePath('/admin/dashboard');
   revalidatePath('/admin/offers');
+  revalidatePath('/admin/drafts');
+  revalidatePath('/admin/notifications');
 
   const priced = (web?.offers || []).filter((o) => o.price && o.price > 0).length;
   const bits = [
@@ -332,6 +331,11 @@ export async function publishDraft(productId: string): Promise<ResearchState> {
 
   revalidatePath('/admin/products');
   revalidatePath('/admin/needs-update');
+  revalidatePath('/admin/drafts');
+  revalidatePath('/admin/notifications');
+  revalidatePath('/admin/dashboard');
   revalidatePath('/');
+  revalidatePath('/search');
+  revalidatePath('/deals');
   return { success: 'Product published.' };
 }
