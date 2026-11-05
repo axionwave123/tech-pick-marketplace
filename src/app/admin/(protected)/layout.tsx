@@ -1,12 +1,15 @@
 import { requireAdmin } from '@/lib/auth/admin';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { AdminAlertBell } from '@/components/admin/AdminAlertBell';
+import { getAdminAlerts } from '@/lib/admin/alerts';
 
 const primaryNav = [
   { href: '/admin/products', label: 'Edit products' },
   { href: '/admin/products/new', label: 'Add product', highlight: true },
   { href: '/admin/import', label: 'Import XML', highlight: true },
   { href: '/admin/drafts', label: 'Drafts' },
+  { href: '/admin/notifications', label: 'Alerts' },
   { href: '/admin/offers', label: 'See prices' },
   { href: '/admin/missing-review', label: 'No YouTube' },
   { href: '/admin/stores', label: 'Stores' },
@@ -20,7 +23,8 @@ const sideLinks = [
   { href: '/admin/products', label: 'Edit / search products' },
   { href: '/admin/products/new', label: 'Add product' },
   { href: '/admin/import', label: 'Import Jumia XML' },
-  { href: '/admin/drafts', label: 'Drafts / delete drafts' },
+  { href: '/admin/drafts', label: 'Drafts / publish' },
+  { href: '/admin/notifications', label: 'Notifications' },
   { href: '/admin/offers', label: 'See prices' },
   { href: '/admin/stores', label: 'Stores (Jumia, Amazon…)' },
   { href: '/admin/tracking', label: 'Price tracking' },
@@ -59,6 +63,8 @@ export default async function ProtectedAdminLayout({
     );
   }
 
+  const alertSummary = await getAdminAlerts();
+
   return (
     <div className="flex min-h-screen flex-col bg-surface-950 text-surface-100">
       <header className="sticky top-0 z-40 border-b border-surface-800 bg-surface-900">
@@ -86,6 +92,11 @@ export default async function ProtectedAdminLayout({
             ))}
           </nav>
 
+          <AdminAlertBell
+            total={alertSummary.total}
+            high={alertSummary.high}
+            alerts={alertSummary.alerts}
+          />
           <Link
             href="/"
             className="shrink-0 text-xs font-medium text-surface-400 hover:text-white sm:text-sm"
